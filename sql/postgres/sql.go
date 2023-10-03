@@ -6,6 +6,10 @@ import (
 	"github.com/RangelReale/debefix-poc2/sql/generic"
 )
 
+func SQLResolverDBCallback(db generic.QueryInterface) generic.ResolverDBCallback {
+	return generic.SQLResolverDBCallback(db, SQLBuilder())
+}
+
 type SQLPlaceholderProvider struct {
 	c int
 }
@@ -27,8 +31,4 @@ func SQLBuilder() generic.SQLBuilder {
 			return `"` + f + `"`
 		},
 	}
-}
-
-func SQLResolverDBCallback(db generic.QueryInterface) generic.ResolverDBCallback {
-	return generic.SQLResolverDBCallback(db, SQLBuilder())
 }
