@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type ResolveCallback func(ctx ResolveContext, tableID, tableName string, fields map[string]any) error
+type ResolveCallback func(ctx ResolveContext, fields map[string]any) error
 
 func Resolve(data *Data, f ResolveCallback, options ...ResolveOption) error {
 	r := &resolver{data: data}
@@ -99,9 +99,12 @@ func (r *resolver) resolve(f ResolveCallback) error {
 				callFields[fieldName] = fieldValue
 			}
 
-			ctx := &defaultResolveContext{}
+			ctx := &defaultResolveContext{
+				tableID:   table.Name,
+				tableName: tableName,
+			}
 
-			err := f(ctx, table.Name, tableName, callFields)
+			err := f(ctx, callFields)
 			if err != nil {
 				return err
 			}

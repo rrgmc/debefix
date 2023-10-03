@@ -10,11 +10,22 @@ type ResolveGenerate struct {
 func (r ResolveGenerate) isResoleValue() {}
 
 type ResolveContext interface {
+	TableID() string
+	TableName() string
 	ResolveField(fieldName string, value any)
 }
 
 type defaultResolveContext struct {
-	resolved map[string]any
+	tableID, tableName string
+	resolved           map[string]any
+}
+
+func (d *defaultResolveContext) TableID() string {
+	return d.tableID
+}
+
+func (d *defaultResolveContext) TableName() string {
+	return d.tableName
 }
 
 func (d *defaultResolveContext) ResolveField(fieldName string, value any) {
