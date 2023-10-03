@@ -6,40 +6,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
-
-	debefix_poc2 "github.com/RangelReale/debefix-poc2"
 )
-
-type ResolverDBCallback func(tableName string, fields map[string]any, returnFieldNames []string) (map[string]any, error)
-
-func ResolverFunc(callback ResolverDBCallback) func(ctx debefix_poc2.ResolveContext, fields map[string]any) error {
-	return func(ctx debefix_poc2.ResolveContext, fields map[string]any) error {
-		insertFields := map[string]any{}
-		var returnFieldNames []string
-
-		for fn, fv := range fields {
-			if fresolve, ok := fv.(debefix_poc2.ResolveValue); ok {
-				switch fresolve.(type) {
-				case *debefix_poc2.ResolveGenerate:
-					returnFieldNames = append(returnFieldNames, fn)
-				}
-			} else {
-				insertFields[fn] = fv
-			}
-		}
-
-		resolved, err := callback(ctx.TableName(), insertFields, returnFieldNames)
-		if err != nil {
-			return err
-		}
-
-		for rn, rv := range resolved {
-			ctx.ResolveField(rn, rv)
-		}
-
-		return nil
-	}
-}
 
 type SQLPlaceholderProvider interface {
 	Next() (placeholder string, argName string)
@@ -80,37 +47,8 @@ func SQLResolverDBCallback(db QueryInterface, sqlBuilder SQLBuilder) ResolverDBC
 	}
 }
 
-type RowInterface interface {
-	Scan(dest ...any) error
-}
-
 type QueryInterface interface {
 	Query(query string, returnFieldNames []string, args ...any) (map[string]any, error)
-}
-
-func RowToMap(cols []string, row RowInterface) (map[string]any, error) {
-	// Create a slice of interface{}'s to represent each column,
-	// and a second slice to contain pointers to each item in the columns slice.
-	columns := make([]interface{}, len(cols))
-	columnPointers := make([]interface{}, len(cols))
-	for i, _ := range columns {
-		columnPointers[i] = &columns[i]
-	}
-
-	// Scan the result into the column pointers...
-	if err := row.Scan(columnPointers...); err != nil {
-		return nil, err
-	}
-
-	// Create our map, and retrieve the value for each column from the pointers slice,
-	// storing it in the map with the name of the column as the key.
-	m := make(map[string]interface{})
-	for i, colName := range cols {
-		val := columnPointers[i].(*interface{})
-		m[colName] = *val
-	}
-
-	return m, nil
 }
 
 type defaultSQLPlaceholderProvider struct {
