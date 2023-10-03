@@ -28,6 +28,10 @@ func Load(fileProvider FileProvider) (*Data, error) {
 	return &loader.data, nil
 }
 
+func LoadDirectory(rootDir string, options ...DirectoryFileProviderOption) (*Data, error) {
+	return Load(NewDirectoryFileProvider(rootDir, options...))
+}
+
 func (l *loader) load() error {
 	return l.fileProvider.Load(func(info FileInfo) error {
 		return l.loadFile(info.File, info.Tags)
