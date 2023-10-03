@@ -53,7 +53,7 @@ func (d directoryFileProvider) loadFiles(path string, tags []string, f func(info
 
 			err = f(FileInfo{
 				File: localFile,
-				Tags: tags,
+				Tags: []string{strings.Join(tags, ".")},
 			})
 
 			fileErr := localFile.Close()

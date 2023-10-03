@@ -46,7 +46,7 @@ func (l *loader) loadFile(file io.Reader, tags []string) error {
 	}
 
 	for _, doc := range fileParser.Docs {
-		err := l.loadTables(doc.Body, tags)
+		err := l.loadTables(doc.Body, tags, &noParentRowInfo{})
 		if err != nil {
 			return err
 		}
@@ -55,20 +55,20 @@ func (l *loader) loadFile(file io.Reader, tags []string) error {
 	return nil
 }
 
-func (l *loader) loadTables(node ast.Node, tags []string) error {
+func (l *loader) loadTables(node ast.Node, tags []string, parent ParentRowInfo) error {
 	switch n := node.(type) {
 	case *ast.MappingValueNode:
 		tableName, err := getStringNode(n.Key)
 		if err != nil {
 			return err
 		}
-		err = l.loadTable(tableName, n.Value, tags)
+		err = l.loadTable(tableName, n.Value, tags, parent)
 		if err != nil {
 			return err
 		}
 	case *ast.MappingNode:
 		for _, value := range n.Values {
-			err := l.loadTables(value, tags)
+			err := l.loadTables(value, tags, parent)
 			if err != nil {
 				return err
 			}
@@ -80,14 +80,16 @@ func (l *loader) loadTables(node ast.Node, tags []string) error {
 	return nil
 }
 
-func (l *loader) loadTable(tableName string, node ast.Node, tags []string) error {
+func (l *loader) loadTable(tableName string, node ast.Node, tags []string, parent ParentRowInfo) error {
 	if l.data.Tables == nil {
 		l.data.Tables = map[string]*Table{}
 	}
 
 	table, ok := l.data.Tables[tableName]
 	if !ok {
-		table = &Table{}
+		table = &Table{
+			Name: tableName,
+		}
 		l.data.Tables[tableName] = table
 	}
 
@@ -118,7 +120,7 @@ func (l *loader) loadTable(tableName string, node ast.Node, tags []string) error
 				return fmt.Errorf("error merge table config for '%s': %w", tableName, err)
 			}
 		case "rows":
-			err := l.loadTableRows(value.Value, table, tags)
+			err := l.loadTableRows(value.Value, table, tags, parent)
 			if err != nil {
 				return fmt.Errorf("error loading table rows for '%s': %w", tableName, err)
 			}
@@ -129,11 +131,11 @@ func (l *loader) loadTable(tableName string, node ast.Node, tags []string) error
 	return nil
 }
 
-func (l *loader) loadTableRows(node ast.Node, table *Table, tags []string) error {
+func (l *loader) loadTableRows(node ast.Node, table *Table, tags []string, parent ParentRowInfo) error {
 	switch n := node.(type) {
 	case *ast.SequenceNode:
 		for _, row := range n.Values {
-			err := l.loadTableRow(row, table, tags)
+			err := l.loadTableRow(row, table, tags, parent)
 			if err != nil {
 				return err
 			}
@@ -144,10 +146,10 @@ func (l *loader) loadTableRows(node ast.Node, table *Table, tags []string) error
 	return nil
 }
 
-func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string) error {
+func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent ParentRowInfo) error {
 	switch n := node.(type) {
 	case *ast.MappingNode:
-		err := l.loadTableRowData(n, table, tags)
+		err := l.loadTableRowData(n, table, tags, parent)
 		if err != nil {
 			return err
 		}
@@ -157,7 +159,7 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string) error 
 	return nil
 }
 
-func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table, tags []string) error {
+func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table, tags []string, parent ParentRowInfo) error {
 	row := Row{
 		InternalID: uuid.New(),
 		Config: RowConfig{
@@ -178,7 +180,10 @@ func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table, tags []st
 					return fmt.Errorf("error reading row config at '%s': %w", field.GetPath(), err)
 				}
 			case "_dbfdeps":
-				err := l.loadTables(field.Value, tags)
+				err := l.loadTables(field.Value, tags, &defaultParentRowInfo{
+					tableName:  table.Name,
+					internalID: row.InternalID,
+				})
 				if err != nil {
 					return fmt.Errorf("error reading row deps at '%s': %w", field.GetPath(), err)
 				}
@@ -186,22 +191,25 @@ func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table, tags []st
 				return fmt.Errorf("invalid table row field: %s", key)
 			}
 		} else {
-			fieldValue, err := l.loadFieldValue(field.Value)
+			fieldValue, err := l.loadFieldValue(field.Value, parent)
 			if err != nil {
 				return err
 			}
 			row.Fields[key] = fieldValue
+			if fd, ok := fieldValue.(valueTableDepends); ok {
+				table.AppendDeps(fd.TableDepends())
+			}
 		}
 	}
 
 	if len(tags) > 0 {
-		row.Config.Tags = appendTags(row.Config.Tags, tags)
+		row.Config.Tags = appendStringNoRepeat(row.Config.Tags, tags)
 	}
 	table.Rows = append(table.Rows, row)
 	return nil
 }
 
-func (l *loader) loadFieldValue(node ast.Node) (any, error) {
+func (l *loader) loadFieldValue(node ast.Node, parent ParentRowInfo) (any, error) {
 	switch n := node.(type) {
 	case *ast.TagNode:
 		if strings.HasPrefix(n.Start.Value, "!dbf") {
@@ -211,7 +219,7 @@ func (l *loader) loadFieldValue(node ast.Node) (any, error) {
 				if err != nil {
 					return nil, err
 				}
-				return ParseValue(tvalue)
+				return ParseValue(tvalue, parent)
 			default:
 				return nil, fmt.Errorf("unknown value tag: %s", n.Start.Value)
 			}

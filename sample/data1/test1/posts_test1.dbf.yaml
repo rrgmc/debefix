@@ -3,11 +3,11 @@ posts:
     - post_id: 5
       title: "Post 5"
       text: "This is the text of the fifth post"
-      user_id: !dbfexpr "refid:users:janedoe"
-      created_at: 2023-01-05T12:30:12Z
-      updated_at: 2023-01-05T12:30:12Z
+      user_id: !dbfexpr "refid:users:janedoe:user_id"
+      created_at: !!timestamp 2023-01-05T12:30:12Z
+      updated_at: !!timestamp 2023-01-05T12:30:12Z
       _dbfdeps:
         posts_tags:
           rows:
             - post_id: !dbfexpr "parent:post_id"
-              tag_id: !dbfexpr "refid:tags:javascript"
+              tag_id: !dbfexpr "refid:tags:javascript:tag_id"
