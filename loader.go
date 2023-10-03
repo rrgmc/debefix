@@ -61,13 +61,6 @@ func (l *loader) loadDoc(node ast.Node, tags []string) error {
 			return err
 		}
 		err = l.loadTable(tableName, n.Value, tags)
-		//
-		// switch tn := n.Value.(type) {
-		// case *ast.MappingNode:
-		// 	err = l.loadTable(tableName, tn, tags)
-		// default:
-		// 	err = fmt.Errorf("unknown table node at '%s'", node.GetPath())
-		// }
 		if err != nil {
 			return err
 		}
