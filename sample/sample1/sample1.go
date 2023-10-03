@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	debefix_poc2 "github.com/RangelReale/debefix-poc2"
-	"github.com/RangelReale/debefix-poc2/sql/generic"
-	"github.com/RangelReale/debefix-poc2/sql/postgres"
+	"github.com/RangelReale/debefix-poc2/db/sql"
+	"github.com/RangelReale/debefix-poc2/db/sql/postgres"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/google/uuid"
 )
@@ -68,5 +68,5 @@ func resolvePrint(data *debefix_poc2.Data) error {
 }
 
 func resolveSQL(data *debefix_poc2.Data) error {
-	return postgres.Resolve(&generic.OutputQueryInterface{}, data)
+	return postgres.Resolve(&sql.OutputQueryInterface{}, data)
 }

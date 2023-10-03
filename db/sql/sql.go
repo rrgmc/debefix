@@ -1,4 +1,4 @@
-package generic
+package sql
 
 import (
 	"database/sql"
@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+
+	"github.com/RangelReale/debefix-poc2/db"
 )
 
-func SQLResolverDBCallback(db QueryInterface, sqlBuilder SQLBuilder) ResolverDBCallback {
+func SQLResolverDBCallback(db QueryInterface, sqlBuilder SQLBuilder) db.ResolverDBCallback {
 	return func(tableName string, fields map[string]any, returnFieldNames []string) (map[string]any, error) {
 		var fieldNames []string
 		var fieldPlaceholders []string

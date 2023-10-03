@@ -1,4 +1,4 @@
-package generic
+package db
 
 import (
 	debefix_poc2 "github.com/RangelReale/debefix-poc2"

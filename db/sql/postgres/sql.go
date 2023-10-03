@@ -3,11 +3,12 @@ package postgres
 import (
 	"fmt"
 
-	"github.com/RangelReale/debefix-poc2/sql/generic"
+	"github.com/RangelReale/debefix-poc2/db"
+	"github.com/RangelReale/debefix-poc2/db/sql"
 )
 
-func SQLResolverDBCallback(db generic.QueryInterface) generic.ResolverDBCallback {
-	return generic.SQLResolverDBCallback(db, SQLBuilder())
+func SQLResolverDBCallback(db sql.QueryInterface) db.ResolverDBCallback {
+	return sql.SQLResolverDBCallback(db, SQLBuilder())
 }
 
 type SQLPlaceholderProvider struct {
@@ -19,9 +20,9 @@ func (p *SQLPlaceholderProvider) Next() (placeholder string, argName string) {
 	return fmt.Sprintf("$%d", p.c), ""
 }
 
-func SQLBuilder() generic.SQLBuilder {
-	return generic.DefaultSQLBuilder{
-		PlaceholderProviderFactory: func() generic.SQLPlaceholderProvider {
+func SQLBuilder() sql.SQLBuilder {
+	return sql.DefaultSQLBuilder{
+		PlaceholderProviderFactory: func() sql.SQLPlaceholderProvider {
 			return &SQLPlaceholderProvider{}
 		},
 		QuoteTable: func(t string) string {
