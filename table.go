@@ -17,7 +17,6 @@ type Table struct {
 }
 
 type TableConfig struct {
-	Key       string   `yaml:"key"`
 	TableName string   `yaml:"table_name"`
 	Depends   []string `yaml:"depends"`
 }
@@ -40,13 +39,6 @@ func (t *Table) AppendDeps(deps ...string) {
 }
 
 func (c *TableConfig) Merge(other *TableConfig) error {
-	if other.Key != "" {
-		if c.Key != "" && other.Key != "" && c.Key != other.Key {
-			return fmt.Errorf("table key value cannot be changed (current: %s, new: %s)", c.Key, other.Key)
-		}
-		c.Key = other.Key
-	}
-
 	if other.TableName != "" {
 		if c.TableName != "" && other.TableName != "" && c.TableName != other.TableName {
 			return fmt.Errorf("table name value cannot be changed (current: %s, new: %s)", c.TableName, other.TableName)

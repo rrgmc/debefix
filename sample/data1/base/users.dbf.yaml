@@ -1,6 +1,5 @@
 users:
   config:
-    key: "user_id"
     table_name: "user"
   rows:
     - user_id: 1

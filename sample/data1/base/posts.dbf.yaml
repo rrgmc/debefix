@@ -1,6 +1,5 @@
 posts:
   config:
-    key: "post_id"
     table_name: "post"
   rows:
     - post_id: 1
