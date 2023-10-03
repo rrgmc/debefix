@@ -17,3 +17,5 @@ users:
       updated_at: 2023-01-04T12:30:12Z
       _dbfconfig:
         id: "janedoe"
+        tags:
+          - onlyone

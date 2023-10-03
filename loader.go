@@ -3,11 +3,13 @@ package debefix_poc2
 import (
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/ast"
 	"github.com/goccy/go-yaml/parser"
+	"github.com/google/uuid"
 )
 
 type loader struct {
@@ -89,8 +91,6 @@ func (l *loader) loadTable(tableName string, node ast.Node, tags []string) error
 		l.data.Tables[tableName] = table
 	}
 
-	table.Config.AppendTags(tags)
-
 	var values []*ast.MappingValueNode
 	switch n := node.(type) {
 	case *ast.MappingNode:
@@ -118,7 +118,7 @@ func (l *loader) loadTable(tableName string, node ast.Node, tags []string) error
 				return fmt.Errorf("error merge table config for '%s': %w", tableName, err)
 			}
 		case "rows":
-			err := l.loadTableRows(value.Value, table)
+			err := l.loadTableRows(value.Value, table, tags)
 			if err != nil {
 				return fmt.Errorf("error loading table rows for '%s': %w", tableName, err)
 			}
@@ -129,11 +129,11 @@ func (l *loader) loadTable(tableName string, node ast.Node, tags []string) error
 	return nil
 }
 
-func (l *loader) loadTableRows(node ast.Node, table *Table) error {
+func (l *loader) loadTableRows(node ast.Node, table *Table, tags []string) error {
 	switch n := node.(type) {
 	case *ast.SequenceNode:
 		for _, row := range n.Values {
-			err := l.loadTableRow(row, table)
+			err := l.loadTableRow(row, table, tags)
 			if err != nil {
 				return err
 			}
@@ -144,10 +144,10 @@ func (l *loader) loadTableRows(node ast.Node, table *Table) error {
 	return nil
 }
 
-func (l *loader) loadTableRow(node ast.Node, table *Table) error {
+func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string) error {
 	switch n := node.(type) {
 	case *ast.MappingNode:
-		err := l.loadTableRowData(n, table)
+		err := l.loadTableRowData(n, table, tags)
 		if err != nil {
 			return err
 		}
@@ -157,8 +157,12 @@ func (l *loader) loadTableRow(node ast.Node, table *Table) error {
 	return nil
 }
 
-func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table) error {
+func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table, tags []string) error {
 	row := Row{
+		InternalID: uuid.New(),
+		Config: RowConfig{
+			Tags: slices.Clone(tags),
+		},
 		Fields: map[string]any{},
 	}
 	for _, field := range node.Values {
@@ -169,7 +173,15 @@ func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table) error {
 		if strings.HasPrefix(key, "_dbf") {
 			switch key {
 			case "_dbfconfig":
+				err := yaml.NodeToValue(field.Value, &row.Config)
+				if err != nil {
+					return fmt.Errorf("error reading row config at '%s': %w", field.GetPath(), err)
+				}
 			case "_dbfdeps":
+				err := l.loadDoc(field.Value, tags)
+				if err != nil {
+					return fmt.Errorf("error reading row deps at '%s': %w", field.GetPath(), err)
+				}
 			default:
 				return fmt.Errorf("invalid table row field: %s", key)
 			}
@@ -182,6 +194,9 @@ func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table) error {
 		}
 	}
 
+	if len(tags) > 0 {
+		row.Config.Tags = appendTags(row.Config.Tags, tags)
+	}
 	table.Rows = append(table.Rows, row)
 	return nil
 }

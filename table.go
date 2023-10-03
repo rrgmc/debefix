@@ -2,7 +2,8 @@ package debefix_poc2
 
 import (
 	"fmt"
-	"slices"
+
+	"github.com/google/uuid"
 )
 
 type Data struct {
@@ -15,14 +16,14 @@ type Table struct {
 }
 
 type TableConfig struct {
-	Key       string   `yaml:"key"`
-	TableName string   `yaml:"table_name"`
-	Tags      []string `yaml:"tags"`
+	Key       string `yaml:"key"`
+	TableName string `yaml:"table_name"`
 }
 
 type Row struct {
-	Config RowConfig
-	Fields map[string]any
+	InternalID uuid.UUID
+	Config     RowConfig
+	Fields     map[string]any
 }
 
 type RowConfig struct {
@@ -47,15 +48,5 @@ func (c *TableConfig) Merge(other *TableConfig) error {
 		c.TableName = other.TableName
 	}
 
-	c.AppendTags(other.Tags)
-
 	return nil
-}
-
-func (c *TableConfig) AppendTags(tags []string) {
-	for _, tag := range tags {
-		if !slices.Contains(c.Tags, tag) {
-			c.Tags = append(c.Tags, tag)
-		}
-	}
 }
