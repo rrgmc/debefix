@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	debefix_poc2 "github.com/RangelReale/debefix-poc2"
@@ -114,14 +115,28 @@ func RowToMap(cols []string, row RowInterface) (map[string]any, error) {
 }
 
 type DefaultSQLBuilder struct {
+	QuoteTable func(t string) string
+	QuoteField func(f string) string
 }
 
 func (d DefaultSQLBuilder) BuildInsertSQL(tableName string, fieldNames []string, fieldPlaceholders []string, returnFieldNames []string) string {
+	if d.QuoteTable != nil {
+		tableName = d.QuoteTable(tableName)
+	}
+
+	if d.QuoteField != nil {
+		fieldNames = slices.Clone(fieldNames)
+		for fi := range fieldNames {
+			fieldNames[fi] = d.QuoteField(fieldNames[fi])
+		}
+	}
+
 	ret := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
 		tableName,
 		strings.Join(fieldNames, ", "),
 		strings.Join(fieldPlaceholders, ", "),
 	)
+
 	if len(returnFieldNames) > 0 {
 		ret += fmt.Sprintf(" RETURNING %s", strings.Join(returnFieldNames, ","))
 	}
