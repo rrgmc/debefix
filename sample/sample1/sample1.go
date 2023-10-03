@@ -17,7 +17,7 @@ func main() {
 		panic(err)
 	}
 
-	// spew.Dump(data)
+	spew.Dump(data)
 
 	err = debefix_poc2.Resolve(data, func(ctx debefix_poc2.ResolveContext, tableID, tableName string, fields map[string]any) error {
 		fmt.Printf("%s %s %s\n", strings.Repeat("=", 10), tableName, strings.Repeat("=", 10))
