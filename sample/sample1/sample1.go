@@ -1,7 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"path/filepath"
+	"runtime"
 	"strings"
 
 	debefix_poc2 "github.com/RangelReale/debefix-poc2"
@@ -11,8 +14,21 @@ import (
 	"github.com/google/uuid"
 )
 
+func currentSourceDirectory() (string, error) {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		return "", errors.New("unable to get the current filename")
+	}
+	return filepath.Dir(filename), nil
+}
+
 func main() {
-	data, err := debefix_poc2.LoadDirectory(`/Users/rangelreale/prog/personal/debefix-poc2/sample/data1`)
+	curDir, err := currentSourceDirectory()
+	if err != nil {
+		panic(err)
+	}
+
+	data, err := debefix_poc2.LoadDirectory(filepath.Join(curDir, "..", "data1"))
 	if err != nil {
 		panic(err)
 	}
