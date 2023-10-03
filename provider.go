@@ -9,8 +9,10 @@ import (
 	"strings"
 )
 
+type FileProviderCallback func(info FileInfo) error
+
 type FileProvider interface {
-	Load(func(info FileInfo) error) error
+	Load(FileProviderCallback) error
 }
 
 type FileInfo struct {
@@ -26,7 +28,7 @@ func NewDirectoryFileProvider(rootDir string) FileProvider {
 	return &directoryFileProvider{rootDir: rootDir}
 }
 
-func (d directoryFileProvider) Load(f func(info FileInfo) error) error {
+func (d directoryFileProvider) Load(f FileProviderCallback) error {
 	return d.loadFiles(d.rootDir, nil, f)
 }
 

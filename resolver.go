@@ -8,35 +8,9 @@ import (
 	"github.com/google/uuid"
 )
 
-type ResolveRow map[string]any
+type ResolveCallback func(ctx ResolveContext, tableID, tableName string, fields map[string]any) error
 
-type ResolveValue interface {
-	isResoleValue()
-}
-
-type ResolveGenerate struct {
-}
-
-func (r ResolveGenerate) isResoleValue() {}
-
-type resolver struct {
-	data *Data
-	tags []string
-
-	tableData map[string]*resolverTable
-}
-
-type resolverTable struct {
-	rows []resolverRow
-}
-
-type resolverRow struct {
-	fields     ResolveRow
-	id         string
-	internalID uuid.UUID
-}
-
-func Resolve(data *Data, f func(tableID, tableName string, fields map[string]any) (map[string]any, error), options ...ResolveOption) error {
+func Resolve(data *Data, f ResolveCallback, options ...ResolveOption) error {
 	r := &resolver{data: data}
 	for _, opt := range options {
 		opt(r)
@@ -52,7 +26,24 @@ func WithResolveTags(tags []string) ResolveOption {
 	}
 }
 
-func (r *resolver) resolve(f func(tableID, tableName string, fields map[string]any) (map[string]any, error)) error {
+type resolver struct {
+	data *Data
+	tags []string
+
+	tableData map[string]*resolverTable
+}
+
+type resolverTable struct {
+	rows []resolverRow
+}
+
+type resolverRow struct {
+	fields     map[string]any
+	id         string
+	internalID uuid.UUID
+}
+
+func (r *resolver) resolve(f ResolveCallback) error {
 	// build table dependency graph
 	depg := depgraph.New()
 
@@ -93,7 +84,7 @@ func (r *resolver) resolve(f func(tableID, tableName string, fields map[string]a
 				continue
 			}
 
-			callFields := ResolveRow{}
+			callFields := map[string]any{}
 			for fieldName, fieldValue := range row.Fields {
 				if fvalue, ok := fieldValue.(Value); ok {
 					var err error
@@ -105,16 +96,18 @@ func (r *resolver) resolve(f func(tableID, tableName string, fields map[string]a
 				callFields[fieldName] = fieldValue
 			}
 
-			resolved, err := f(table.Name, tableName, callFields)
+			ctx := &defaultResolveContext{}
+
+			err := f(ctx, table.Name, tableName, callFields)
 			if err != nil {
 				return err
 			}
 
-			saveFields := ResolveRow{}
+			saveFields := map[string]any{}
 
 			for fieldName, fieldValue := range callFields {
 				if _, ok := fieldValue.(ResolveValue); ok {
-					if rv, ok := resolved[fieldName]; ok {
+					if rv, ok := ctx.resolved[fieldName]; ok {
 						saveFields[fieldName] = rv
 					} else {
 						return fmt.Errorf("field %s for table %s was not resolved", fieldName, table.Name)
