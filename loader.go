@@ -46,7 +46,7 @@ func (l *loader) loadFile(file io.Reader, tags []string) error {
 	}
 
 	for _, doc := range fileParser.Docs {
-		err := l.loadDoc(doc.Body, tags)
+		err := l.loadTables(doc.Body, tags)
 		if err != nil {
 			return err
 		}
@@ -55,7 +55,7 @@ func (l *loader) loadFile(file io.Reader, tags []string) error {
 	return nil
 }
 
-func (l *loader) loadDoc(node ast.Node, tags []string) error {
+func (l *loader) loadTables(node ast.Node, tags []string) error {
 	switch n := node.(type) {
 	case *ast.MappingValueNode:
 		tableName, err := getStringNode(n.Key)
@@ -68,7 +68,7 @@ func (l *loader) loadDoc(node ast.Node, tags []string) error {
 		}
 	case *ast.MappingNode:
 		for _, value := range n.Values {
-			err := l.loadDoc(value, tags)
+			err := l.loadTables(value, tags)
 			if err != nil {
 				return err
 			}
@@ -178,7 +178,7 @@ func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table, tags []st
 					return fmt.Errorf("error reading row config at '%s': %w", field.GetPath(), err)
 				}
 			case "_dbfdeps":
-				err := l.loadDoc(field.Value, tags)
+				err := l.loadTables(field.Value, tags)
 				if err != nil {
 					return fmt.Errorf("error reading row deps at '%s': %w", field.GetPath(), err)
 				}
