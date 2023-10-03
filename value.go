@@ -52,7 +52,7 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 	switch fields[0] {
 	case "refid":
 		if len(fields) != 4 {
-			return nil, fmt.Errorf("invalid !dbf tag: %s", value)
+			return nil, fmt.Errorf("invalid !dbf tag value: %s", value)
 		}
 		return &ValueRefID{Table: fields[1], ID: fields[2], FieldName: fields[3]}, nil
 	case "parent":
@@ -60,7 +60,7 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 			return nil, errors.New("value has no parent")
 		}
 		if len(fields) != 2 {
-			return nil, fmt.Errorf("invalid !dbf tag: %s", value)
+			return nil, fmt.Errorf("invalid !dbf tag value: %s", value)
 		}
 		return &ValueInternalID{Table: parent.TableName(), InternalID: parent.InternalID(), FieldName: fields[1]}, nil
 	case "generated":

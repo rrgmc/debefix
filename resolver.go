@@ -53,6 +53,9 @@ func (r *resolver) resolve(f ResolveCallback) error {
 			return fmt.Errorf("error build table dependency graph: %w", err)
 		}
 		for _, dep := range table.Config.Depends {
+			if tableName == dep {
+				continue
+			}
 			err = depg.DependOn(tableName, dep)
 			if err != nil {
 				return fmt.Errorf("error build table dependency graph: %w", err)

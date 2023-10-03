@@ -18,6 +18,7 @@ posts:
         id: "post_1"
         tags: ["initial"]
     - post_id: 2
+      parent_post_id: !dbfexpr "refid:posts:post_1:post_id"
       title: "Post 2"
       text: "This is the text of the seco d post"
       user_id: !dbfexpr "refid:users:johndoe:user_id"
