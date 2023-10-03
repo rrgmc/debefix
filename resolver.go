@@ -153,7 +153,7 @@ func (r *resolver) resolveValue(value Value) (any, error) {
 			}
 		}
 		return nil, fmt.Errorf("could not find refid %s in table %s", fv.ID, fv.Table)
-	case *valueInternalID:
+	case *ValueInternalID:
 		vdb, ok := r.tableData[fv.Table]
 		if !ok {
 			return nil, fmt.Errorf("could not find internalid table %s (internalid %s)", fv.Table, fv.InternalID)

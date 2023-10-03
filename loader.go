@@ -55,7 +55,7 @@ func (l *loader) loadFile(file io.Reader, tags []string) error {
 	return nil
 }
 
-func (l *loader) loadTables(node ast.Node, tags []string, parent ParentRowInfo) error {
+func (l *loader) loadTables(node ast.Node, tags []string, parent parentRowInfo) error {
 	switch n := node.(type) {
 	case *ast.MappingValueNode:
 		tableName, err := getStringNode(n.Key)
@@ -80,7 +80,7 @@ func (l *loader) loadTables(node ast.Node, tags []string, parent ParentRowInfo) 
 	return nil
 }
 
-func (l *loader) loadTable(tableName string, node ast.Node, tags []string, parent ParentRowInfo) error {
+func (l *loader) loadTable(tableName string, node ast.Node, tags []string, parent parentRowInfo) error {
 	if l.data.Tables == nil {
 		l.data.Tables = map[string]*Table{}
 	}
@@ -131,7 +131,7 @@ func (l *loader) loadTable(tableName string, node ast.Node, tags []string, paren
 	return nil
 }
 
-func (l *loader) loadTableRows(node ast.Node, table *Table, tags []string, parent ParentRowInfo) error {
+func (l *loader) loadTableRows(node ast.Node, table *Table, tags []string, parent parentRowInfo) error {
 	switch n := node.(type) {
 	case *ast.SequenceNode:
 		for _, row := range n.Values {
@@ -146,7 +146,7 @@ func (l *loader) loadTableRows(node ast.Node, table *Table, tags []string, paren
 	return nil
 }
 
-func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent ParentRowInfo) error {
+func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent parentRowInfo) error {
 	switch n := node.(type) {
 	case *ast.MappingNode:
 		err := l.loadTableRowData(n, table, tags, parent)
@@ -159,7 +159,7 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 	return nil
 }
 
-func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table, tags []string, parent ParentRowInfo) error {
+func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table, tags []string, parent parentRowInfo) error {
 	row := Row{
 		InternalID: uuid.New(),
 		Config: RowConfig{
@@ -209,7 +209,7 @@ func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table, tags []st
 	return nil
 }
 
-func (l *loader) loadFieldValue(node ast.Node, parent ParentRowInfo) (any, error) {
+func (l *loader) loadFieldValue(node ast.Node, parent parentRowInfo) (any, error) {
 	switch n := node.(type) {
 	case *ast.TagNode:
 		if strings.HasPrefix(n.Start.Value, "!dbf") {
@@ -219,7 +219,7 @@ func (l *loader) loadFieldValue(node ast.Node, parent ParentRowInfo) (any, error
 				if err != nil {
 					return nil, err
 				}
-				return ParseValue(tvalue, parent)
+				return parseValue(tvalue, parent)
 			default:
 				return nil, fmt.Errorf("unknown value tag: %s", n.Start.Value)
 			}

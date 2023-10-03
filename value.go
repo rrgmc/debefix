@@ -29,21 +29,21 @@ func (v ValueRefID) TableDepends() string {
 type ValueGenerated struct {
 }
 
-type valueInternalID struct {
+type ValueInternalID struct {
 	Table      string
 	InternalID uuid.UUID
 	FieldName  string
 }
 
-func (v valueInternalID) TableDepends() string {
+func (v ValueInternalID) TableDepends() string {
 	return v.Table
 }
 
 func (v ValueRefID) isValue()      {}
 func (v ValueGenerated) isValue()  {}
-func (v valueInternalID) isValue() {}
+func (v ValueInternalID) isValue() {}
 
-func ParseValue(value string, parent ParentRowInfo) (Value, error) {
+func parseValue(value string, parent parentRowInfo) (Value, error) {
 	fields := strings.Split(value, ":")
 	if len(fields) == 0 {
 		return nil, fmt.Errorf("invalid !dbf tag: %s", value)
@@ -62,7 +62,7 @@ func ParseValue(value string, parent ParentRowInfo) (Value, error) {
 		if len(fields) != 2 {
 			return nil, fmt.Errorf("invalid !dbf tag: %s", value)
 		}
-		return &valueInternalID{Table: parent.TableName(), InternalID: parent.InternalID(), FieldName: fields[1]}, nil
+		return &ValueInternalID{Table: parent.TableName(), InternalID: parent.InternalID(), FieldName: fields[1]}, nil
 	case "generated":
 		return &ValueGenerated{}, nil
 	default:
@@ -70,7 +70,7 @@ func ParseValue(value string, parent ParentRowInfo) (Value, error) {
 	}
 }
 
-type ParentRowInfo interface {
+type parentRowInfo interface {
 	HasParent() bool
 	TableName() string
 	InternalID() uuid.UUID
