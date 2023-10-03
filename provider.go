@@ -22,6 +22,7 @@ type FileInfo struct {
 
 type directoryFileProvider struct {
 	rootDir string
+	include func(path string, entry os.DirEntry) bool
 	tagFunc func(dirs []string) []string
 }
 
@@ -32,6 +33,11 @@ func NewDirectoryFileProvider(rootDir string, options ...DirectoryFileProviderOp
 	for _, opt := range options {
 		opt(ret)
 	}
+	if ret.include == nil {
+		ret.include = func(string, os.DirEntry) bool {
+			return true
+		}
+	}
 	if ret.tagFunc == nil {
 		ret.tagFunc = DefaultDirectoryTagFunc
 	}
@@ -39,6 +45,12 @@ func NewDirectoryFileProvider(rootDir string, options ...DirectoryFileProviderOp
 }
 
 type DirectoryFileProviderOption func(*directoryFileProvider)
+
+func WithDirectoryFileProviderIncludeFunc(include func(path string, entry os.DirEntry) bool) DirectoryFileProviderOption {
+	return func(provider *directoryFileProvider) {
+		provider.include = include
+	}
+}
 
 func WithDirectoryTagFunc(tagFunc func(dirs []string) []string) DirectoryFileProviderOption {
 	return func(provider *directoryFileProvider) {
@@ -63,6 +75,10 @@ func (d directoryFileProvider) loadFiles(path string, tags []string, f func(info
 	var dirs []string
 
 	for _, file := range files {
+		if !d.include(path, file) {
+			continue
+		}
+
 		fullPath := filepath.Join(path, file.Name())
 
 		if file.IsDir() {
