@@ -143,6 +143,11 @@ func (d DefaultSQLBuilder) BuildInsertSQL(tableName string, fieldNames []string,
 		for fi := range fieldNames {
 			fieldNames[fi] = d.QuoteField(fieldNames[fi])
 		}
+
+		returnFieldNames = slices.Clone(returnFieldNames)
+		for fi := range returnFieldNames {
+			returnFieldNames[fi] = d.QuoteField(returnFieldNames[fi])
+		}
 	}
 
 	ret := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
@@ -161,7 +166,9 @@ type SQLQueryInterface struct {
 	DB *sql.DB
 }
 
-func (q SQLQueryInterface) Query(query string, args ...any) (map[string]any, error) {
+var _ QueryInterface = (*SQLQueryInterface)(nil)
+
+func (q SQLQueryInterface) Query(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
 	rows, err := q.DB.Query(query, args...)
 	if err != nil {
 		return nil, err
