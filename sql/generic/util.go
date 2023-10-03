@@ -1,5 +1,11 @@
 package generic
 
+import (
+	"fmt"
+
+	"github.com/google/uuid"
+)
+
 type RowInterface interface {
 	Scan(dest ...any) error
 }
@@ -27,4 +33,20 @@ func RowToMap(cols []string, row RowInterface) (map[string]any, error) {
 	}
 
 	return m, nil
+}
+
+type OutputQueryInterface struct {
+}
+
+func (m OutputQueryInterface) Query(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+	fmt.Println(query)
+	fmt.Println(args)
+	fmt.Printf("===\n")
+
+	ret := map[string]any{}
+	for _, fn := range returnFieldNames {
+		ret[fn] = uuid.New()
+	}
+
+	return ret, nil
 }

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	debefix_poc2 "github.com/RangelReale/debefix-poc2"
+	"github.com/RangelReale/debefix-poc2/sql/generic"
 	"github.com/RangelReale/debefix-poc2/sql/postgres"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/google/uuid"
@@ -50,22 +51,6 @@ func resolvePrint(data *debefix_poc2.Data) error {
 	}, debefix_poc2.WithResolveTags([]string{}))
 }
 
-type MockDB struct {
-}
-
-func (m MockDB) Query(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
-	fmt.Println(query)
-	fmt.Println(args)
-	fmt.Printf("===\n")
-
-	ret := map[string]any{}
-	for _, fn := range returnFieldNames {
-		ret[fn] = uuid.New()
-	}
-
-	return ret, nil
-}
-
 func resolveSQL(data *debefix_poc2.Data) error {
-	return postgres.Resolve(&MockDB{}, data)
+	return postgres.Resolve(&generic.OutputQueryInterface{}, data)
 }
