@@ -3,19 +3,19 @@ tags:
     key: "tag_id"
     table_name: "tag"
   rows:
-    - tag_id: 1
+    - tag_id: !dbfexpr "generated"
       name: "Go"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
         id: "go"
-    - tag_id: 2
+    - tag_id: !dbfexpr "generated"
       name: "JavaScript"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
         id: "javascript"
-    - tag_id: 3
+    - tag_id: !dbfexpr "generated"
       name: "C++"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z

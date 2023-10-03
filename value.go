@@ -26,6 +26,9 @@ func (v ValueRefID) TableDepends() string {
 	return v.Table
 }
 
+type ValueGenerated struct {
+}
+
 type valueInternalID struct {
 	Table      string
 	InternalID uuid.UUID
@@ -37,6 +40,7 @@ func (v valueInternalID) TableDepends() string {
 }
 
 func (v ValueRefID) isValue()      {}
+func (v ValueGenerated) isValue()  {}
 func (v valueInternalID) isValue() {}
 
 func ParseValue(value string, parent ParentRowInfo) (Value, error) {
@@ -59,6 +63,8 @@ func ParseValue(value string, parent ParentRowInfo) (Value, error) {
 			return nil, fmt.Errorf("invalid !dbf tag: %s", value)
 		}
 		return &valueInternalID{Table: parent.TableName(), InternalID: parent.InternalID(), FieldName: fields[1]}, nil
+	case "generated":
+		return &ValueGenerated{}, nil
 	default:
 		return nil, fmt.Errorf("unknown !dbf tag type: %s", value)
 	}
