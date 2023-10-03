@@ -1,0 +1,40 @@
+posts:
+  config:
+    key: "post_id"
+    table_name: "post"
+  rows:
+    - post_id: 1
+      title: "Post 1"
+      text: "This is the text of the first post"
+      user_id: !dbfexpr "refid:users:johndoe"
+      created_at: !!timestamp 2023-01-01T12:30:12Z
+      updated_at: !!timestamp 2023-01-01T12:30:12Z
+      _dbfdeps:
+        posts_tags:
+          rows:
+            - post_id: !dbfexpr "parent:post_id"
+              tag_id: !dbfexpr "refid:tags:go"
+      _dbfconfig:
+        id: "post_1"
+        tags: ["initial"]
+    - post_id: 2
+      title: "Post 2"
+      text: "This is the text of the seco d post"
+      user_id: !dbfexpr "refid:users:johndoe"
+      created_at: !!timestamp 2023-01-02T12:30:12Z
+      updated_at: !!timestamp 2023-01-02T12:30:12Z
+      _dbfdeps:
+        posts_tags:
+          rows:
+            - post_id: !dbfexpr "parent:post_id"
+              tag_id: !dbfexpr "refid:tags:javascript"
+        comments:
+          rows:
+            - comment_id: 3
+              post_id: !dbfexpr "parent:post_id"
+              user_id: !dbfexpr "refid:users:janedoe"
+              text: "I liked this post!"
+posts2:
+  config:
+    key: "post2_id"
+    table_name: "post2"

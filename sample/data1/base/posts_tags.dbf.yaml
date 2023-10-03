@@ -1,0 +1,3 @@
+posts_tags:
+  config:
+    table_name: "post_tag"

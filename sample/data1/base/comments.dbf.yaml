@@ -1,0 +1,18 @@
+comments:
+  config:
+    depends:
+      - posts
+      - users
+  rows:
+    - comment_id: 1
+      post_id: 1
+      user_id: !dbfexpr "refid:users:janedoe"
+      text: "Good post!"
+      created_at: !!timestamp 2023-01-01T12:31:12Z
+      updated_at: !!timestamp 2023-01-01T12:31:12Z
+    - comment_id: 2
+      post_id: 1
+      user_id: !dbfexpr "refid:users:johndoe"
+      text: "Thanks!"
+      created_at: !!timestamp 2023-01-01T12:35:12Z
+      updated_at: !!timestamp 2023-01-01T12:35:12Z

@@ -1,0 +1,19 @@
+users:
+  config:
+    key: "user_id"
+    table_name: "user"
+  rows:
+    - user_id: 1
+      name: "John Doe"
+      email: "john@example.com"
+      created_at: 2023-01-01T12:30:12Z
+      updated_at: 2023-01-01T12:30:12Z
+      _dbfconfig:
+        id: "johndoe"
+    - user_id: 2
+      name: "Jane Doe"
+      email: "jane@example.com"
+      created_at: 2023-01-04T12:30:12Z
+      updated_at: 2023-01-04T12:30:12Z
+      _dbfconfig:
+        id: "janedoe"
