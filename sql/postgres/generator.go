@@ -26,6 +26,9 @@ func (p *SQLPlaceholderProvider) Next() (placeholder string, argName string) {
 
 func SQLBuilder() generic.SQLBuilder {
 	return generic.DefaultSQLBuilder{
+		PlaceholderProviderFactory: func() generic.SQLPlaceholderProvider {
+			return &SQLPlaceholderProvider{}
+		},
 		QuoteTable: func(t string) string {
 			return `"` + t + `"`
 		},
@@ -36,7 +39,5 @@ func SQLBuilder() generic.SQLBuilder {
 }
 
 func SQLResolverDBCallback(db generic.QueryInterface) generic.ResolverDBCallback {
-	return generic.SQLResolverDBCallback(db, func() generic.SQLPlaceholderProvider {
-		return &SQLPlaceholderProvider{}
-	}, SQLBuilder())
+	return generic.SQLResolverDBCallback(db, SQLBuilder())
 }

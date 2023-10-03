@@ -41,23 +41,22 @@ func ResolverFunc(callback ResolverDBCallback) func(ctx debefix_poc2.ResolveCont
 	}
 }
 
-type SQLPlaceholderProviderFactory func() SQLPlaceholderProvider
-
 type SQLPlaceholderProvider interface {
 	Next() (placeholder string, argName string)
 }
 
 type SQLBuilder interface {
+	CreatePlaceholderProvider() SQLPlaceholderProvider
 	BuildInsertSQL(tableName string, fieldNames []string, fieldPlaceholders []string, returnFieldNames []string) string
 }
 
-func SQLResolverDBCallback(db QueryInterface, placeholderProviderFactory SQLPlaceholderProviderFactory, sqlBuilder SQLBuilder) ResolverDBCallback {
+func SQLResolverDBCallback(db QueryInterface, sqlBuilder SQLBuilder) ResolverDBCallback {
 	return func(tableName string, fields map[string]any, returnFieldNames []string) (map[string]any, error) {
 		var fieldNames []string
 		var fieldPlaceholders []string
 		var args []any
 
-		placeholderProvider := placeholderProviderFactory()
+		placeholderProvider := sqlBuilder.CreatePlaceholderProvider()
 
 		for fn, fv := range fields {
 			fieldNames = append(fieldNames, fn)
@@ -114,9 +113,24 @@ func RowToMap(cols []string, row RowInterface) (map[string]any, error) {
 	return m, nil
 }
 
+type defaultSQLPlaceholderProvider struct {
+}
+
+func (d defaultSQLPlaceholderProvider) Next() (placeholder string, argName string) {
+	return "?", ""
+}
+
 type DefaultSQLBuilder struct {
-	QuoteTable func(t string) string
-	QuoteField func(f string) string
+	PlaceholderProviderFactory func() SQLPlaceholderProvider
+	QuoteTable                 func(t string) string
+	QuoteField                 func(f string) string
+}
+
+func (d DefaultSQLBuilder) CreatePlaceholderProvider() SQLPlaceholderProvider {
+	if d.PlaceholderProviderFactory == nil {
+		return &defaultSQLPlaceholderProvider{}
+	}
+	return d.PlaceholderProviderFactory()
 }
 
 func (d DefaultSQLBuilder) BuildInsertSQL(tableName string, fieldNames []string, fieldPlaceholders []string, returnFieldNames []string) string {
