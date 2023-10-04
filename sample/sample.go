@@ -28,7 +28,7 @@ func main() {
 		panic(err)
 	}
 
-	data, err := debefix_poc2.LoadDirectory(filepath.Join(curDir, "..", "data1"),
+	data, err := debefix_poc2.LoadDirectory(filepath.Join(curDir, "data"),
 		debefix_poc2.WithDirectoryAsTag())
 	if err != nil {
 		panic(err)
