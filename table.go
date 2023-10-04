@@ -11,7 +11,7 @@ type Data struct {
 }
 
 type Table struct {
-	Name   string
+	ID     string
 	Config TableConfig
 	Rows   Rows
 }

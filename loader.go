@@ -62,11 +62,11 @@ func (l *loader) loadFile(file io.Reader, tags []string) error {
 func (l *loader) loadTables(node ast.Node, tags []string, parent parentRowInfo) error {
 	switch n := node.(type) {
 	case *ast.MappingValueNode:
-		tableName, err := getStringNode(n.Key)
+		tableID, err := getStringNode(n.Key)
 		if err != nil {
 			return err
 		}
-		err = l.loadTable(tableName, n.Value, tags, parent)
+		err = l.loadTable(tableID, n.Value, tags, parent)
 		if err != nil {
 			return err
 		}
@@ -84,17 +84,17 @@ func (l *loader) loadTables(node ast.Node, tags []string, parent parentRowInfo) 
 	return nil
 }
 
-func (l *loader) loadTable(tableName string, node ast.Node, tags []string, parent parentRowInfo) error {
+func (l *loader) loadTable(tableID string, node ast.Node, tags []string, parent parentRowInfo) error {
 	if l.data.Tables == nil {
 		l.data.Tables = map[string]*Table{}
 	}
 
-	table, ok := l.data.Tables[tableName]
+	table, ok := l.data.Tables[tableID]
 	if !ok {
 		table = &Table{
-			Name: tableName,
+			ID: tableID,
 		}
-		l.data.Tables[tableName] = table
+		l.data.Tables[tableID] = table
 	}
 
 	var values []*ast.MappingValueNode
@@ -110,26 +110,26 @@ func (l *loader) loadTable(tableName string, node ast.Node, tags []string, paren
 	for _, value := range values {
 		key, err := getStringNode(value.Key)
 		if err != nil {
-			return fmt.Errorf("error getting table info for '%s': %w", tableName, err)
+			return fmt.Errorf("error getting table info for '%s': %w", tableID, err)
 		}
 		switch key {
 		case "config":
 			var cfg TableConfig
 			err := yaml.NodeToValue(value.Value, &cfg)
 			if err != nil {
-				return fmt.Errorf("error reading table config for '%s': %w", tableName, err)
+				return fmt.Errorf("error reading table config for '%s': %w", tableID, err)
 			}
 			err = table.Config.Merge(&cfg)
 			if err != nil {
-				return fmt.Errorf("error merge table config for '%s': %w", tableName, err)
+				return fmt.Errorf("error merge table config for '%s': %w", tableID, err)
 			}
 		case "rows":
 			err := l.loadTableRows(value.Value, table, tags, parent)
 			if err != nil {
-				return fmt.Errorf("error loading table rows for '%s': %w", tableName, err)
+				return fmt.Errorf("error loading table rows for '%s': %w", tableID, err)
 			}
 		default:
-			return fmt.Errorf("invalid table row data: '%s' at '%s' for '%s'", key, value.Path, tableName)
+			return fmt.Errorf("invalid table row data: '%s' at '%s' for '%s'", key, value.Path, tableID)
 		}
 	}
 	return nil
@@ -185,7 +185,7 @@ func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table, tags []st
 				}
 			case "_dbfdeps":
 				err := l.loadTables(field.Value, tags, &defaultParentRowInfo{
-					tableName:  table.Name,
+					tableID:    table.ID,
 					internalID: row.InternalID,
 				})
 				if err != nil {

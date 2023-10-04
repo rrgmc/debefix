@@ -62,7 +62,7 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 		if len(fields) != 2 {
 			return nil, fmt.Errorf("invalid !dbf tag value: %s", value)
 		}
-		return &ValueInternalID{Table: parent.TableName(), InternalID: parent.InternalID(), FieldName: fields[1]}, nil
+		return &ValueInternalID{Table: parent.TableID(), InternalID: parent.InternalID(), FieldName: fields[1]}, nil
 	case "generated":
 		return &ValueGenerated{}, nil
 	default:
@@ -72,7 +72,7 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 
 type parentRowInfo interface {
 	HasParent() bool
-	TableName() string
+	TableID() string
 	InternalID() uuid.UUID
 }
 
@@ -83,7 +83,7 @@ func (n noParentRowInfo) HasParent() bool {
 	return false
 }
 
-func (n noParentRowInfo) TableName() string {
+func (n noParentRowInfo) TableID() string {
 	return ""
 }
 
@@ -92,7 +92,7 @@ func (n noParentRowInfo) InternalID() uuid.UUID {
 }
 
 type defaultParentRowInfo struct {
-	tableName  string
+	tableID    string
 	internalID uuid.UUID
 }
 
@@ -100,8 +100,8 @@ func (n defaultParentRowInfo) HasParent() bool {
 	return true
 }
 
-func (n defaultParentRowInfo) TableName() string {
-	return n.tableName
+func (n defaultParentRowInfo) TableID() string {
+	return n.tableID
 }
 
 func (n defaultParentRowInfo) InternalID() uuid.UUID {

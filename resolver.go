@@ -8,8 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type ResolveCallback func(ctx ResolveContext, fields map[string]any) error
-
 func Resolve(data *Data, f ResolveCallback, options ...ResolveOption) error {
 	r := &resolver{data: data}
 	for _, opt := range options {
@@ -21,6 +19,8 @@ func Resolve(data *Data, f ResolveCallback, options ...ResolveOption) error {
 func ResolveCheck(data *Data, options ...ResolveOption) error {
 	return Resolve(data, resolveCheckCallback, options...)
 }
+
+type ResolveCallback func(ctx ResolveContext, fields map[string]any) error
 
 type ResolveOption func(*resolver)
 
@@ -51,16 +51,16 @@ func (r *resolver) resolve(f ResolveCallback) error {
 	// build table dependency graph
 	depg := depgraph.New()
 
-	for tableName, table := range r.data.Tables {
-		err := depg.DependOn(tableName, "") // add blank so tables without dependencies are accounted for
+	for tableID, table := range r.data.Tables {
+		err := depg.DependOn(tableID, "") // add blank so tables without dependencies are accounted for
 		if err != nil {
 			return fmt.Errorf("error build table dependency graph: %w", err)
 		}
 		for _, dep := range table.Config.Depends {
-			if tableName == dep {
+			if tableID == dep {
 				continue
 			}
-			err = depg.DependOn(tableName, dep)
+			err = depg.DependOn(tableID, dep)
 			if err != nil {
 				return fmt.Errorf("error build table dependency graph: %w", err)
 			}
@@ -77,13 +77,11 @@ func (r *resolver) resolve(f ResolveCallback) error {
 		}
 	}
 
-	for _, t := range tableOrder {
-		// fmt.Println(t)
-
-		table := r.data.Tables[t]
+	for _, tableID := range tableOrder {
+		table := r.data.Tables[tableID]
 		tableName := table.Config.TableName
 		if tableName == "" {
-			tableName = t
+			tableName = tableID
 		}
 
 		for _, row := range table.Rows {
@@ -97,14 +95,14 @@ func (r *resolver) resolve(f ResolveCallback) error {
 					var err error
 					fieldValue, err = r.resolveValue(fvalue)
 					if err != nil {
-						return fmt.Errorf("error resolving Value for table %s: %w", table.Name, err)
+						return fmt.Errorf("error resolving Value for table %s: %w", table.ID, err)
 					}
 				}
 				callFields[fieldName] = fieldValue
 			}
 
 			ctx := &defaultResolveContext{
-				tableID:   table.Name,
+				tableID:   table.ID,
 				tableName: tableName,
 			}
 
@@ -120,7 +118,7 @@ func (r *resolver) resolve(f ResolveCallback) error {
 					if rv, ok := ctx.resolved[fieldName]; ok {
 						saveFields[fieldName] = rv
 					} else {
-						return fmt.Errorf("field %s for table %s was not resolved", fieldName, table.Name)
+						return fmt.Errorf("field %s for table %s was not resolved", fieldName, table.ID)
 					}
 				} else {
 					saveFields[fieldName] = fieldValue
@@ -130,10 +128,10 @@ func (r *resolver) resolve(f ResolveCallback) error {
 			if r.tableData == nil {
 				r.tableData = map[string]*resolverTable{}
 			}
-			if _, ok := r.tableData[table.Name]; !ok {
-				r.tableData[table.Name] = &resolverTable{}
+			if _, ok := r.tableData[table.ID]; !ok {
+				r.tableData[table.ID] = &resolverTable{}
 			}
-			r.tableData[table.Name].rows = append(r.tableData[table.Name].rows, resolverRow{
+			r.tableData[table.ID].rows = append(r.tableData[table.ID].rows, resolverRow{
 				fields:     saveFields,
 				id:         row.Config.ID,
 				internalID: row.InternalID,
