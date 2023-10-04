@@ -12,6 +12,7 @@ import (
 )
 
 // Load loads the files from the fileProvider and returns the list of loaded tables.
+// Rows dependencies are not resolved, use ResolveCheck to check for them.
 func Load(fileProvider FileProvider) (*Data, error) {
 	loader := &loader{
 		fileProvider: fileProvider,

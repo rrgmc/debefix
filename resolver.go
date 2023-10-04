@@ -1,6 +1,7 @@
 package debefix_poc2
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// Resolve calls a callback for each table row, taking table dependency in account.
 func Resolve(data *Data, f ResolveCallback, options ...ResolveOption) error {
 	r := &resolver{data: data}
 	for _, opt := range options {
@@ -16,6 +18,7 @@ func Resolve(data *Data, f ResolveCallback, options ...ResolveOption) error {
 	return r.resolve(f)
 }
 
+// ResolveCheck checks if all dependencies between rows are resolvable.
 func ResolveCheck(data *Data, options ...ResolveOption) error {
 	return Resolve(data, resolveCheckCallback, options...)
 }
@@ -24,6 +27,8 @@ type ResolveCallback func(ctx ResolveContext, fields map[string]any) error
 
 type ResolveOption func(*resolver)
 
+// WithResolveTags set Resolve to only resolve rows that contains at least one of these tags. If nil or 0 length,
+// no row filtering is performed.
 func WithResolveTags(tags []string) ResolveOption {
 	return func(r *resolver) {
 		r.tags = tags
@@ -34,6 +39,7 @@ type resolver struct {
 	data *Data
 	tags []string
 
+	// tableData stores the already-parsed row's data.
 	tableData map[string]*resolverTable
 }
 
@@ -52,7 +58,7 @@ func (r *resolver) resolve(f ResolveCallback) error {
 	depg := depgraph.New()
 
 	for tableID, table := range r.data.Tables {
-		err := depg.DependOn(tableID, "") // add blank so tables without dependencies are accounted for
+		err := depg.DependOn(tableID, "") // add blank so tables without dependencies are also returned
 		if err != nil {
 			return fmt.Errorf("error build table dependency graph: %w", err)
 		}
@@ -67,17 +73,17 @@ func (r *resolver) resolve(f ResolveCallback) error {
 		}
 	}
 
-	var tableOrder []string
+	var tableIDOrder []string
 	for _, layer := range depg.TopoSortedLayers() {
 		for _, layeritem := range layer {
 			if layeritem == "" {
 				continue
 			}
-			tableOrder = append(tableOrder, layeritem)
+			tableIDOrder = append(tableIDOrder, layeritem)
 		}
 	}
 
-	for _, tableID := range tableOrder {
+	for _, tableID := range tableIDOrder {
 		table := r.data.Tables[tableID]
 		tableName := table.Config.TableName
 		if tableName == "" {
@@ -89,8 +95,10 @@ func (r *resolver) resolve(f ResolveCallback) error {
 				continue
 			}
 
+			// build the fields to send to the callback
 			callFields := map[string]any{}
 			for fieldName, fieldValue := range row.Fields {
+				// Value fields must be resolved by a ResolveValue.
 				if fvalue, ok := fieldValue.(Value); ok {
 					var err error
 					fieldValue, err = r.resolveValue(fvalue)
@@ -111,9 +119,11 @@ func (r *resolver) resolve(f ResolveCallback) error {
 				return err
 			}
 
+			// build the row to save in memory
 			saveFields := map[string]any{}
 
 			for fieldName, fieldValue := range callFields {
+				// check if all ResolveValue fields were resolved.
 				if _, ok := fieldValue.(ResolveValue); ok {
 					if rv, ok := ctx.resolved[fieldName]; ok {
 						saveFields[fieldName] = rv
@@ -125,6 +135,7 @@ func (r *resolver) resolve(f ResolveCallback) error {
 				}
 			}
 
+			// store table row in memory
 			if r.tableData == nil {
 				r.tableData = map[string]*resolverTable{}
 			}
@@ -142,40 +153,41 @@ func (r *resolver) resolve(f ResolveCallback) error {
 	return nil
 }
 
+// resolveValue resolves Value fields or returns a ResolveValue instance to be resolved by the callback.
 func (r *resolver) resolveValue(value Value) (any, error) {
 	switch fv := value.(type) {
 	case *ValueGenerated:
 		return &ResolveGenerate{}, nil
 	case *ValueRefID:
-		vdb, ok := r.tableData[fv.Table]
-		if !ok {
-			return nil, fmt.Errorf("could not find refid table %s (refid %s)", fv.Table, fv.ID)
-		}
-		for _, vrow := range vdb.rows {
-			if vrow.id == fv.ID {
-				if vrowfield, ok := vrow.fields[fv.FieldName]; ok {
-					return vrowfield, nil
+		vrowfield, err := r.walkTableData(fv.Table, func(row resolverRow) (bool, any, error) {
+			if row.id == fv.ID {
+				if rowfield, ok := row.fields[fv.FieldName]; ok {
+					return true, rowfield, nil
 				} else {
-					return nil, fmt.Errorf("could not find field %s in refid table %s", fv.FieldName, fv.Table)
+					return false, nil, fmt.Errorf("could not find field %s in refid table %s", fv.FieldName, fv.Table)
 				}
 			}
+			return false, nil, nil
+		})
+		if err != nil {
+			return nil, fmt.Errorf("could not find refid %s in table %s: %w", fv.ID, fv.Table, err)
 		}
-		return nil, fmt.Errorf("could not find refid %s in table %s", fv.ID, fv.Table)
+		return vrowfield, nil
 	case *ValueInternalID:
-		vdb, ok := r.tableData[fv.Table]
-		if !ok {
-			return nil, fmt.Errorf("could not find internalid table %s (internalid %s)", fv.Table, fv.InternalID)
-		}
-		for _, vrow := range vdb.rows {
-			if vrow.internalID == fv.InternalID {
-				if vrowfield, ok := vrow.fields[fv.FieldName]; ok {
-					return vrowfield, nil
+		vrowfield, err := r.walkTableData(fv.Table, func(row resolverRow) (bool, any, error) {
+			if row.internalID == fv.InternalID {
+				if rowfield, ok := row.fields[fv.FieldName]; ok {
+					return true, rowfield, nil
 				} else {
-					return nil, fmt.Errorf("could not find field %s in internalid table %s", fv.FieldName, fv.Table)
+					return false, nil, fmt.Errorf("could not find field %s in internalid table %s", fv.FieldName, fv.Table)
 				}
 			}
+			return false, nil, nil
+		})
+		if err != nil {
+			return nil, fmt.Errorf("could not find internalid %s in table %s: %w", fv.InternalID, fv.Table, err)
 		}
-		return nil, fmt.Errorf("could not find internalid %s in table %s", fv.InternalID, fv.Table)
+		return vrowfield, nil
 	default:
 		return nil, fmt.Errorf("unknown Value field")
 	}
@@ -200,4 +212,22 @@ func resolveCheckCallback(ctx ResolveContext, fields map[string]any) error {
 		}
 	}
 	return nil
+}
+
+func (r *resolver) walkTableData(tableID string, f func(row resolverRow) (bool, any, error)) (any, error) {
+	vdb, ok := r.tableData[tableID]
+	if !ok {
+		return nil, fmt.Errorf("could not find table %s", tableID)
+	}
+	for _, vrow := range vdb.rows {
+		ok, v, err := f(vrow)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			return v, nil
+		}
+	}
+
+	return errors.New("row not found in data"), nil
 }
