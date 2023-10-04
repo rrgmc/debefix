@@ -3,7 +3,7 @@ package sql
 import (
 	"database/sql"
 
-	"github.com/RangelReale/debefix-poc2/db"
+	"github.com/RangelReale/debefix/db"
 )
 
 // ResolverDBCallback is a db.ResolverDBCallback to generate SQL-based database records.

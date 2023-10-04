@@ -1,9 +1,9 @@
 package postgres
 
 import (
-	debefix_poc2 "github.com/RangelReale/debefix-poc2"
-	"github.com/RangelReale/debefix-poc2/db"
-	"github.com/RangelReale/debefix-poc2/db/sql"
+	debefix_poc2 "github.com/RangelReale/debefix"
+	"github.com/RangelReale/debefix/db"
+	"github.com/RangelReale/debefix/db/sql"
 )
 
 // Resolve runs SQL INSERT queries on db.

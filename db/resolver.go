@@ -1,7 +1,7 @@
 package db
 
 import (
-	debefix_poc2 "github.com/RangelReale/debefix-poc2"
+	debefix_poc2 "github.com/RangelReale/debefix"
 )
 
 // ResolverFunc is a debefix_poc2.ResolveCallback helper to generate database records.

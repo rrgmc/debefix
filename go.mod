@@ -1,4 +1,4 @@
-module github.com/RangelReale/debefix-poc2
+module github.com/RangelReale/debefix
 
 go 1.21.1
 

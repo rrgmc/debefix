@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/RangelReale/debefix-poc2/internal/external/depgraph"
+	"github.com/RangelReale/debefix/internal/external/depgraph"
 	"github.com/google/uuid"
 )
 

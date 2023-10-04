@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"strings"
 
-	debefix_poc2 "github.com/RangelReale/debefix-poc2"
-	"github.com/RangelReale/debefix-poc2/db/sql"
-	"github.com/RangelReale/debefix-poc2/db/sql/postgres"
+	debefix_poc2 "github.com/RangelReale/debefix"
+	"github.com/RangelReale/debefix/db/sql"
+	"github.com/RangelReale/debefix/db/sql/postgres"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/google/uuid"
 )

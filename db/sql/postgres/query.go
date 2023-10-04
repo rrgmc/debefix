@@ -3,7 +3,7 @@ package postgres
 import (
 	"fmt"
 
-	"github.com/RangelReale/debefix-poc2/db/sql"
+	"github.com/RangelReale/debefix/db/sql"
 )
 
 // PlaceholderProvider generates postgres-compatible placeholders ($1, $2).
