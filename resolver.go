@@ -20,7 +20,7 @@ func Resolve(data *Data, f ResolveCallback, options ...ResolveOption) error {
 
 // ResolveCheck checks if all dependencies between rows are resolvable.
 func ResolveCheck(data *Data, options ...ResolveOption) error {
-	return Resolve(data, resolveCheckCallback, options...)
+	return Resolve(data, ResolveCheckCallback, options...)
 }
 
 type ResolveCallback func(ctx ResolveContext, fields map[string]any) error
@@ -84,7 +84,10 @@ func (r *resolver) resolve(f ResolveCallback) error {
 	}
 
 	for _, tableID := range tableIDOrder {
-		table := r.data.Tables[tableID]
+		table, ok := r.data.Tables[tableID]
+		if !ok {
+			return fmt.Errorf("tableID not found: %s", tableID)
+		}
 		tableName := table.Config.TableName
 		if tableName == "" {
 			tableName = tableID
@@ -222,8 +225,8 @@ func (r *resolver) walkTableData(tableID string, f func(row resolverRow) (bool, 
 	return errors.New("row not found in data"), nil
 }
 
-// resolveCheckCallback is the callback for the ResolveCheck function.
-func resolveCheckCallback(ctx ResolveContext, fields map[string]any) error {
+// ResolveCheckCallback is the callback for the ResolveCheck function.
+func ResolveCheckCallback(ctx ResolveContext, fields map[string]any) error {
 	for fn, fv := range fields {
 		if fresolve, ok := fv.(ResolveValue); ok {
 			switch fresolve.(type) {
