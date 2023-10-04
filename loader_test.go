@@ -200,3 +200,82 @@ post_tags:
 
 	require.Equal(t, []string{"tags"}, postTagsTable.Config.Depends)
 }
+
+func TestLoadFileOrder(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"05-users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`users:
+  rows:
+    - user_id: 1
+      name: "John"
+`),
+		},
+		"04-users/10-users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`users:
+  rows:
+    - user_id: 10
+      name: "Mary"
+`),
+		},
+		"03-users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`users:
+  rows:
+    - user_id: 5
+      name: "Jane"
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	require.NoError(t, err)
+
+	usersTable, ok := data.Tables["users"]
+	require.True(t, ok, "users table not found")
+
+	require.Len(t, usersTable.Rows, 3)
+
+	require.Equal(t, map[string]any{
+		"user_id": uint64(5),
+		"name":    "Jane",
+	}, usersTable.Rows[0].Fields)
+
+	require.Equal(t, map[string]any{
+		"user_id": uint64(1),
+		"name":    "John",
+	}, usersTable.Rows[1].Fields)
+
+	require.Equal(t, map[string]any{
+		"user_id": uint64(10),
+		"name":    "Mary",
+	}, usersTable.Rows[2].Fields)
+}
+
+func TestLoadTags(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"base/users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`users:
+  rows:
+    - user_id: 1
+      name: "John Doe"
+      _dbfconfig:
+        tags: ["first", "all"]
+    - user_id: 2
+      name: "Jane Doe"
+      _dbfconfig:
+        tags: ["second"]
+`),
+		},
+	}, WithDirectoryAsTag())
+
+	data, err := Load(provider)
+	require.NoError(t, err)
+
+	usersTable, ok := data.Tables["users"]
+	require.True(t, ok, "users table not found")
+
+	require.Len(t, usersTable.Rows, 2)
+	require.Len(t, usersTable.Rows[0].Config.Tags, 3)
+	require.Len(t, usersTable.Rows[1].Config.Tags, 2)
+	require.Subset(t, usersTable.Rows[0].Config.Tags, []string{"base", "first", "all"})
+	require.Subset(t, usersTable.Rows[1].Config.Tags, []string{"base", "second"})
+}
