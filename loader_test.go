@@ -279,3 +279,59 @@ func TestLoadTags(t *testing.T) {
 	require.Subset(t, usersTable.Rows[0].Config.Tags, []string{"base", "first", "all"})
 	require.Subset(t, usersTable.Rows[1].Config.Tags, []string{"base", "second"})
 }
+
+func TestLoadInvalid(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`users:
+  invalid:
+    data: 2
+`),
+		},
+	})
+
+	_, err := Load(provider)
+	require.Error(t, err)
+}
+
+func TestLoadInvalidType(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`users:
+  rows:
+    data: 2
+`),
+		},
+	})
+
+	_, err := Load(provider)
+	require.Error(t, err)
+}
+
+func TestLoadInvalidKeyType(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`users:
+  rows:
+    - 5: 10
+`),
+		},
+	})
+
+	_, err := Load(provider)
+	require.Error(t, err)
+}
+
+func TestLoadRowSingleField(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`users:
+  rows:
+    - user_id: 10
+`),
+		},
+	})
+
+	_, err := Load(provider)
+	require.NoError(t, err)
+}

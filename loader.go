@@ -147,30 +147,27 @@ func (l *loader) loadTableRows(node ast.Node, table *Table, tags []string, paren
 			}
 		}
 	default:
-		return fmt.Errorf("%s: invalid table rows node '%s'", n.GetPath(), n.Type().String())
+		return fmt.Errorf("%s: invalid table rows node '%s' (expected Sequence)", n.GetPath(), n.Type().String())
 	}
 	return nil
 }
 
 func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent parentRowInfo) error {
+	var values []*ast.MappingValueNode
 	switch n := node.(type) {
 	case *ast.MappingNode:
-		err := l.loadTableRowData(n, table, tags, parent)
-		if err != nil {
-			return err
-		}
+		values = n.Values
+	case *ast.MappingValueNode:
+		values = []*ast.MappingValueNode{n}
 	default:
-		return fmt.Errorf("%s: invalid table row node '%s'", n.GetPath(), n.Type().String())
+		return fmt.Errorf("%s: unknown table row node type '%s' (expected Mapping)", node.GetPath(), node.Type().String())
 	}
-	return nil
-}
 
-func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table, tags []string, parent parentRowInfo) error {
 	row := Row{
 		InternalID: uuid.New(),
 		Fields:     map[string]any{},
 	}
-	for _, field := range node.Values {
+	for _, field := range values {
 		key, err := getStringNode(field.Key)
 		if err != nil {
 			return err
