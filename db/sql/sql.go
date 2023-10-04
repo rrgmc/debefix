@@ -6,8 +6,10 @@ import (
 	"github.com/RangelReale/debefix-poc2/db"
 )
 
+// ResolverDBCallback is a db.ResolverDBCallback to generate SQL-based database records.
 func ResolverDBCallback(db QueryInterface, sqlBuilder QueryBuilder) db.ResolverDBCallback {
 	return func(tableName string, fields map[string]any, returnFieldNames []string) (map[string]any, error) {
+		// build INSERT query
 		var fieldNames []string
 		var fieldPlaceholders []string
 		var args []any
@@ -36,14 +38,19 @@ func ResolverDBCallback(db QueryInterface, sqlBuilder QueryBuilder) db.ResolverD
 	}
 }
 
+// QueryInterface abstracts executing a query on a database. The return map should contain values for all fields
+// specified in returnFieldNames.
 type QueryInterface interface {
 	Query(query string, returnFieldNames []string, args ...any) (map[string]any, error)
 }
 
+// PlaceholderProvider generates database-specific placeholders, like ? for MySQL, $1 for postgres, or :param1 for MSSQL.
+// If the database uses named parameters, its name should be returned in argName, otherwise this should be blank.
 type PlaceholderProvider interface {
 	Next() (placeholder string, argName string)
 }
 
+// QueryBuilder is an abstraction for building INSERT queries.
 type QueryBuilder interface {
 	CreatePlaceholderProvider() PlaceholderProvider
 	BuildInsertSQL(tableName string, fieldNames []string, fieldPlaceholders []string, returnFieldNames []string) string

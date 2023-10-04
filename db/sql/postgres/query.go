@@ -3,27 +3,26 @@ package postgres
 import (
 	"fmt"
 
-	"github.com/RangelReale/debefix-poc2/db"
 	"github.com/RangelReale/debefix-poc2/db/sql"
 )
 
-func SQLResolverDBCallback(db sql.QueryInterface) db.ResolverDBCallback {
-	return sql.ResolverDBCallback(db, SQLBuilder())
-}
-
-type SQLPlaceholderProvider struct {
+// PlaceholderProvider generates postgres-compatible placeholders ($1, $2).
+type PlaceholderProvider struct {
 	c int
 }
 
-func (p *SQLPlaceholderProvider) Next() (placeholder string, argName string) {
+var _ sql.PlaceholderProvider = (*PlaceholderProvider)(nil)
+
+func (p *PlaceholderProvider) Next() (placeholder string, argName string) {
 	p.c++
 	return fmt.Sprintf("$%d", p.c), ""
 }
 
+// SQLBuilder returns a postgres-compatible sql.QueryBuilder
 func SQLBuilder() sql.QueryBuilder {
 	return sql.DefaultSQLBuilder{
 		PlaceholderProviderFactory: func() sql.PlaceholderProvider {
-			return &SQLPlaceholderProvider{}
+			return &PlaceholderProvider{}
 		},
 		QuoteTable: func(t string) string {
 			return `"` + t + `"`

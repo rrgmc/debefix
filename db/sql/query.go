@@ -8,13 +8,18 @@ import (
 	"strings"
 )
 
-type SQLQueryInterface struct {
+// sqlQueryInterface is a QueryInterface wrapper for *sql.DB.
+type sqlQueryInterface struct {
 	DB *sql.DB
 }
 
-var _ QueryInterface = (*SQLQueryInterface)(nil)
+var _ QueryInterface = (*sqlQueryInterface)(nil)
 
-func (q SQLQueryInterface) Query(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+func NewSQLQueryInterface(db *sql.DB) QueryInterface {
+	return &sqlQueryInterface{db}
+}
+
+func (q sqlQueryInterface) Query(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
 	rows, err := q.DB.Query(query, args...)
 	if err != nil {
 		return nil, err
@@ -30,7 +35,7 @@ func (q SQLQueryInterface) Query(query string, returnFieldNames []string, args .
 		return nil, err
 	}
 
-	ret, err := RowToMap(cols, rows)
+	ret, err := rowToMap(cols, rows)
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +47,7 @@ func (q SQLQueryInterface) Query(query string, returnFieldNames []string, args .
 	return ret, nil
 }
 
+// defaultSQLPlaceholderProvider returns placeholders using ?
 type defaultSQLPlaceholderProvider struct {
 }
 
@@ -49,10 +55,12 @@ func (d defaultSQLPlaceholderProvider) Next() (placeholder string, argName strin
 	return "?", ""
 }
 
+// DefaultSQLBuilder is the default customizable INSERT SQL builder, using placeholders for values.
+// It uses "RETURNING" to get the returnFieldNames.
 type DefaultSQLBuilder struct {
-	PlaceholderProviderFactory func() PlaceholderProvider
-	QuoteTable                 func(t string) string
-	QuoteField                 func(f string) string
+	PlaceholderProviderFactory func() PlaceholderProvider // uses defaultSQLPlaceholderProvider if not set
+	QuoteTable                 func(t string) string      // don't quote if not set
+	QuoteField                 func(f string) string      // don't quote if not set
 }
 
 func (d DefaultSQLBuilder) CreatePlaceholderProvider() PlaceholderProvider {
@@ -63,10 +71,12 @@ func (d DefaultSQLBuilder) CreatePlaceholderProvider() PlaceholderProvider {
 }
 
 func (d DefaultSQLBuilder) BuildInsertSQL(tableName string, fieldNames []string, fieldPlaceholders []string, returnFieldNames []string) string {
+	// quote table
 	if d.QuoteTable != nil {
 		tableName = d.QuoteTable(tableName)
 	}
 
+	// quote fields
 	if d.QuoteField != nil {
 		fieldNames = slices.Clone(fieldNames)
 		for fi := range fieldNames {
@@ -88,5 +98,6 @@ func (d DefaultSQLBuilder) BuildInsertSQL(tableName string, fieldNames []string,
 	if len(returnFieldNames) > 0 {
 		ret += fmt.Sprintf(" RETURNING %s", strings.Join(returnFieldNames, ","))
 	}
+
 	return ret
 }

@@ -4,8 +4,7 @@ import (
 	debefix_poc2 "github.com/RangelReale/debefix-poc2"
 )
 
-type ResolverDBCallback func(tableName string, fields map[string]any, returnFieldNames []string) (map[string]any, error)
-
+// ResolverFunc is a debefix_poc2.ResolveCallback helper to generate database records.
 func ResolverFunc(callback ResolverDBCallback) debefix_poc2.ResolveCallback {
 	return func(ctx debefix_poc2.ResolveContext, fields map[string]any) error {
 		insertFields := map[string]any{}
@@ -34,3 +33,9 @@ func ResolverFunc(callback ResolverDBCallback) debefix_poc2.ResolveCallback {
 		return nil
 	}
 }
+
+// ResolverDBCallback will be called for each table row to be inserted.
+// fields are the fields to be inserted.
+// returnedFieldNames are the fields whose values are expected to be returned in the return map.
+type ResolverDBCallback func(tableName string, fields map[string]any,
+	returnFieldNames []string) (returnValues map[string]any, err error)

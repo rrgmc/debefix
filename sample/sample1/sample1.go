@@ -80,5 +80,5 @@ func resolvePrint(data *debefix_poc2.Data, resolveTags []string) error {
 }
 
 func resolveSQL(data *debefix_poc2.Data, resolveTags []string) error {
-	return postgres.Resolve(&sql.OutputQueryInterface{}, data, debefix_poc2.WithResolveTags(resolveTags))
+	return postgres.Resolve(&sql.DebugQueryInterface{}, data, debefix_poc2.WithResolveTags(resolveTags))
 }

@@ -1,16 +1,19 @@
 package sql
 
 import (
+	"errors"
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/google/uuid"
 )
 
-type RowInterface interface {
+type rowInterface interface {
 	Scan(dest ...any) error
 }
 
-func RowToMap(cols []string, row RowInterface) (map[string]any, error) {
+func rowToMap(cols []string, row rowInterface) (map[string]any, error) {
 	// Create a slice of interface{}'s to represent each column,
 	// and a second slice to contain pointers to each item in the columns slice.
 	columns := make([]interface{}, len(cols))
@@ -35,18 +38,33 @@ func RowToMap(cols []string, row RowInterface) (map[string]any, error) {
 	return m, nil
 }
 
-type OutputQueryInterface struct {
+// DebugQueryInterface is a QueryInterface that outputs the generated queries.
+type DebugQueryInterface struct {
+	Out io.Writer
 }
 
-func (m OutputQueryInterface) Query(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
-	fmt.Println(query)
-	fmt.Println(args)
-	fmt.Printf("===\n")
+func (m DebugQueryInterface) Query(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+	out := m.Out
+	if out == nil {
+		out = os.Stdout
+	}
+
+	var retErr error
+
+	_, err := fmt.Fprintln(out, query)
+	retErr = errors.Join(retErr, err)
+
+	_, err = fmt.Fprintln(out, args)
+	retErr = errors.Join(retErr, err)
+
+	_, err = fmt.Fprintf(out, "===\n")
+	retErr = errors.Join(retErr, err)
 
 	ret := map[string]any{}
 	for _, fn := range returnFieldNames {
+		// simulate fields being generated
 		ret[fn] = uuid.New()
 	}
 
-	return ret, nil
+	return ret, retErr
 }
