@@ -15,14 +15,14 @@ type Value interface {
 
 // ValueRefID is a Value that references a field value in a table using the REFID (string ID).
 type ValueRefID struct {
-	Table     string
+	TableID   string
 	ID        string
 	FieldName string
 }
 
 // TableDepends indicates a dependency on another table.
 func (v ValueRefID) TableDepends() string {
-	return v.Table
+	return v.TableID
 }
 
 // ValueGenerated is a Value that will be generated in the future (possibly by a database).
@@ -31,14 +31,14 @@ type ValueGenerated struct {
 
 // ValueInternalID is a Value that references a field value in a table using the internal ID.
 type ValueInternalID struct {
-	Table      string
+	TableID    string
 	InternalID uuid.UUID
 	FieldName  string
 }
 
 // TableDepends indicates a dependency on another table.
 func (v ValueInternalID) TableDepends() string {
-	return v.Table
+	return v.TableID
 }
 
 func (v ValueRefID) isValue()      {}
@@ -62,7 +62,7 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 		if len(fields) != 4 {
 			return nil, fmt.Errorf("invalid !dbf tag value: %s", value)
 		}
-		return &ValueRefID{Table: fields[1], ID: fields[2], FieldName: fields[3]}, nil
+		return &ValueRefID{TableID: fields[1], ID: fields[2], FieldName: fields[3]}, nil
 	case "parent": // parent:<fieldname>
 		if !parent.HasParent() {
 			return nil, errors.New("value has no parent")
@@ -70,7 +70,7 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 		if len(fields) != 2 {
 			return nil, fmt.Errorf("invalid !dbf tag value: %s", value)
 		}
-		return &ValueInternalID{Table: parent.TableID(), InternalID: parent.InternalID(), FieldName: fields[1]}, nil
+		return &ValueInternalID{TableID: parent.TableID(), InternalID: parent.InternalID(), FieldName: fields[1]}, nil
 	case "generated": // generated
 		return &ValueGenerated{}, nil
 	default:

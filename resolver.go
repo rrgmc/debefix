@@ -159,33 +159,33 @@ func (r *resolver) resolveValue(value Value) (any, error) {
 	case *ValueGenerated:
 		return &ResolveGenerate{}, nil
 	case *ValueRefID:
-		vrowfield, err := r.walkTableData(fv.Table, func(row resolverRow) (bool, any, error) {
+		vrowfield, err := r.walkTableData(fv.TableID, func(row resolverRow) (bool, any, error) {
 			if row.id == fv.ID {
 				if rowfield, ok := row.fields[fv.FieldName]; ok {
 					return true, rowfield, nil
 				} else {
-					return false, nil, fmt.Errorf("could not find field %s in refid table %s", fv.FieldName, fv.Table)
+					return false, nil, fmt.Errorf("could not find field %s in refid table %s", fv.FieldName, fv.TableID)
 				}
 			}
 			return false, nil, nil
 		})
 		if err != nil {
-			return nil, fmt.Errorf("could not find refid %s in table %s: %w", fv.ID, fv.Table, err)
+			return nil, fmt.Errorf("could not find refid %s in table %s: %w", fv.ID, fv.TableID, err)
 		}
 		return vrowfield, nil
 	case *ValueInternalID:
-		vrowfield, err := r.walkTableData(fv.Table, func(row resolverRow) (bool, any, error) {
+		vrowfield, err := r.walkTableData(fv.TableID, func(row resolverRow) (bool, any, error) {
 			if row.internalID == fv.InternalID {
 				if rowfield, ok := row.fields[fv.FieldName]; ok {
 					return true, rowfield, nil
 				} else {
-					return false, nil, fmt.Errorf("could not find field %s in internalid table %s", fv.FieldName, fv.Table)
+					return false, nil, fmt.Errorf("could not find field %s in internalid table %s", fv.FieldName, fv.TableID)
 				}
 			}
 			return false, nil, nil
 		})
 		if err != nil {
-			return nil, fmt.Errorf("could not find internalid %s in table %s: %w", fv.InternalID, fv.Table, err)
+			return nil, fmt.Errorf("could not find internalid %s in table %s: %w", fv.InternalID, fv.TableID, err)
 		}
 		return vrowfield, nil
 	default:
@@ -193,6 +193,7 @@ func (r *resolver) resolveValue(value Value) (any, error) {
 	}
 }
 
+// includeTag checks whether the tags match the requested ones.
 func (r *resolver) includeTag(tags []string) bool {
 	if len(r.tags) > 0 && !slices.ContainsFunc(tags, func(s string) bool {
 		return slices.Contains(r.tags, s)
@@ -202,18 +203,7 @@ func (r *resolver) includeTag(tags []string) bool {
 	return true
 }
 
-func resolveCheckCallback(ctx ResolveContext, fields map[string]any) error {
-	for fn, fv := range fields {
-		if fresolve, ok := fv.(ResolveValue); ok {
-			switch fresolve.(type) {
-			case *ResolveGenerate:
-				ctx.ResolveField(fn, uuid.New())
-			}
-		}
-	}
-	return nil
-}
-
+// walkTableData searches for rows in tables.
 func (r *resolver) walkTableData(tableID string, f func(row resolverRow) (bool, any, error)) (any, error) {
 	vdb, ok := r.tableData[tableID]
 	if !ok {
@@ -230,4 +220,17 @@ func (r *resolver) walkTableData(tableID string, f func(row resolverRow) (bool, 
 	}
 
 	return errors.New("row not found in data"), nil
+}
+
+// resolveCheckCallback is the callback for the ResolveCheck function.
+func resolveCheckCallback(ctx ResolveContext, fields map[string]any) error {
+	for fn, fv := range fields {
+		if fresolve, ok := fv.(ResolveValue); ok {
+			switch fresolve.(type) {
+			case *ResolveGenerate:
+				ctx.ResolveField(fn, uuid.New())
+			}
+		}
+	}
+	return nil
 }
