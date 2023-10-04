@@ -160,7 +160,7 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 			return err
 		}
 	default:
-		return fmt.Errorf("%s: invalid table row node '%s' at '%s'", n.GetPath(), n.Type().String())
+		return fmt.Errorf("%s: invalid table row node '%s'", n.GetPath(), n.Type().String())
 	}
 	return nil
 }

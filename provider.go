@@ -20,6 +20,7 @@ type FileProvider interface {
 type FileProviderCallback func(info FileInfo) error
 
 type FileInfo struct {
+	Name string
 	File io.Reader
 	Tags []string
 }
@@ -33,8 +34,14 @@ type directoryFileProvider struct {
 // NewDirectoryFileProvider creates a FileProvider that list files from a directory, sorted by name.
 // Only files with the ".dbf.yaml" extension are returned.
 func NewDirectoryFileProvider(rootDir string, options ...DirectoryFileProviderOption) FileProvider {
+	return NewDirectoryFileProviderFS(os.DirFS(rootDir), options...)
+}
+
+// NewDirectoryFileProviderFS creates a FileProvider that list files from a fs.FS, sorted by name.
+// Only files with the ".dbf.yaml" extension are returned.
+func NewDirectoryFileProviderFS(fs fs.FS, options ...DirectoryFileProviderOption) FileProvider {
 	ret := &directoryFileProvider{
-		fs: os.DirFS(rootDir),
+		fs: fs,
 	}
 	for _, opt := range options {
 		opt(ret)
@@ -52,8 +59,8 @@ func NewDirectoryFileProvider(rootDir string, options ...DirectoryFileProviderOp
 
 type DirectoryFileProviderOption func(*directoryFileProvider)
 
-// WithDirectoryFileProviderIncludeFunc sets a callback to allow choosing files that will be read.
-func WithDirectoryFileProviderIncludeFunc(include func(path string, entry os.DirEntry) bool) DirectoryFileProviderOption {
+// WithDirectoryIncludeFunc sets a callback to allow choosing files that will be read.
+func WithDirectoryIncludeFunc(include func(path string, entry os.DirEntry) bool) DirectoryFileProviderOption {
 	return func(provider *directoryFileProvider) {
 		provider.include = include
 	}
@@ -87,7 +94,7 @@ func (d directoryFileProvider) Load(f FileProviderCallback) error {
 	return d.loadFiles(".", nil, f)
 }
 
-func (d directoryFileProvider) loadFiles(currentPath string, tags []string, f func(info FileInfo) error) error {
+func (d directoryFileProvider) loadFiles(currentPath string, tags []string, f FileProviderCallback) error {
 	files, err := d.readDirSorted(currentPath)
 	if err != nil {
 		return fmt.Errorf("error reading directory '%s': %w", currentPath, err)
@@ -114,6 +121,7 @@ func (d directoryFileProvider) loadFiles(currentPath string, tags []string, f fu
 			}
 
 			err = f(FileInfo{
+				Name: fullPath,
 				File: localFile,
 				Tags: d.tagFunc(tags),
 			})
