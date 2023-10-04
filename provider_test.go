@@ -9,7 +9,7 @@ import (
 )
 
 func TestDirectoryFileProviderChecksExtension(t *testing.T) {
-	provider := NewDirectoryFileProviderFS(testFS)
+	provider := NewFSFileProvider(testFS)
 
 	files := map[string]bool{}
 
@@ -24,7 +24,7 @@ func TestDirectoryFileProviderChecksExtension(t *testing.T) {
 }
 
 func TestDirectoryFileProviderDirectoryAsTags(t *testing.T) {
-	provider := NewDirectoryFileProviderFS(testFS, WithDirectoryAsTag())
+	provider := NewFSFileProvider(testFS, WithDirectoryAsTag())
 
 	err := provider.Load(func(info FileInfo) error {
 		var tag string
@@ -41,7 +41,7 @@ func TestDirectoryFileProviderDirectoryAsTags(t *testing.T) {
 }
 
 func TestDirectoryFileProviderDirectoryAsTagsFunc(t *testing.T) {
-	provider := NewDirectoryFileProviderFS(testFS, WithDirectoryTagFunc(func(dirs []string) []string {
+	provider := NewFSFileProvider(testFS, WithDirectoryTagFunc(func(dirs []string) []string {
 		return []string{"a." + strings.Join(dirs, ".")}
 	}))
 
@@ -60,7 +60,7 @@ func TestDirectoryFileProviderDirectoryAsTagsFunc(t *testing.T) {
 }
 
 func TestDirectoryFileProviderIgnoresFiles(t *testing.T) {
-	provider := NewDirectoryFileProviderFS(testFS, WithDirectoryIncludeFunc(func(path string, entry os.DirEntry) bool {
+	provider := NewFSFileProvider(testFS, WithDirectoryIncludeFunc(func(path string, entry os.DirEntry) bool {
 		return !strings.HasPrefix(path, "test1/inner")
 	}))
 
