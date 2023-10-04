@@ -126,6 +126,48 @@ func TestLoad2TablesSeparateFiles(t *testing.T) {
 	}, tagsTable.Rows[0].Fields)
 }
 
+func TestLoadExtValueTypes(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`users:
+  rows:
+    - user_id: 1
+      name: "John Doe"
+      attributes:
+        gender: "male"
+        age: "old"
+      tags: ["carpenter", "office"]
+    - user_id: 2
+      name: "Jane Doe"
+      attributes:
+        gender: "female"
+        age: "mid"
+      tags: ["firefighter", "outdoors"]
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	require.NoError(t, err)
+
+	usersTable, ok := data.Tables["users"]
+	require.True(t, ok, "users table not found")
+
+	require.Len(t, usersTable.Rows, 2)
+
+	require.Equal(t, map[string]any{
+		"gender": "male",
+		"age":    "old",
+	}, usersTable.Rows[0].Fields["attributes"])
+	require.Equal(t, []any{"carpenter", "office"}, usersTable.Rows[0].Fields["tags"])
+
+	require.Equal(t, map[string]any{
+		"gender": "female",
+		"age":    "mid",
+	}, usersTable.Rows[1].Fields["attributes"])
+	require.Equal(t, []any{"firefighter", "outdoors"}, usersTable.Rows[1].Fields["tags"])
+}
+
 func TestLoadExprRefID(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"posts.dbf.yaml": &fstest.MapFile{
@@ -294,7 +336,7 @@ func TestLoadInvalid(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestLoadInvalidType(t *testing.T) {
+func TestLoadInvalidRowType(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
 			Data: []byte(`users:

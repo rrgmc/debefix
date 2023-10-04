@@ -80,7 +80,7 @@ func (l *loader) loadTables(node ast.Node, tags []string, parent parentRowInfo) 
 			}
 		}
 	default:
-		return fmt.Errorf("%s: invalid file node '%s'", n.GetPath(), n.Type().String())
+		return fmt.Errorf("%s: invalid table node '%s'", n.GetPath(), n.Type().String())
 	}
 
 	return nil
