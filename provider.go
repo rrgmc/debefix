@@ -30,6 +30,7 @@ type directoryFileProvider struct {
 }
 
 // NewDirectoryFileProvider creates a FileProvider that list files from a directory, sorted by name.
+// Only files with the ".dbf.yaml" extension are returned.
 func NewDirectoryFileProvider(rootDir string, options ...DirectoryFileProviderOption) FileProvider {
 	ret := &directoryFileProvider{
 		rootDir: rootDir,
