@@ -12,11 +12,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type loader struct {
-	fileProvider FileProvider
-	data         Data
-}
-
 func Load(fileProvider FileProvider) (*Data, error) {
 	loader := &loader{
 		fileProvider: fileProvider,
@@ -30,6 +25,11 @@ func Load(fileProvider FileProvider) (*Data, error) {
 
 func LoadDirectory(rootDir string, options ...DirectoryFileProviderOption) (*Data, error) {
 	return Load(NewDirectoryFileProvider(rootDir, options...))
+}
+
+type loader struct {
+	fileProvider FileProvider
+	data         Data
 }
 
 func (l *loader) load() error {
@@ -78,7 +78,7 @@ func (l *loader) loadTables(node ast.Node, tags []string, parent parentRowInfo) 
 			}
 		}
 	default:
-		return fmt.Errorf("invalid file node '%s' at '%s'", n.Type().String(), n.GetPath())
+		return fmt.Errorf("%s: invalid file node '%s'", n.GetPath(), n.Type().String())
 	}
 
 	return nil
@@ -104,32 +104,32 @@ func (l *loader) loadTable(tableID string, node ast.Node, tags []string, parent 
 	case *ast.MappingValueNode:
 		values = []*ast.MappingValueNode{n}
 	default:
-		return fmt.Errorf("unknown table node at '%s'", node.GetPath())
+		return fmt.Errorf("%s: unknown table node type '%s'", node.GetPath(), node.Type().String())
 	}
 
 	for _, value := range values {
 		key, err := getStringNode(value.Key)
 		if err != nil {
-			return fmt.Errorf("error getting table info for '%s': %w", tableID, err)
+			return fmt.Errorf("%s: error getting table info for '%s': %w", value.GetPath(), tableID, err)
 		}
 		switch key {
 		case "config":
 			var cfg TableConfig
 			err := yaml.NodeToValue(value.Value, &cfg)
 			if err != nil {
-				return fmt.Errorf("error reading table config for '%s': %w", tableID, err)
+				return fmt.Errorf("%s: error reading table config for '%s': %w", value.GetPath(), tableID, err)
 			}
 			err = table.Config.Merge(&cfg)
 			if err != nil {
-				return fmt.Errorf("error merge table config for '%s': %w", tableID, err)
+				return fmt.Errorf("%s: error merge table config for '%s': %w", value.GetPath(), tableID, err)
 			}
 		case "rows":
 			err := l.loadTableRows(value.Value, table, tags, parent)
 			if err != nil {
-				return fmt.Errorf("error loading table rows for '%s': %w", tableID, err)
+				return err
 			}
 		default:
-			return fmt.Errorf("invalid table row data: '%s' at '%s' for '%s'", key, value.Path, tableID)
+			return fmt.Errorf("%s: invalid table row data: '%s' for '%s'", value.GetPath(), key, tableID)
 		}
 	}
 	return nil
@@ -145,7 +145,7 @@ func (l *loader) loadTableRows(node ast.Node, table *Table, tags []string, paren
 			}
 		}
 	default:
-		return fmt.Errorf("invalid table rows node '%s' at '%s'", n.Type().String(), n.GetPath())
+		return fmt.Errorf("%s: invalid table rows node '%s'", n.GetPath(), n.Type().String())
 	}
 	return nil
 }
@@ -158,7 +158,7 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 			return err
 		}
 	default:
-		return fmt.Errorf("invalid table row node '%s' at '%s'", n.Type().String(), n.GetPath())
+		return fmt.Errorf("%s: invalid table row node '%s' at '%s'", n.GetPath(), n.Type().String())
 	}
 	return nil
 }
@@ -181,7 +181,7 @@ func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table, tags []st
 			case "_dbfconfig":
 				err := yaml.NodeToValue(field.Value, &row.Config)
 				if err != nil {
-					return fmt.Errorf("error reading row config at '%s': %w", field.GetPath(), err)
+					return fmt.Errorf("%s: error reading row config: %w", field.GetPath(), err)
 				}
 			case "_dbfdeps":
 				err := l.loadTables(field.Value, tags, &defaultParentRowInfo{
@@ -189,10 +189,10 @@ func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table, tags []st
 					internalID: row.InternalID,
 				})
 				if err != nil {
-					return fmt.Errorf("error reading row deps at '%s': %w", field.GetPath(), err)
+					return fmt.Errorf("%s: error reading row deps: %w", field.GetPath(), err)
 				}
 			default:
-				return fmt.Errorf("invalid table row field: %s", key)
+				return fmt.Errorf("%s: invalid table row field: %s", field.GetPath(), key)
 			}
 		} else {
 			fieldValue, err := l.loadFieldValue(field.Value, parent)
@@ -225,7 +225,7 @@ func (l *loader) loadFieldValue(node ast.Node, parent parentRowInfo) (any, error
 				}
 				return parseValue(tvalue, parent)
 			default:
-				return nil, fmt.Errorf("unknown value tag: %s", n.Start.Value)
+				return nil, fmt.Errorf("%s: unknown value tag: %s", n.GetPath(), n.Start.Value)
 			}
 		}
 	}
