@@ -40,6 +40,25 @@ func TestDirectoryFileProviderDirectoryAsTags(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestDirectoryFileProviderDirectoryAsTagsFunc(t *testing.T) {
+	provider := NewDirectoryFileProviderFS(testFS, WithDirectoryTagFunc(func(dirs []string) []string {
+		return []string{"a." + strings.Join(dirs, ".")}
+	}))
+
+	err := provider.Load(func(info FileInfo) error {
+		var tag string
+		if strings.HasPrefix(info.Name, "test1/inner/") {
+			tag = "test1.inner"
+		} else {
+			tag, _, _ = strings.Cut(info.Name, "/")
+		}
+
+		require.Equal(t, []string{"a." + tag}, info.Tags)
+		return nil
+	})
+	require.NoError(t, err)
+}
+
 func TestDirectoryFileProviderIgnoresFiles(t *testing.T) {
 	provider := NewDirectoryFileProviderFS(testFS, WithDirectoryIncludeFunc(func(path string, entry os.DirEntry) bool {
 		return !strings.HasPrefix(path, "test1/inner")
