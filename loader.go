@@ -3,7 +3,6 @@ package debefix_poc2
 import (
 	"fmt"
 	"io"
-	"slices"
 	"strings"
 
 	"github.com/goccy/go-yaml"
@@ -12,6 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// Load loads the files from the fileProvider and returns the list of loaded tables.
 func Load(fileProvider FileProvider) (*Data, error) {
 	loader := &loader{
 		fileProvider: fileProvider,
@@ -23,6 +23,7 @@ func Load(fileProvider FileProvider) (*Data, error) {
 	return &loader.data, nil
 }
 
+// LoadDirectory is a helper to load from a filesystem directory path.
 func LoadDirectory(rootDir string, options ...DirectoryFileProviderOption) (*Data, error) {
 	return Load(NewDirectoryFileProvider(rootDir, options...))
 }
@@ -129,7 +130,7 @@ func (l *loader) loadTable(tableID string, node ast.Node, tags []string, parent 
 				return err
 			}
 		default:
-			return fmt.Errorf("%s: invalid table row data: '%s' for '%s'", value.GetPath(), key, tableID)
+			return fmt.Errorf("%s: unknown key in table row data: '%s' for '%s'", value.GetPath(), key, tableID)
 		}
 	}
 	return nil
@@ -166,10 +167,7 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table, tags []string, parent parentRowInfo) error {
 	row := Row{
 		InternalID: uuid.New(),
-		Config: RowConfig{
-			Tags: slices.Clone(tags),
-		},
-		Fields: map[string]any{},
+		Fields:     map[string]any{},
 	}
 	for _, field := range node.Values {
 		key, err := getStringNode(field.Key)
@@ -210,6 +208,7 @@ func (l *loader) loadTableRowData(node *ast.MappingNode, table *Table, tags []st
 		row.Config.Tags = appendStringNoRepeat(row.Config.Tags, tags)
 	}
 	table.Rows = append(table.Rows, row)
+
 	return nil
 }
 

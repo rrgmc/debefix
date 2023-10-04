@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// Data stores the entire collection of parsed Table information.
 type Data struct {
 	Tables map[string]*Table
 }
@@ -34,10 +35,12 @@ type RowConfig struct {
 
 type Rows []Row
 
+// AppendDeps adds table dependencies checking duplicates.
 func (t *Table) AppendDeps(deps ...string) {
 	t.Config.Depends = appendStringNoRepeat(t.Config.Depends, deps)
 }
 
+// Merge checks if merging is allowed before merging.
 func (c *TableConfig) Merge(other *TableConfig) error {
 	if other.TableName != "" {
 		if c.TableName != "" && other.TableName != "" && c.TableName != other.TableName {

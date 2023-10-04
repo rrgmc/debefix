@@ -2,6 +2,7 @@ package debefix_poc2
 
 import (
 	"cmp"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,11 +11,12 @@ import (
 	"strings"
 )
 
-type FileProviderCallback func(info FileInfo) error
-
+// FileProvider provides files and tags to Load. The order matters, so it should be deterministic.
 type FileProvider interface {
 	Load(FileProviderCallback) error
 }
+
+type FileProviderCallback func(info FileInfo) error
 
 type FileInfo struct {
 	File io.Reader
@@ -27,6 +29,7 @@ type directoryFileProvider struct {
 	tagFunc func(dirs []string) []string
 }
 
+// NewDirectoryFileProvider creates a FileProvider that list files from a directory, sorted by name.
 func NewDirectoryFileProvider(rootDir string, options ...DirectoryFileProviderOption) FileProvider {
 	ret := &directoryFileProvider{
 		rootDir: rootDir,
@@ -47,28 +50,33 @@ func NewDirectoryFileProvider(rootDir string, options ...DirectoryFileProviderOp
 
 type DirectoryFileProviderOption func(*directoryFileProvider)
 
+// WithDirectoryFileProviderIncludeFunc sets a callback to allow choosing files that will be read.
 func WithDirectoryFileProviderIncludeFunc(include func(path string, entry os.DirEntry) bool) DirectoryFileProviderOption {
 	return func(provider *directoryFileProvider) {
 		provider.include = include
 	}
 }
 
+// WithDirectoryAsTag creates tags for each directory. Inner directories will be concatenated by a dot (.).
 func WithDirectoryAsTag() DirectoryFileProviderOption {
 	return func(provider *directoryFileProvider) {
 		provider.tagFunc = DefaultDirectoryTagFunc
 	}
 }
 
+// WithDirectoryTagFunc allows returning custom tags for each directory entry.
 func WithDirectoryTagFunc(tagFunc func(dirs []string) []string) DirectoryFileProviderOption {
 	return func(provider *directoryFileProvider) {
 		provider.tagFunc = tagFunc
 	}
 }
 
+// DefaultDirectoryTagFunc joins directories using a dot (.).
 func DefaultDirectoryTagFunc(dirs []string) []string {
 	return []string{strings.Join(dirs, ".")}
 }
 
+// noDirectoryTagFunc don't add tags to directories.
 func noDirectoryTagFunc(dirs []string) []string {
 	return nil
 }
@@ -110,7 +118,7 @@ func (d directoryFileProvider) loadFiles(path string, tags []string, f func(info
 
 			fileErr := localFile.Close()
 			if fileErr != nil {
-				return fmt.Errorf("error closing file '%s': %w", fullPath, fileErr)
+				return errors.Join(fmt.Errorf("error closing file '%s': %w", fullPath, fileErr), err)
 			}
 
 			if err != nil {
@@ -122,7 +130,7 @@ func (d directoryFileProvider) loadFiles(path string, tags []string, f func(info
 	for _, dir := range dirs {
 		fullPath := filepath.Join(path, dir)
 
-		// each directory becomes a tag
+		// each directory may become a tag
 		err := d.loadFiles(fullPath, append(slices.Clone(tags), dir), f)
 		if err != nil {
 			return err
