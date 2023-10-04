@@ -1,19 +1,19 @@
 package db
 
 import (
-	debefix_poc2 "github.com/RangelReale/debefix"
+	"github.com/RangelReale/debefix"
 )
 
-// ResolverFunc is a debefix_poc2.ResolveCallback helper to generate database records.
-func ResolverFunc(callback ResolverDBCallback) debefix_poc2.ResolveCallback {
-	return func(ctx debefix_poc2.ResolveContext, fields map[string]any) error {
+// ResolverFunc is a debefix.ResolveCallback helper to generate database records.
+func ResolverFunc(callback ResolverDBCallback) debefix.ResolveCallback {
+	return func(ctx debefix.ResolveContext, fields map[string]any) error {
 		insertFields := map[string]any{}
 		var returnFieldNames []string
 
 		for fn, fv := range fields {
-			if fresolve, ok := fv.(debefix_poc2.ResolveValue); ok {
+			if fresolve, ok := fv.(debefix.ResolveValue); ok {
 				switch fresolve.(type) {
-				case *debefix_poc2.ResolveGenerate:
+				case *debefix.ResolveGenerate:
 					returnFieldNames = append(returnFieldNames, fn)
 				}
 			} else {

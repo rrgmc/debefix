@@ -1,18 +1,18 @@
 package postgres
 
 import (
-	debefix_poc2 "github.com/RangelReale/debefix"
+	"github.com/RangelReale/debefix"
 	"github.com/RangelReale/debefix/db"
 	"github.com/RangelReale/debefix/db/sql"
 )
 
 // Resolve runs SQL INSERT queries on db.
-func Resolve(db sql.QueryInterface, data *debefix_poc2.Data, options ...debefix_poc2.ResolveOption) error {
-	return debefix_poc2.Resolve(data, ResolverFunc(ResolverDBCallback(db)), options...)
+func Resolve(db sql.QueryInterface, data *debefix.Data, options ...debefix.ResolveOption) error {
+	return debefix.Resolve(data, ResolverFunc(ResolverDBCallback(db)), options...)
 }
 
-// ResolverFunc is the debefix_poc2.ResolveCallback used by Resolve.
-func ResolverFunc(callback db.ResolverDBCallback) debefix_poc2.ResolveCallback {
+// ResolverFunc is the debefix.ResolveCallback used by Resolve.
+func ResolverFunc(callback db.ResolverDBCallback) debefix.ResolveCallback {
 	return db.ResolverFunc(callback)
 }
 

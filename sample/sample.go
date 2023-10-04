@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"strings"
 
-	debefix_poc2 "github.com/RangelReale/debefix"
+	"github.com/RangelReale/debefix"
 	"github.com/RangelReale/debefix/db/sql"
 	"github.com/RangelReale/debefix/db/sql/postgres"
 	"github.com/davecgh/go-spew/spew"
@@ -28,8 +28,8 @@ func main() {
 		panic(err)
 	}
 
-	data, err := debefix_poc2.LoadDirectory(filepath.Join(curDir, "data"),
-		debefix_poc2.WithDirectoryAsTag())
+	data, err := debefix.LoadDirectory(filepath.Join(curDir, "data"),
+		debefix.WithDirectoryAsTag())
 	if err != nil {
 		panic(err)
 	}
@@ -38,7 +38,7 @@ func main() {
 
 	resolveTags := []string{}
 
-	err = debefix_poc2.ResolveCheck(data, debefix_poc2.WithResolveTags(resolveTags))
+	err = debefix.ResolveCheck(data, debefix.WithResolveTags(resolveTags))
 	if err != nil {
 		panic(err)
 	}
@@ -54,16 +54,16 @@ func main() {
 	}
 }
 
-func resolvePrint(data *debefix_poc2.Data, resolveTags []string) error {
-	return debefix_poc2.Resolve(data, func(ctx debefix_poc2.ResolveContext, fields map[string]any) error {
+func resolvePrint(data *debefix.Data, resolveTags []string) error {
+	return debefix.Resolve(data, func(ctx debefix.ResolveContext, fields map[string]any) error {
 		fmt.Printf("%s %s %s\n", strings.Repeat("=", 10), ctx.TableName(), strings.Repeat("=", 10))
 		spew.Dump(fields)
 
 		resolved := map[string]any{}
 		for fn, fv := range fields {
-			if fresolve, ok := fv.(debefix_poc2.ResolveValue); ok {
+			if fresolve, ok := fv.(debefix.ResolveValue); ok {
 				switch fresolve.(type) {
-				case *debefix_poc2.ResolveGenerate:
+				case *debefix.ResolveGenerate:
 					ctx.ResolveField(fn, uuid.New())
 					resolved[fn] = uuid.New()
 				}
@@ -76,9 +76,9 @@ func resolvePrint(data *debefix_poc2.Data, resolveTags []string) error {
 		}
 
 		return nil
-	}, debefix_poc2.WithResolveTags(resolveTags))
+	}, debefix.WithResolveTags(resolveTags))
 }
 
-func resolveSQL(data *debefix_poc2.Data, resolveTags []string) error {
-	return postgres.Resolve(&sql.DebugQueryInterface{}, data, debefix_poc2.WithResolveTags(resolveTags))
+func resolveSQL(data *debefix.Data, resolveTags []string) error {
+	return postgres.Resolve(&sql.DebugQueryInterface{}, data, debefix.WithResolveTags(resolveTags))
 }

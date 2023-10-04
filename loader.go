@@ -1,4 +1,4 @@
-package debefix_poc2
+package debefix
 
 import (
 	"fmt"
