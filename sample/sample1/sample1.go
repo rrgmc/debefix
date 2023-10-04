@@ -36,14 +36,25 @@ func main() {
 
 	// spew.Dump(data)
 
-	// err = resolvePrint(data)
-	err = resolveSQL(data)
+	resolveTags := []string{}
+
+	err = debefix_poc2.ResolveCheck(data, debefix_poc2.WithResolveTags(resolveTags))
+	if err != nil {
+		panic(err)
+	}
+
+	// err = resolvePrint(data, resolveTags)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	err = resolveSQL(data, resolveTags)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func resolvePrint(data *debefix_poc2.Data) error {
+func resolvePrint(data *debefix_poc2.Data, resolveTags []string) error {
 	return debefix_poc2.Resolve(data, func(ctx debefix_poc2.ResolveContext, fields map[string]any) error {
 		fmt.Printf("%s %s %s\n", strings.Repeat("=", 10), ctx.TableName(), strings.Repeat("=", 10))
 		spew.Dump(fields)
@@ -65,9 +76,9 @@ func resolvePrint(data *debefix_poc2.Data) error {
 		}
 
 		return nil
-	}, debefix_poc2.WithResolveTags([]string{}))
+	}, debefix_poc2.WithResolveTags(resolveTags))
 }
 
-func resolveSQL(data *debefix_poc2.Data) error {
-	return postgres.Resolve(&sql.OutputQueryInterface{}, data)
+func resolveSQL(data *debefix_poc2.Data, resolveTags []string) error {
+	return postgres.Resolve(&sql.OutputQueryInterface{}, data, debefix_poc2.WithResolveTags(resolveTags))
 }

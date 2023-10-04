@@ -18,6 +18,10 @@ func Resolve(data *Data, f ResolveCallback, options ...ResolveOption) error {
 	return r.resolve(f)
 }
 
+func ResolveCheck(data *Data, options ...ResolveOption) error {
+	return Resolve(data, resolveCheckCallback, options...)
+}
+
 type ResolveOption func(*resolver)
 
 func WithResolveTags(tags []string) ResolveOption {
@@ -186,4 +190,16 @@ func (r *resolver) includeTag(tags []string) bool {
 		return false
 	}
 	return true
+}
+
+func resolveCheckCallback(ctx ResolveContext, fields map[string]any) error {
+	for fn, fv := range fields {
+		if fresolve, ok := fv.(ResolveValue); ok {
+			switch fresolve.(type) {
+			case *ResolveGenerate:
+				ctx.ResolveField(fn, uuid.New())
+			}
+		}
+	}
+	return nil
 }
