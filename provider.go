@@ -5,8 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
-	"path/filepath"
+	"path"
 	"slices"
 	"strings"
 )
@@ -24,7 +25,7 @@ type FileInfo struct {
 }
 
 type directoryFileProvider struct {
-	rootDir string
+	fs      fs.FS
 	include func(path string, entry os.DirEntry) bool
 	tagFunc func(dirs []string) []string
 }
@@ -33,7 +34,7 @@ type directoryFileProvider struct {
 // Only files with the ".dbf.yaml" extension are returned.
 func NewDirectoryFileProvider(rootDir string, options ...DirectoryFileProviderOption) FileProvider {
 	ret := &directoryFileProvider{
-		rootDir: rootDir,
+		fs: os.DirFS(rootDir),
 	}
 	for _, opt := range options {
 		opt(ret)
@@ -83,23 +84,23 @@ func noDirectoryTagFunc(dirs []string) []string {
 }
 
 func (d directoryFileProvider) Load(f FileProviderCallback) error {
-	return d.loadFiles(d.rootDir, nil, f)
+	return d.loadFiles(".", nil, f)
 }
 
-func (d directoryFileProvider) loadFiles(path string, tags []string, f func(info FileInfo) error) error {
-	files, err := d.readDirSorted(path)
+func (d directoryFileProvider) loadFiles(currentPath string, tags []string, f func(info FileInfo) error) error {
+	files, err := d.readDirSorted(currentPath)
 	if err != nil {
-		return fmt.Errorf("error reading directory '%s': %w", path, err)
+		return fmt.Errorf("error reading directory '%s': %w", currentPath, err)
 	}
 
 	var dirs []string
 
 	for _, file := range files {
-		if !d.include(path, file) {
+		if !d.include(currentPath, file) {
 			continue
 		}
 
-		fullPath := filepath.Join(path, file.Name())
+		fullPath := path.Join(currentPath, file.Name())
 
 		if file.IsDir() {
 			dirs = append(dirs, file.Name())
@@ -107,7 +108,7 @@ func (d directoryFileProvider) loadFiles(path string, tags []string, f func(info
 		}
 
 		if strings.HasSuffix(file.Name(), ".dbf.yaml") {
-			localFile, err := os.Open(fullPath)
+			localFile, err := d.fs.Open(fullPath)
 			if err != nil {
 				return fmt.Errorf("error opening file '%s': %w", fullPath, err)
 			}
@@ -129,7 +130,7 @@ func (d directoryFileProvider) loadFiles(path string, tags []string, f func(info
 	}
 
 	for _, dir := range dirs {
-		fullPath := filepath.Join(path, dir)
+		fullPath := path.Join(currentPath, dir)
 
 		// each directory may become a tag
 		err := d.loadFiles(fullPath, append(slices.Clone(tags), dir), f)
@@ -141,10 +142,10 @@ func (d directoryFileProvider) loadFiles(path string, tags []string, f func(info
 	return nil
 }
 
-func (d directoryFileProvider) readDirSorted(path string) ([]os.DirEntry, error) {
-	files, err := os.ReadDir(path)
+func (d directoryFileProvider) readDirSorted(currentPath string) ([]os.DirEntry, error) {
+	files, err := fs.ReadDir(d.fs, currentPath)
 	if err != nil {
-		return nil, fmt.Errorf("error reading directory '%s': %w", path, err)
+		return nil, err
 	}
 
 	slices.SortFunc(files, func(a, b os.DirEntry) int {
