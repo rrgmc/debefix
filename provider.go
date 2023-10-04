@@ -1,6 +1,7 @@
 package debefix_poc2
 
 import (
+	"cmp"
 	"fmt"
 	"io"
 	"os"
@@ -39,7 +40,7 @@ func NewDirectoryFileProvider(rootDir string, options ...DirectoryFileProviderOp
 		}
 	}
 	if ret.tagFunc == nil {
-		ret.tagFunc = DefaultDirectoryTagFunc
+		ret.tagFunc = noDirectoryTagFunc
 	}
 	return ret
 }
@@ -49,6 +50,12 @@ type DirectoryFileProviderOption func(*directoryFileProvider)
 func WithDirectoryFileProviderIncludeFunc(include func(path string, entry os.DirEntry) bool) DirectoryFileProviderOption {
 	return func(provider *directoryFileProvider) {
 		provider.include = include
+	}
+}
+
+func WithDirectoryAsTag() DirectoryFileProviderOption {
+	return func(provider *directoryFileProvider) {
+		provider.tagFunc = DefaultDirectoryTagFunc
 	}
 }
 
@@ -62,12 +69,16 @@ func DefaultDirectoryTagFunc(dirs []string) []string {
 	return []string{strings.Join(dirs, ".")}
 }
 
+func noDirectoryTagFunc(dirs []string) []string {
+	return nil
+}
+
 func (d directoryFileProvider) Load(f FileProviderCallback) error {
 	return d.loadFiles(d.rootDir, nil, f)
 }
 
 func (d directoryFileProvider) loadFiles(path string, tags []string, f func(info FileInfo) error) error {
-	files, err := os.ReadDir(path)
+	files, err := d.readDirSorted(path)
 	if err != nil {
 		return fmt.Errorf("error reading directory '%s': %w", path, err)
 	}
@@ -108,8 +119,6 @@ func (d directoryFileProvider) loadFiles(path string, tags []string, f func(info
 		}
 	}
 
-	slices.Sort(dirs)
-
 	for _, dir := range dirs {
 		fullPath := filepath.Join(path, dir)
 
@@ -121,4 +130,17 @@ func (d directoryFileProvider) loadFiles(path string, tags []string, f func(info
 	}
 
 	return nil
+}
+
+func (d directoryFileProvider) readDirSorted(path string) ([]os.DirEntry, error) {
+	files, err := os.ReadDir(path)
+	if err != nil {
+		return nil, fmt.Errorf("error reading directory '%s': %w", path, err)
+	}
+
+	slices.SortFunc(files, func(a, b os.DirEntry) int {
+		return cmp.Compare(a.Name(), b.Name())
+	})
+
+	return files, err
 }
