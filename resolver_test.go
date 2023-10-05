@@ -57,3 +57,30 @@ post_tags:
 	}, rowCount)
 	require.Equal(t, []string{"tags", "tags", "posts", "post_tags"}, tableOrder)
 }
+
+func TestResolveUnresolvedRefID(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tags:
+  rows:
+    - tag_id: 2
+      tag_name: "All"
+      _dbfconfig:
+        id: "all"
+    - tag_id: 5
+      tag_name: "Half"
+posts:
+  rows:
+    - post_id: 1
+      title: "First post"
+      tag_id: !dbfexpr "refid:tags:half:tag_id"
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	require.NoError(t, err)
+
+	err = ResolveCheck(data)
+	require.ErrorIs(t, err, ResolveError)
+}

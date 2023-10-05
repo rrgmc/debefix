@@ -173,7 +173,7 @@ func (r *resolver) resolveValue(value Value) (any, error) {
 			return false, nil, nil
 		})
 		if err != nil {
-			return nil, fmt.Errorf("could not find refid %s in table %s: %w", fv.ID, fv.TableID, err)
+			return nil, errors.Join(ResolveError, fmt.Errorf("could not find refid %s in table %s: %w", fv.ID, fv.TableID, err))
 		}
 		return vrowfield, nil
 	case *ValueInternalID:
@@ -188,11 +188,11 @@ func (r *resolver) resolveValue(value Value) (any, error) {
 			return false, nil, nil
 		})
 		if err != nil {
-			return nil, fmt.Errorf("could not find internalid %s in table %s: %w", fv.InternalID, fv.TableID, err)
+			return nil, errors.Join(ResolveError, fmt.Errorf("could not find internalid %s in table %s: %w", fv.InternalID, fv.TableID, err))
 		}
 		return vrowfield, nil
 	default:
-		return nil, fmt.Errorf("unknown Value field")
+		return nil, errors.Join(ResolveError, fmt.Errorf("unknown Value field"))
 	}
 }
 
@@ -222,7 +222,7 @@ func (r *resolver) walkTableData(tableID string, f func(row resolverRow) (bool, 
 		}
 	}
 
-	return errors.New("row not found in data"), nil
+	return nil, errors.New("row not found in data")
 }
 
 // ResolveCheckCallback is the callback for the ResolveCheck function.
