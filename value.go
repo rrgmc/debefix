@@ -54,27 +54,27 @@ type valueTableDepends interface {
 func parseValue(value string, parent parentRowInfo) (Value, error) {
 	fields := strings.Split(value, ":")
 	if len(fields) == 0 {
-		return nil, fmt.Errorf("invalid !dbf tag: %s", value)
+		return nil, errors.Join(ValueError, fmt.Errorf("invalid !dbf tag: %s", value))
 	}
 
 	switch fields[0] {
 	case "refid": // refid:<table>:<refid>:<fieldname>
 		if len(fields) != 4 {
-			return nil, fmt.Errorf("invalid !dbf tag value: %s", value)
+			return nil, errors.Join(ValueError, fmt.Errorf("invalid !dbf tag value: %s", value))
 		}
 		return &ValueRefID{TableID: fields[1], ID: fields[2], FieldName: fields[3]}, nil
 	case "parent": // parent:<fieldname>
 		if !parent.HasParent() {
-			return nil, errors.New("value has no parent")
+			return nil, errors.Join(ValueError, errors.New("value has no parent"))
 		}
 		if len(fields) != 2 {
-			return nil, fmt.Errorf("invalid !dbf tag value: %s", value)
+			return nil, errors.Join(ValueError, fmt.Errorf("invalid !dbf tag value: %s", value))
 		}
 		return &ValueInternalID{TableID: parent.TableID(), InternalID: parent.InternalID(), FieldName: fields[1]}, nil
 	case "generated": // generated
 		return &ValueGenerated{}, nil
 	default:
-		return nil, fmt.Errorf("unknown !dbfexpr tag type: %s", value)
+		return nil, errors.Join(ValueError, fmt.Errorf("unknown !dbfexpr tag type: %s", value))
 	}
 }
 

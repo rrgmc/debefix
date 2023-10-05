@@ -173,7 +173,7 @@ func (r *resolver) resolveValue(value Value) (any, error) {
 			return false, nil, nil
 		})
 		if err != nil {
-			return nil, errors.Join(ResolveError, fmt.Errorf("could not find refid %s in table %s: %w", fv.ID, fv.TableID, err))
+			return nil, errors.Join(ResolveValueError, fmt.Errorf("could not find refid %s in table %s: %w", fv.ID, fv.TableID, err))
 		}
 		return vrowfield, nil
 	case *ValueInternalID:
@@ -188,11 +188,11 @@ func (r *resolver) resolveValue(value Value) (any, error) {
 			return false, nil, nil
 		})
 		if err != nil {
-			return nil, errors.Join(ResolveError, fmt.Errorf("could not find internalid %s in table %s: %w", fv.InternalID, fv.TableID, err))
+			return nil, errors.Join(ResolveValueError, fmt.Errorf("could not find internalid %s in table %s: %w", fv.InternalID, fv.TableID, err))
 		}
 		return vrowfield, nil
 	default:
-		return nil, errors.Join(ResolveError, fmt.Errorf("unknown Value field"))
+		return nil, errors.Join(ResolveValueError, fmt.Errorf("unknown Value field"))
 	}
 }
 

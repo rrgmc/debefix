@@ -1,7 +1,6 @@
 package debefix
 
 import (
-	"fmt"
 	"slices"
 
 	"github.com/goccy/go-yaml/ast"
@@ -23,6 +22,6 @@ func getStringNode(node ast.Node) (string, error) {
 	case *ast.StringNode:
 		return n.Value, nil
 	default:
-		return "", fmt.Errorf("node at '%s' is not string", node.GetPath())
+		return "", NewParseError("node is not string", node.GetPath(), node.GetToken())
 	}
 }

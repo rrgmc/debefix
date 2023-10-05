@@ -82,5 +82,33 @@ posts:
 	require.NoError(t, err)
 
 	err = ResolveCheck(data)
-	require.ErrorIs(t, err, ResolveError)
+	require.ErrorIs(t, err, ResolveValueError)
+}
+
+func TestResolveNoParent(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tags:
+  rows:
+    - tag_id: 2
+      tag_name: "All"
+      _dbfconfig:
+        id: "all"
+    - tag_id: 5
+      tag_name: "Half"
+posts:
+  rows:
+    - post_id: 1
+      title: "First post"
+      tag_id: !dbfexpr "parent:tag_id"
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	require.NoError(t, err)
+
+	err = ResolveCheck(data)
+	// require.ErrorIs(t, err, ResolveError)
+	require.NoError(t, err)
 }

@@ -333,7 +333,7 @@ func TestLoadInvalid(t *testing.T) {
 	})
 
 	_, err := Load(provider)
-	require.Error(t, err)
+	require.ErrorAs(t, err, &ParseError{})
 }
 
 func TestLoadInvalidRowType(t *testing.T) {
@@ -347,7 +347,7 @@ func TestLoadInvalidRowType(t *testing.T) {
 	})
 
 	_, err := Load(provider)
-	require.Error(t, err)
+	require.ErrorAs(t, err, &ParseError{})
 }
 
 func TestLoadInvalidKeyType(t *testing.T) {
@@ -361,7 +361,7 @@ func TestLoadInvalidKeyType(t *testing.T) {
 	})
 
 	_, err := Load(provider)
-	require.Error(t, err)
+	require.ErrorAs(t, err, &ParseError{})
 }
 
 func TestLoadRowSingleField(t *testing.T) {
@@ -376,4 +376,28 @@ func TestLoadRowSingleField(t *testing.T) {
 
 	_, err := Load(provider)
 	require.NoError(t, err)
+}
+
+func TestLoadNoParent(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tags:
+  rows:
+    - tag_id: 2
+      tag_name: "All"
+      _dbfconfig:
+        id: "all"
+    - tag_id: 5
+      tag_name: "Half"
+posts:
+  rows:
+    - post_id: 1
+      title: "First post"
+      tag_id: !dbfexpr "parent:tag_id"
+`),
+		},
+	})
+
+	_, err := Load(provider)
+	require.ErrorIs(t, err, ValueError)
 }

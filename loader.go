@@ -80,7 +80,8 @@ func (l *loader) loadTables(node ast.Node, tags []string, parent parentRowInfo) 
 			}
 		}
 	default:
-		return fmt.Errorf("%s: invalid table node '%s'", n.GetPath(), n.Type().String())
+		return NewParseError(fmt.Sprintf("invalid table node '%s'", n.Type().String()),
+			n.GetPath(), n.GetToken())
 	}
 
 	return nil
@@ -106,24 +107,28 @@ func (l *loader) loadTable(tableID string, node ast.Node, tags []string, parent 
 	case *ast.MappingValueNode:
 		values = []*ast.MappingValueNode{n}
 	default:
-		return fmt.Errorf("%s: unknown table node type '%s'", node.GetPath(), node.Type().String())
+		return NewParseError(fmt.Sprintf("unknown table node type '%s'", node.Type().String()),
+			node.GetPath(), node.GetToken())
 	}
 
 	for _, value := range values {
 		key, err := getStringNode(value.Key)
 		if err != nil {
-			return fmt.Errorf("%s: error getting table info for '%s': %w", value.GetPath(), tableID, err)
+			return NewParseError(fmt.Sprintf("error getting table info for '%s': %s", tableID, err),
+				value.GetPath(), value.GetToken())
 		}
 		switch key {
 		case "config":
 			var cfg TableConfig
 			err := yaml.NodeToValue(value.Value, &cfg)
 			if err != nil {
-				return fmt.Errorf("%s: error reading table config for '%s': %w", value.GetPath(), tableID, err)
+				return NewParseError(fmt.Sprintf("error reading table config for '%s': %s", tableID, err),
+					value.GetPath(), value.GetToken())
 			}
 			err = table.Config.Merge(&cfg)
 			if err != nil {
-				return fmt.Errorf("%s: error merge table config for '%s': %w", value.GetPath(), tableID, err)
+				return NewParseError(fmt.Sprintf("error merge table config for '%s': %s", tableID, err),
+					value.GetPath(), value.GetToken())
 			}
 		case "rows":
 			err := l.loadTableRows(value.Value, table, tags, parent)
@@ -131,7 +136,8 @@ func (l *loader) loadTable(tableID string, node ast.Node, tags []string, parent 
 				return err
 			}
 		default:
-			return fmt.Errorf("%s: unknown key in table row data: '%s' for '%s'", value.GetPath(), key, tableID)
+			return NewParseError(fmt.Sprintf("unknown key in table row data: '%s' for '%s'", key, tableID),
+				value.GetPath(), value.GetToken())
 		}
 	}
 	return nil
@@ -147,7 +153,8 @@ func (l *loader) loadTableRows(node ast.Node, table *Table, tags []string, paren
 			}
 		}
 	default:
-		return fmt.Errorf("%s: invalid table rows node '%s' (expected Sequence)", n.GetPath(), n.Type().String())
+		return NewParseError(fmt.Sprintf("invalid table rows node '%s' (expected Sequence)", n.Type().String()),
+			n.GetPath(), n.GetToken())
 	}
 	return nil
 }
@@ -160,7 +167,8 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 	case *ast.MappingValueNode:
 		values = []*ast.MappingValueNode{n}
 	default:
-		return fmt.Errorf("%s: unknown table row node type '%s' (expected Mapping)", node.GetPath(), node.Type().String())
+		return NewParseError(fmt.Sprintf("unknown table row node type '%s' (expected Mapping)", node.Type().String()),
+			node.GetPath(), node.GetToken())
 	}
 
 	row := Row{
@@ -177,7 +185,8 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 			case "_dbfconfig":
 				err := yaml.NodeToValue(field.Value, &row.Config)
 				if err != nil {
-					return fmt.Errorf("%s: error reading row config: %w", field.GetPath(), err)
+					return NewParseError(fmt.Sprintf("error reading row config: %s", err),
+						field.GetPath(), field.GetToken())
 				}
 			case "_dbfdeps":
 				err := l.loadTables(field.Value, tags, &defaultParentRowInfo{
@@ -185,10 +194,12 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 					internalID: row.InternalID,
 				})
 				if err != nil {
-					return fmt.Errorf("%s: error reading row deps: %w", field.GetPath(), err)
+					return NewParseError(fmt.Sprintf("error reading row deps: %s", err),
+						field.GetPath(), field.GetToken())
 				}
 			default:
-				return fmt.Errorf("%s: invalid table row field: %s", field.GetPath(), key)
+				return NewParseError(fmt.Sprintf("invalid table row field: %s", key),
+					field.GetPath(), field.GetToken())
 			}
 		} else {
 			fieldValue, err := l.loadFieldValue(field.Value, parent)
@@ -222,7 +233,8 @@ func (l *loader) loadFieldValue(node ast.Node, parent parentRowInfo) (any, error
 				}
 				return parseValue(tvalue, parent)
 			default:
-				return nil, fmt.Errorf("%s: unknown value tag: %s", n.GetPath(), n.Start.Value)
+				return nil, NewParseError(fmt.Sprintf("unknown value tag: %s", n.Start.Value),
+					n.GetPath(), n.GetToken())
 			}
 		}
 	}
