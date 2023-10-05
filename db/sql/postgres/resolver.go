@@ -8,12 +8,12 @@ import (
 
 // Resolve runs SQL INSERT queries on db.
 func Resolve(db sql.QueryInterface, data *debefix.Data, options ...debefix.ResolveOption) error {
-	return debefix.Resolve(data, ResolverFunc(ResolverDBCallback(db)), options...)
+	return debefix.Resolve(data, ResolverFunc(db), options...)
 }
 
 // ResolverFunc is the debefix.ResolveCallback used by Resolve.
-func ResolverFunc(callback db.ResolverDBCallback) debefix.ResolveCallback {
-	return db.ResolverFunc(callback)
+func ResolverFunc(dbi sql.QueryInterface) debefix.ResolveCallback {
+	return db.ResolverFunc(ResolverDBCallback(dbi))
 }
 
 // ResolverDBCallback returns a postgres-compatible db.ResolverDBCallback.
