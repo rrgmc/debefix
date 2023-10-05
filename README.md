@@ -1,5 +1,18 @@
 # debefix - Database seeding and fixtures
 
+debefix is a Go library (and a cli in the future) to seed database data and/or create fixtures for DB tests.
+
+Tables can reference each other using string ids (called "refid"), generated fields (like database auto increment or
+generated UUID) are supported and can be resolved and used by other table's references.
+
+Dependencies between tables can be detected automatically by reference ids, or manually. This is used to generate a
+dependency graph and output the insert statements in the correct order.
+
+Using the yaml tag `!dbfexpr` it is possible to define expressions on field values.
+
+Tables with rows can be declared at the top-level on inside a parent row using a special `_dbfdeps` field. In this case,
+values from the parent row can be used, using the `parent:<fieldname>` expression.
+
 ## Sample input
 
 The configuration can be in a single or multiple files, the file itself doesn't matter. The file names/directories are 
