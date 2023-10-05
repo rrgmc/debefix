@@ -13,6 +13,15 @@ Using the yaml tag `!dbfexpr` it is possible to define expressions on field valu
 Tables with rows can be declared at the top-level on inside a parent row using a special `_dbfdeps` field. In this case,
 values from the parent row can be used, using the `parent:<fieldname>` expression.
 
+## Expressions
+
+- `!dbfexpr "refid:<table>:<refid>:<fieldname>"`: reference a **string id** field value in a table. This id is 
+  declared using a `_dbfconfig: {"id": <refid>}` special field in the row.
+- `!dbfexpr "parent:<fieldname>"`: reference a field in the parent table. This can only be used inside a `_dbfdeps` 
+  block.
+- `!dbfexpr "generated"`: indicates that this is a generated field that must be supplied at resolve time, and can later
+  be used by other references once resolved.
+
 ## Sample input
 
 The configuration can be in a single or multiple files, the file itself doesn't matter. The file names/directories are 
@@ -23,7 +32,7 @@ The same table can also be present in multiple files, given that the `config` se
 ```yaml
 tags:
   config:
-    table_name: "public.tag"
+    table_name: "public.tag" # database table name. If not set, will use the table id (tags) as the table name.
   rows:
     - tag_id: !dbfexpr "generated" # means that this will be generated, for example as a database autoincrement
       name: "Go"
@@ -79,7 +88,7 @@ posts:
       _dbfconfig:
         id: "post_1"
     - post_id: 2
-      parent_post_id: !dbfexpr "refid:posts:post_1:post_id" # order matters, to self-referential fields must be added in order
+      parent_post_id: !dbfexpr "refid:posts:post_1:post_id" # order matters, so self-referential fields must be set in order
       title: "Post 2"
       text: "This is the text of the seco d post"
       user_id: !dbfexpr "refid:users:johndoe:user_id"
@@ -102,7 +111,7 @@ posts_tags:
 comments:
   config:
     depends:
-      - posts # add a manual dependency if there is not refid linking these tables
+      - posts # add a manual dependency if there is no refid linking the tables
   rows:
     - comment_id: 1
       post_id: 1
