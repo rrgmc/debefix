@@ -1,5 +1,5 @@
 # debefix - Database seeding and fixtures
-[![GoDoc](https://godoc.org/github.com/RangelReale/debefix?status.png)](https://godoc.org/github.com/RangelReale/instruct)
+[![GoDoc](https://godoc.org/github.com/RangelReale/debefix?status.png)](https://godoc.org/github.com/RangelReale/debefix)
 
 debefix is a Go library (and a cli in the future) to seed database data and/or create fixtures for DB tests.
 
