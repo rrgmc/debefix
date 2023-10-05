@@ -23,6 +23,35 @@ values from the parent row can be used, using the `parent:<fieldname>` expressio
 - `!dbfexpr "generated"`: indicates that this is a generated field that must be supplied at resolve time, and can later
   be used by other references once resolved.
 
+## Generating SQL
+
+SQL can be generated using `github.com/RangelReale/debefix/sql/<dbtype>`.
+
+```go
+import (
+    "github.com/RangelReale/debefix/sql"
+    "github.com/RangelReale/debefix/sql/postgres"
+)
+
+func main() {
+    db, err := sql.Open("postgres", "dsn://postgres")
+    if err != nil {
+        panic(err)
+    }
+
+    data, err := debefix.LoadDirectory("/x/y")
+    if err != nil {
+        panic(err)
+    }
+
+    // will send an INSERT SQL for each row to the db, taking table dependency in account for the correct order. 
+    err = debefix.Resolve(data, postgres.ResolverFunc(sql.NewSQLQueryInterface(db)))
+    if err != nil {
+        panic(err)
+    }
+}
+```
+
 ## Sample input
 
 The configuration can be in a single or multiple files, the file itself doesn't matter. The file names/directories are 
