@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	ValueError        = errors.New("value error")
-	ResolveValueError = errors.New("resolve value error")
+	ValueError           = errors.New("value error")
+	ResolveValueError    = errors.New("resolve value error")
+	ResolveError         = errors.New("resolve error")
+	ResolveCallbackError = errors.New("resolve callback error")
 )
 
 type ParseError struct {

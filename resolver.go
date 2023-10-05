@@ -60,7 +60,7 @@ func (r *resolver) resolve(f ResolveCallback) error {
 	for tableID, table := range r.data.Tables {
 		err := depg.DependOn(tableID, "") // add blank so tables without dependencies are also returned
 		if err != nil {
-			return fmt.Errorf("error build table dependency graph: %w", err)
+			return errors.Join(ResolveError, fmt.Errorf("error build table dependency graph: %w", err))
 		}
 		for _, dep := range table.Config.Depends {
 			if tableID == dep {
@@ -68,7 +68,7 @@ func (r *resolver) resolve(f ResolveCallback) error {
 			}
 			err = depg.DependOn(tableID, dep)
 			if err != nil {
-				return fmt.Errorf("error build table dependency graph: %w", err)
+				return errors.Join(ResolveError, fmt.Errorf("error build table dependency graph: %w", err))
 			}
 		}
 	}
@@ -86,7 +86,7 @@ func (r *resolver) resolve(f ResolveCallback) error {
 	for _, tableID := range tableIDOrder {
 		table, ok := r.data.Tables[tableID]
 		if !ok {
-			return fmt.Errorf("tableID not found: %s", tableID)
+			return errors.Join(ResolveError, fmt.Errorf("tableID not found: %s", tableID))
 		}
 		tableName := table.Config.TableName
 		if tableName == "" {
@@ -131,7 +131,8 @@ func (r *resolver) resolve(f ResolveCallback) error {
 					if rv, ok := ctx.resolved[fieldName]; ok {
 						saveFields[fieldName] = rv
 					} else {
-						return fmt.Errorf("field %s for table %s was not resolved", fieldName, table.ID)
+						return errors.Join(ResolveCallbackError,
+							fmt.Errorf("field %s for table %s was not resolved", fieldName, table.ID))
 					}
 				} else {
 					saveFields[fieldName] = fieldValue

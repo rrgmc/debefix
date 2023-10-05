@@ -1,13 +1,13 @@
 package debefix
 
 type ResolveValue interface {
-	isResoleValue()
+	isResolveValue()
 }
 
 type ResolveGenerate struct {
 }
 
-func (r ResolveGenerate) isResoleValue() {}
+func (r ResolveGenerate) isResolveValue() {}
 
 type ResolveContext interface {
 	TableID() string

@@ -1,6 +1,7 @@
 package debefix
 
 import (
+	"errors"
 	"testing"
 	"testing/fstest"
 
@@ -54,6 +55,35 @@ post_tags:
 		"post_tags": 1,
 	}, rowCount)
 	require.Equal(t, []string{"tags", "tags", "posts", "post_tags"}, tableOrder)
+}
+
+func TestResolveGenerated(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tags:
+  rows:
+    - tag_id: !dbfexpr generated
+      tag_name: "All"
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	require.NoError(t, err)
+
+	rowCount := map[string]int{}
+
+	err = Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+		rowCount[ctx.TableID()]++
+		require.IsType(t, &ResolveGenerate{}, fields["tag_id"])
+		ctx.ResolveField("tag_id", 1)
+		return nil
+	})
+	require.NoError(t, err)
+
+	require.Equal(t, map[string]int{
+		"tags": 1,
+	}, rowCount)
 }
 
 func TestResolveTags(t *testing.T) {
@@ -144,4 +174,60 @@ posts:
 
 	err = ResolveCheck(data)
 	require.ErrorIs(t, err, ResolveValueError)
+}
+
+func TestResolveInvalidDependency(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tags:
+  rows:
+    - tag_id: 2
+      tag_name: "All"
+      _dbfconfig:
+        id: "all"
+posts:
+  config:
+    depends: ["nothing"]
+  rows:
+    - post_id: 1
+      title: "First post"
+      tag_id: !dbfexpr "refid:tags:half:tag_id"
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	require.NoError(t, err)
+
+	err = ResolveCheck(data)
+	require.ErrorIs(t, err, ResolveError)
+}
+
+func TestResolveCallbackError(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tags:
+  rows:
+    - tag_id: !dbfexpr generated
+      tag_name: "All"
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	require.NoError(t, err)
+
+	cbError := errors.New("test error")
+
+	rowCount := map[string]int{}
+
+	err = Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+		rowCount[ctx.TableID()]++
+		return cbError
+	})
+	require.ErrorIs(t, err, cbError)
+
+	require.Equal(t, map[string]int{
+		"tags": 1,
+	}, rowCount)
 }
