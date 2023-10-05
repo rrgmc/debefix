@@ -15,6 +15,7 @@ type sqlQueryInterface struct {
 
 var _ QueryInterface = (*sqlQueryInterface)(nil)
 
+// NewSQLQueryInterface wraps a *sql.DB on the QueryInterface interface.
 func NewSQLQueryInterface(db *sql.DB) QueryInterface {
 	return &sqlQueryInterface{db}
 }
