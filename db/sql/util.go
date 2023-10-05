@@ -54,7 +54,7 @@ func (m DebugQueryInterface) Query(query string, returnFieldNames []string, args
 	_, err := fmt.Fprintln(out, query)
 	retErr = errors.Join(retErr, err)
 
-	_, err = fmt.Fprintln(out, args)
+	_, err = fmt.Fprintln(out, args...)
 	retErr = errors.Join(retErr, err)
 
 	_, err = fmt.Fprintf(out, "===\n")

@@ -2,28 +2,37 @@ package sql
 
 import (
 	"database/sql"
+	"slices"
 
 	"github.com/RangelReale/debefix/db"
 )
 
 // ResolverDBCallback is a db.ResolverDBCallback to generate SQL-based database records.
+// The parameter "fields" and "returnFieldNames" are always sorted to be deterministic.
 func ResolverDBCallback(db QueryInterface, sqlBuilder QueryBuilder) db.ResolverDBCallback {
 	return func(tableName string, fields map[string]any, returnFieldNames []string) (map[string]any, error) {
 		// build INSERT query
 		var fieldNames []string
 		var fieldPlaceholders []string
 		var args []any
+		returnFieldNames = slices.Clone(returnFieldNames)
+
+		for fn, _ := range fields {
+			fieldNames = append(fieldNames, fn)
+		}
+
+		slices.Sort(fieldNames)
+		slices.Sort(returnFieldNames)
 
 		placeholderProvider := sqlBuilder.CreatePlaceholderProvider()
 
-		for fn, fv := range fields {
-			fieldNames = append(fieldNames, fn)
+		for _, fn := range fieldNames {
 			placeholder, argName := placeholderProvider.Next()
 			fieldPlaceholders = append(fieldPlaceholders, placeholder)
 			if argName != "" {
-				args = append(args, sql.Named(argName, fv))
+				args = append(args, sql.Named(argName, fields[fn]))
 			} else {
-				args = append(args, fv)
+				args = append(args, fields[fn])
 			}
 		}
 
@@ -42,6 +51,13 @@ func ResolverDBCallback(db QueryInterface, sqlBuilder QueryBuilder) db.ResolverD
 // specified in returnFieldNames.
 type QueryInterface interface {
 	Query(query string, returnFieldNames []string, args ...any) (map[string]any, error)
+}
+
+// QueryInterfaceFunc is a func adapter for QueryInterface
+type QueryInterfaceFunc func(query string, returnFieldNames []string, args ...any) (map[string]any, error)
+
+func (f QueryInterfaceFunc) Query(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+	return f(query, returnFieldNames, args...)
 }
 
 // PlaceholderProvider generates database-specific placeholders, like ? for MySQL, $1 for postgres, or :param1 for MSSQL.
