@@ -13,10 +13,10 @@ Using the yaml tag `!dbfexpr` it is possible to define expressions on field valu
 Tables with rows can be declared at the top-level on inside a parent row using a special `_dbfdeps` field. In this case,
 values from the parent row can be used, using the `parent:<fieldname>` expression.
 
-## Expressions
+## Field value expressions
 
-- `!dbfexpr "refid:<table>:<refid>:<fieldname>"`: reference a **string id** field value in a table. This id is 
-  declared using a `_dbfconfig: {"id": <refid>}` special field in the row.
+- `!dbfexpr "refid:<table>:<refid>:<fieldname>"`: reference a **refid** field value in a table. This id is 
+  declared using a `_dbfconfig: {"refid": <refid>}` special field in the row.
 - `!dbfexpr "parent:<fieldname>"`: reference a field in the parent table. This can only be used inside a `_dbfdeps` 
   block.
 - `!dbfexpr "generated"`: indicates that this is a generated field that must be supplied at resolve time, and can later
