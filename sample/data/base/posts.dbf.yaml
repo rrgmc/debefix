@@ -14,7 +14,7 @@ posts:
             - post_id: !dbfexpr "parent:post_id"
               tag_id: !dbfexpr "refid:tags:go:tag_id"
       _dbfconfig:
-        id: "post_1"
+        refid: "post_1"
         tags: ["initial"]
     - post_id: 2
       parent_post_id: !dbfexpr "refid:posts:post_1:post_id"

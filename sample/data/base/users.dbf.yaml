@@ -8,13 +8,13 @@ users:
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
-        id: "johndoe"
+        refid: "johndoe"
     - user_id: 2
       name: "Jane Doe"
       email: "jane@example.com"
       created_at: !!timestamp 2023-01-04T12:30:12Z
       updated_at: !!timestamp 2023-01-04T12:30:12Z
       _dbfconfig:
-        id: "janedoe"
+        refid: "janedoe"
         tags:
           - onlyone

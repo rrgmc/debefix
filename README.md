@@ -39,19 +39,19 @@ tags:
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
-        id: "go" # refid to be targeted by '!dbfexpr "refid:tags:go:tag_id"'
+        refid: "go" # refid to be targeted by '!dbfexpr "refid:tags:go:tag_id"'
     - tag_id: !dbfexpr "generated"
       name: "JavaScript"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
-        id: "javascript"
+        refid: "javascript"
     - tag_id: !dbfexpr "generated"
       name: "C++"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
-        id: "cpp"
+        refid: "cpp"
 users:
   config:
     table_name: "public.user"
@@ -62,14 +62,14 @@ users:
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
-        id: "johndoe" # refid to be targeted by '!dbfexpr "refid:users:johndoe:user_id"'
+        refid: "johndoe" # refid to be targeted by '!dbfexpr "refid:users:johndoe:user_id"'
     - user_id: 2
       name: "Jane Doe"
       email: "jane@example.com"
       created_at: !!timestamp 2023-01-04T12:30:12Z
       updated_at: !!timestamp 2023-01-04T12:30:12Z
       _dbfconfig:
-        id: "janedoe"
+        refid: "janedoe"
 posts:
   config:
     table_name: "public.post"
@@ -86,7 +86,7 @@ posts:
             - post_id: !dbfexpr "parent:post_id"
               tag_id: !dbfexpr "refid:tags:go:tag_id"
       _dbfconfig:
-        id: "post_1"
+        refid: "post_1"
     - post_id: 2
       parent_post_id: !dbfexpr "refid:posts:post_1:post_id" # order matters, so self-referential fields must be set in order
       title: "Post 2"

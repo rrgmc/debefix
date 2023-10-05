@@ -29,8 +29,8 @@ type Row struct {
 }
 
 type RowConfig struct {
-	ID   string
-	Tags []string
+	RefID string   `yaml:"refid"`
+	Tags  []string `yaml:"tags"`
 }
 
 type Rows []Row

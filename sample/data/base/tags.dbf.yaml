@@ -7,16 +7,16 @@ tags:
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
-        id: "go"
+        refid: "go"
     - tag_id: !dbfexpr "generated"
       name: "JavaScript"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
-        id: "javascript"
+        refid: "javascript"
     - tag_id: !dbfexpr "generated"
       name: "C++"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
-        id: "cpp"
+        refid: "cpp"

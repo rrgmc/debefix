@@ -17,11 +17,11 @@ func TestLoad(t *testing.T) {
     - user_id: 1
       name: "John Doe"
       _dbfconfig:
-        id: "johndoe"
+        refid: "johndoe"
     - user_id: 2
       name: "Jane Doe"
       _dbfconfig:
-        id: "janedoe"
+        refid: "janedoe"
 `),
 		},
 	})
@@ -40,13 +40,13 @@ func TestLoad(t *testing.T) {
 		"user_id": uint64(1),
 		"name":    "John Doe",
 	}, usersTable.Rows[0].Fields)
-	require.Equal(t, "johndoe", usersTable.Rows[0].Config.ID)
+	require.Equal(t, "johndoe", usersTable.Rows[0].Config.RefID)
 
 	require.Equal(t, map[string]any{
 		"user_id": uint64(2),
 		"name":    "Jane Doe",
 	}, usersTable.Rows[1].Fields)
-	require.Equal(t, "janedoe", usersTable.Rows[1].Config.ID)
+	require.Equal(t, "janedoe", usersTable.Rows[1].Config.RefID)
 }
 
 func TestLoad2TablesSameFile(t *testing.T) {
@@ -188,7 +188,7 @@ func TestLoadExprRefID(t *testing.T) {
 
 	require.Len(t, postsTable.Rows, 1)
 	require.Equal(t,
-		&ValueRefID{TableID: "tags", ID: "all", FieldName: "tag_id"},
+		&ValueRefID{TableID: "tags", RefID: "all", FieldName: "tag_id"},
 		postsTable.Rows[0].Fields["tag_id"])
 }
 
@@ -386,7 +386,7 @@ func TestLoadNoParent(t *testing.T) {
     - tag_id: 2
       tag_name: "All"
       _dbfconfig:
-        id: "all"
+        refid: "all"
     - tag_id: 5
       tag_name: "Half"
 posts:

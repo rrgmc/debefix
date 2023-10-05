@@ -17,14 +17,14 @@ var testFS = fstest.MapFS{
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
-        id: "johndoe"
+        refid: "johndoe"
     - user_id: 2
       name: "Jane Doe"
       email: "jane@example.com"
       created_at: !!timestamp 2023-01-04T12:30:12Z
       updated_at: !!timestamp 2023-01-04T12:30:12Z
       _dbfconfig:
-        id: "janedoe"
+        refid: "janedoe"
         tags:
           - onlyone
 `),
@@ -40,19 +40,19 @@ var testFS = fstest.MapFS{
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
-        id: "go"
+        refid: "go"
     - tag_id: !dbfexpr "generated"
       name: "JavaScript"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
-        id: "javascript"
+        refid: "javascript"
     - tag_id: !dbfexpr "generated"
       name: "C++"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
-        id: "cpp"
+        refid: "cpp"
 `),
 		ModTime: time.Now(),
 	},
@@ -73,7 +73,7 @@ var testFS = fstest.MapFS{
             - post_id: !dbfexpr "parent:post_id"
               tag_id: !dbfexpr "refid:tags:go:tag_id"
       _dbfconfig:
-        id: "post_1"
+        refid: "post_1"
         tags: ["initial"]
     - post_id: 2
       parent_post_id: !dbfexpr "refid:posts:post_1:post_id"

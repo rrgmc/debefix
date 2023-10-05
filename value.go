@@ -13,10 +13,10 @@ type Value interface {
 	isValue()
 }
 
-// ValueRefID is a Value that references a field value in a table using the REFID (string ID).
+// ValueRefID is a Value that references a field value in a table using the RefID (string ID).
 type ValueRefID struct {
 	TableID   string
-	ID        string
+	RefID     string
 	FieldName string
 }
 
@@ -62,7 +62,7 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 		if len(fields) != 4 {
 			return nil, errors.Join(ValueError, fmt.Errorf("invalid !dbf tag value: %s", value))
 		}
-		return &ValueRefID{TableID: fields[1], ID: fields[2], FieldName: fields[3]}, nil
+		return &ValueRefID{TableID: fields[1], RefID: fields[2], FieldName: fields[3]}, nil
 	case "parent": // parent:<fieldname>
 		if !parent.HasParent() {
 			return nil, errors.Join(ValueError, errors.New("value has no parent"))

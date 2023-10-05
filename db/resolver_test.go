@@ -18,11 +18,11 @@ func TestResolver(t *testing.T) {
     - tag_id: 2
       tag_name: "All"
       _dbfconfig:
-        id: "all"
+        refid: "all"
     - tag_id: 5
       tag_name: "Half"
       _dbfconfig:
-        id: "half"
+        refid: "half"
 posts:
   config:
     table_name: "public.posts"
@@ -31,11 +31,11 @@ posts:
     - post_id: 1
       title: "First post"
       _dbfconfig:
-        id: "post_1"
+        refid: "post_1"
     - post_id: 2
       title: "Second post"
       _dbfconfig:
-        id: "post_2"
+        refid: "post_2"
 post_tags:
   config:
     table_name: "public.post_tags"

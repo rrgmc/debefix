@@ -148,7 +148,7 @@ func (r *resolver) resolve(f ResolveCallback) error {
 			}
 			r.tableData[table.ID].rows = append(r.tableData[table.ID].rows, resolverRow{
 				fields:     saveFields,
-				id:         row.Config.ID,
+				id:         row.Config.RefID,
 				internalID: row.InternalID,
 			})
 		}
@@ -164,7 +164,7 @@ func (r *resolver) resolveValue(value Value) (any, error) {
 		return &ResolveGenerate{}, nil
 	case *ValueRefID:
 		vrowfield, err := r.walkTableData(fv.TableID, func(row resolverRow) (bool, any, error) {
-			if row.id == fv.ID {
+			if row.id == fv.RefID {
 				if rowfield, ok := row.fields[fv.FieldName]; ok {
 					return true, rowfield, nil
 				} else {
@@ -174,7 +174,7 @@ func (r *resolver) resolveValue(value Value) (any, error) {
 			return false, nil, nil
 		})
 		if err != nil {
-			return nil, errors.Join(ResolveValueError, fmt.Errorf("could not find refid %s in table %s: %w", fv.ID, fv.TableID, err))
+			return nil, errors.Join(ResolveValueError, fmt.Errorf("could not find refid %s in table %s: %w", fv.RefID, fv.TableID, err))
 		}
 		return vrowfield, nil
 	case *ValueInternalID:
