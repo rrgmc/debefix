@@ -25,12 +25,12 @@ values from the parent row can be used, using the `parent:<fieldname>` expressio
 
 ## Generating SQL
 
-SQL can be generated using `github.com/RangelReale/debefix/sql/<dbtype>`.
+SQL can be generated using `github.com/RangelReale/debefix/db/sql/<dbtype>`.
 
 ```go
 import (
-    "github.com/RangelReale/debefix/sql"
-    "github.com/RangelReale/debefix/sql/postgres"
+    "github.com/RangelReale/debefix/db/sql"
+    "github.com/RangelReale/debefix/db/sql/postgres"
 )
 
 func main() {
