@@ -29,6 +29,9 @@ SQL can be generated using `github.com/RangelReale/debefix/db/sql/<dbtype>`.
 
 ```go
 import (
+    "sql"
+
+    "github.com/RangelReale/debefix"
     "github.com/RangelReale/debefix/db/sql"
     "github.com/RangelReale/debefix/db/sql/postgres"
 )
@@ -45,7 +48,7 @@ func main() {
     }
 
     // will send an INSERT SQL for each row to the db, taking table dependency in account for the correct order. 
-    err = debefix.Resolve(data, postgres.ResolverFunc(sql.NewSQLQueryInterface(db)))
+    err = postgres.Resolve(sql.NewSQLQueryInterface(db), data)
     if err != nil {
         panic(err)
     }
