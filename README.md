@@ -14,6 +14,12 @@ Using the yaml tag `!dbfexpr` it is possible to define expressions on field valu
 Tables with rows can be declared at the top-level on inside a parent row using a special `_dbfdeps` field. In this case,
 values from the parent row can be used, using the `parent:<fieldname>` expression.
 
+## Install
+
+```shell
+go get github.com/RangelReale/debefix
+```
+
 ## Field value expressions
 
 - `!dbfexpr "refid:<table>:<refid>:<fieldname>"`: reference a **refid** field value in a table. This id is 
