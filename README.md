@@ -38,7 +38,7 @@ import (
     "sql"
 
     "github.com/RangelReale/debefix"
-    "github.com/RangelReale/debefix/db/sql"
+    dbsql "github.com/RangelReale/debefix/db/sql"
     "github.com/RangelReale/debefix/db/sql/postgres"
 )
 
@@ -54,7 +54,7 @@ func main() {
     }
 
     // will send an INSERT SQL for each row to the db, taking table dependency in account for the correct order. 
-    err = postgres.Resolve(sql.NewSQLQueryInterface(db), data)
+    err = postgres.Resolve(dbsql.NewSQLQueryInterface(db), data)
     if err != nil {
         panic(err)
     }
@@ -75,7 +75,10 @@ sorted alphabetically, so the order can be deterministic.
 
 The same table can also be present in multiple files, given that the `config` section is equal (or only set in one of them).
 
+Only files that have the extension `.dbf.yaml` are loaded by the directory loader.
+
 ```yaml
+# all_data.dbf.yaml
 tags:
   config:
     table_name: "public.tag" # database table name. If not set, will use the table id (tags) as the table name.
