@@ -38,6 +38,16 @@ func rowToMap(cols []string, row rowInterface) (map[string]any, error) {
 	return m, nil
 }
 
+// QueryInterfaceCheck generates a smulated response for QueryInterface.Query
+func QueryInterfaceCheck(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+	ret := map[string]any{}
+	for _, fn := range returnFieldNames {
+		// simulate fields being generated
+		ret[fn] = uuid.New()
+	}
+	return ret, nil
+}
+
 // DebugQueryInterface is a QueryInterface that outputs the generated queries.
 type DebugQueryInterface struct {
 	Out io.Writer
@@ -54,17 +64,15 @@ func (m DebugQueryInterface) Query(query string, returnFieldNames []string, args
 	_, err := fmt.Fprintln(out, query)
 	retErr = errors.Join(retErr, err)
 
-	_, err = fmt.Fprintln(out, args...)
+	_, err = fmt.Fprintf(out, "%+v\n", args)
 	retErr = errors.Join(retErr, err)
 
 	_, err = fmt.Fprintf(out, "===\n")
 	retErr = errors.Join(retErr, err)
 
-	ret := map[string]any{}
-	for _, fn := range returnFieldNames {
-		// simulate fields being generated
-		ret[fn] = uuid.New()
+	if retErr != nil {
+		return nil, retErr
 	}
 
-	return ret, retErr
+	return QueryInterfaceCheck(query, returnFieldNames, args...)
 }

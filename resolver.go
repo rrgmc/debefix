@@ -31,13 +31,35 @@ type ResolveOption func(*resolver)
 // no row filtering is performed.
 func WithResolveTags(tags []string) ResolveOption {
 	return func(r *resolver) {
-		r.tags = tags
+		r.includeTagsFunc = DefaultResolveIncludeTagFunc(tags)
+	}
+}
+
+// ResolveIncludeTagsFunc is the function signature for WithResolveTagsFunc
+type ResolveIncludeTagsFunc func(tableID string, rowTags []string) bool
+
+// WithResolveTagsFunc sets a row tag filter function.
+func WithResolveTagsFunc(f ResolveIncludeTagsFunc) ResolveOption {
+	return func(r *resolver) {
+		r.includeTagsFunc = f
+	}
+}
+
+// DefaultResolveIncludeTagFunc returns a ResolveIncludeTagsFunc check checks if at least one tags is contained.
+func DefaultResolveIncludeTagFunc(tags []string) ResolveIncludeTagsFunc {
+	return func(tableID string, rowTags []string) bool {
+		if len(tags) > 0 && !slices.ContainsFunc(rowTags, func(s string) bool {
+			return slices.Contains(tags, s)
+		}) {
+			return false
+		}
+		return true
 	}
 }
 
 type resolver struct {
-	data *Data
-	tags []string
+	data            *Data
+	includeTagsFunc ResolveIncludeTagsFunc
 
 	// tableData stores the already-parsed row's data.
 	tableData map[string]*resolverTable
@@ -94,7 +116,7 @@ func (r *resolver) resolve(f ResolveCallback) error {
 		}
 
 		for _, row := range table.Rows {
-			if !r.includeTag(row.Config.Tags) {
+			if !r.includeTag(table.ID, row.Config.Tags) {
 				continue
 			}
 
@@ -198,13 +220,12 @@ func (r *resolver) resolveValue(value Value) (any, error) {
 }
 
 // includeTag checks whether the tags match the requested ones.
-func (r *resolver) includeTag(tags []string) bool {
-	if len(r.tags) > 0 && !slices.ContainsFunc(tags, func(s string) bool {
-		return slices.Contains(r.tags, s)
-	}) {
-		return false
+func (r *resolver) includeTag(tableID string, rowTags []string) bool {
+	if r.includeTagsFunc == nil {
+		return true
 	}
-	return true
+
+	return r.includeTagsFunc(tableID, rowTags)
 }
 
 // walkTableData searches for rows in tables.
