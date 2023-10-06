@@ -52,6 +52,13 @@ func main() {
 }
 ```
 
+## Generating Non-SQL
+
+The import `github.com/RangelReale/debefix/db` contains a `ResolverFunc` that is not directly tied to SQL, it can be
+used to insert data in any database that has the concepts of "tables" with a list of field/values.
+
+As inner maps/arrays are supported by YAML, data with more complex structure should work without any problems.
+
 ## Sample input
 
 The configuration can be in a single or multiple files, the file itself doesn't matter. The file names/directories are 
