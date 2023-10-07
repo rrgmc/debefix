@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/RangelReale/debefix/db/sql"
 )
@@ -25,10 +26,14 @@ func SQLBuilder() sql.QueryBuilder {
 			return &PlaceholderProvider{}
 		},
 		QuoteTable: func(t string) string {
-			return `"` + t + `"`
+			return quoteIdentifier(t)
 		},
 		QuoteField: func(f string) string {
-			return `"` + f + `"`
+			return quoteIdentifier(f)
 		},
 	}
+}
+
+func quoteIdentifier(s string) string {
+	return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
 }
