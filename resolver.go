@@ -38,6 +38,20 @@ func WithResolveTags(tags []string) ResolveOption {
 // ResolveIncludeTagsFunc is the function signature for WithResolveTagsFunc
 type ResolveIncludeTagsFunc func(tableID string, rowTags []string) bool
 
+// WithResolveProgress sets a function to receive resolve progress.
+func WithResolveProgress(progress func(tableID, tableName string)) ResolveOption {
+	return func(r *resolver) {
+		r.progress = progress
+	}
+}
+
+// WithResolveRowProgress sets a function to receive resolve row progress.
+func WithResolveRowProgress(rowProgress func(tableID, tableName string, current, amount int, isIncluded bool)) ResolveOption {
+	return func(r *resolver) {
+		r.rowProgress = rowProgress
+	}
+}
+
 // WithResolveTagsFunc sets a row tag filter function.
 func WithResolveTagsFunc(f ResolveIncludeTagsFunc) ResolveOption {
 	return func(r *resolver) {
@@ -59,6 +73,8 @@ func DefaultResolveIncludeTagFunc(tags []string) ResolveIncludeTagsFunc {
 
 type resolver struct {
 	data            *Data
+	progress        func(tableID, tableName string)
+	rowProgress     func(tableID, tableName string, current, amount int, isIncluded bool)
 	includeTagsFunc ResolveIncludeTagsFunc
 
 	// tableData stores the already-parsed row's data.
@@ -115,8 +131,18 @@ func (r *resolver) resolve(f ResolveCallback) error {
 			tableName = tableID
 		}
 
-		for _, row := range table.Rows {
-			if !r.includeTag(table.ID, row.Config.Tags) {
+		if r.progress != nil {
+			r.progress(table.ID, tableName)
+		}
+
+		for rowIdx, row := range table.Rows {
+			isIncluded := r.includeTag(table.ID, row.Config.Tags)
+
+			if r.rowProgress != nil {
+				r.rowProgress(table.ID, tableName, rowIdx+1, len(table.Rows), isIncluded)
+			}
+
+			if !isIncluded {
 				continue
 			}
 

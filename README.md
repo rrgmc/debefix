@@ -48,7 +48,7 @@ func main() {
         panic(err)
     }
 
-    data, err := debefix.LoadDirectory("/x/y")
+    data, err := debefix.Load(debefix.NewDirectoryFileProvider("/x/y"))
     if err != nil {
         panic(err)
     }

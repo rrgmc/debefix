@@ -2,6 +2,7 @@ package sql
 
 import (
 	"database/sql"
+	"fmt"
 	"slices"
 
 	"github.com/RangelReale/debefix/db"
@@ -40,7 +41,7 @@ func ResolverDBCallback(db QueryInterface, sqlBuilder QueryBuilder) db.ResolverD
 
 		ret, err := db.Query(query, returnFieldNames, args...)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error executing query `%s`: %w", query, err)
 		}
 
 		return ret, nil

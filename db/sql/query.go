@@ -21,6 +21,11 @@ func NewSQLQueryInterface(db *sql.DB) QueryInterface {
 }
 
 func (q sqlQueryInterface) Query(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+	if len(returnFieldNames) == 0 {
+		_, err := q.DB.Exec(query, args...)
+		return nil, err
+	}
+
 	rows, err := q.DB.Query(query, args...)
 	if err != nil {
 		return nil, err
@@ -28,7 +33,7 @@ func (q sqlQueryInterface) Query(query string, returnFieldNames []string, args .
 	defer rows.Close()
 
 	if !rows.Next() {
-		return nil, errors.New("no records")
+		return nil, errors.New("no records on query")
 	}
 
 	cols, err := rows.Columns()
