@@ -13,29 +13,40 @@ import (
 
 // Load loads the files from the fileProvider and returns the list of loaded tables.
 // Rows dependencies are not resolved, use ResolveCheck to check for them.
-func Load(fileProvider FileProvider) (*Data, error) {
-	loader := &loader{
+func Load(fileProvider FileProvider, options ...LoadOption) (*Data, error) {
+	l := &loader{
 		fileProvider: fileProvider,
 	}
-	err := loader.load()
+	for _, opt := range options {
+		opt(l)
+	}
+	err := l.load()
 	if err != nil {
 		return nil, err
 	}
-	return &loader.data, nil
+	return &l.data, nil
 }
 
-// LoadDirectory is a helper to load from a filesystem directory path.
-func LoadDirectory(rootDir string, options ...DirectoryFileProviderOption) (*Data, error) {
-	return Load(NewDirectoryFileProvider(rootDir, options...))
+type LoadOption func(l *loader)
+
+// WithLoadProgress sets a callback to report load progress.
+func WithLoadProgress(progress func(filename string)) LoadOption {
+	return func(l *loader) {
+		l.progress = progress
+	}
 }
 
 type loader struct {
 	fileProvider FileProvider
 	data         Data
+	progress     func(filename string)
 }
 
 func (l *loader) load() error {
 	return l.fileProvider.Load(func(info FileInfo) error {
+		if l.progress != nil {
+			l.progress(info.Name)
+		}
 		return l.loadFile(info.File, info.Tags)
 	})
 }

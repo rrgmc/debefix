@@ -25,7 +25,7 @@ type FileInfo struct {
 	Tags []string
 }
 
-type directoryFileProvider struct {
+type fsFileProvider struct {
 	fs      fs.FS
 	include func(path string, entry os.DirEntry) bool
 	tagFunc func(dirs []string) []string
@@ -34,14 +34,14 @@ type directoryFileProvider struct {
 // NewDirectoryFileProvider creates a FileProvider that list files from a directory, sorted by name.
 // Only files with the ".dbf.yaml" extension are returned.
 // Returned file names are relative to the rootDir.
-func NewDirectoryFileProvider(rootDir string, options ...DirectoryFileProviderOption) FileProvider {
+func NewDirectoryFileProvider(rootDir string, options ...FSFileProviderOption) FileProvider {
 	return NewFSFileProvider(os.DirFS(rootDir), options...)
 }
 
 // NewFSFileProvider creates a FileProvider that list files from a fs.FS, sorted by name.
 // Only files with the ".dbf.yaml" extension are returned.
-func NewFSFileProvider(fs fs.FS, options ...DirectoryFileProviderOption) FileProvider {
-	ret := &directoryFileProvider{
+func NewFSFileProvider(fs fs.FS, options ...FSFileProviderOption) FileProvider {
+	ret := &fsFileProvider{
 		fs: fs,
 	}
 	for _, opt := range options {
@@ -58,25 +58,25 @@ func NewFSFileProvider(fs fs.FS, options ...DirectoryFileProviderOption) FilePro
 	return ret
 }
 
-type DirectoryFileProviderOption func(*directoryFileProvider)
+type FSFileProviderOption func(*fsFileProvider)
 
 // WithDirectoryIncludeFunc sets a callback to allow choosing files that will be read.
-func WithDirectoryIncludeFunc(include func(path string, entry os.DirEntry) bool) DirectoryFileProviderOption {
-	return func(provider *directoryFileProvider) {
+func WithDirectoryIncludeFunc(include func(path string, entry os.DirEntry) bool) FSFileProviderOption {
+	return func(provider *fsFileProvider) {
 		provider.include = include
 	}
 }
 
 // WithDirectoryAsTag creates tags for each directory. Inner directories will be concatenated by a dot (.).
-func WithDirectoryAsTag() DirectoryFileProviderOption {
-	return func(provider *directoryFileProvider) {
+func WithDirectoryAsTag() FSFileProviderOption {
+	return func(provider *fsFileProvider) {
 		provider.tagFunc = DefaultDirectoryTagFunc
 	}
 }
 
 // WithDirectoryTagFunc allows returning custom tags for each directory entry.
-func WithDirectoryTagFunc(tagFunc func(dirs []string) []string) DirectoryFileProviderOption {
-	return func(provider *directoryFileProvider) {
+func WithDirectoryTagFunc(tagFunc func(dirs []string) []string) FSFileProviderOption {
+	return func(provider *fsFileProvider) {
 		provider.tagFunc = tagFunc
 	}
 }
@@ -91,11 +91,11 @@ func noDirectoryTagFunc(dirs []string) []string {
 	return nil
 }
 
-func (d directoryFileProvider) Load(f FileProviderCallback) error {
+func (d fsFileProvider) Load(f FileProviderCallback) error {
 	return d.loadFiles(".", nil, f)
 }
 
-func (d directoryFileProvider) loadFiles(currentPath string, tags []string, f FileProviderCallback) error {
+func (d fsFileProvider) loadFiles(currentPath string, tags []string, f FileProviderCallback) error {
 	files, err := d.readDirSorted(currentPath)
 	if err != nil {
 		return fmt.Errorf("error reading directory '%s': %w", currentPath, err)
@@ -151,7 +151,7 @@ func (d directoryFileProvider) loadFiles(currentPath string, tags []string, f Fi
 	return nil
 }
 
-func (d directoryFileProvider) readDirSorted(currentPath string) ([]os.DirEntry, error) {
+func (d fsFileProvider) readDirSorted(currentPath string) ([]os.DirEntry, error) {
 	files, err := fs.ReadDir(d.fs, currentPath)
 	if err != nil {
 		return nil, err

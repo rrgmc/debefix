@@ -28,8 +28,8 @@ func main() {
 		panic(err)
 	}
 
-	data, err := debefix.LoadDirectory(filepath.Join(curDir, "data"),
-		debefix.WithDirectoryAsTag())
+	data, err := debefix.Load(debefix.NewDirectoryFileProvider(filepath.Join(curDir, "data"),
+		debefix.WithDirectoryAsTag()))
 	if err != nil {
 		panic(err)
 	}
