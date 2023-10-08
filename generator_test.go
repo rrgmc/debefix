@@ -84,17 +84,17 @@ func TestGenerateOptions(t *testing.T) {
 	err := GenerateFS(providerData, func(ctx ResolveContext, fields map[string]any) error {
 		return ResolveCheckCallback(ctx, fields)
 	},
-		WithGenerateFSFileProviderOptions(
+		WithFSFileProviderOptions(
 			WithDirectoryIncludeFunc(func(path string, entry os.DirEntry) bool {
 				called["fsfileprovider_option"] = true
 				return true
 			}),
 		),
-		WithGenerateLoadOptions(
+		WithLoadOptions(
 			WithLoadProgress(func(filename string) {
 				called["load_option"] = true
 			})),
-		WithGenerateResolveOptions(
+		WithResolveOptions(
 			WithResolveProgress(func(tableID, tableName string) {
 				called["resolve_option"] = true
 

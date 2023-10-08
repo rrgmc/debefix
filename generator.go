@@ -44,23 +44,23 @@ func WithGenerateResolveCheck(check bool) GenerateOption {
 	}
 }
 
-// WithGenerateFSFileProviderOptions sets file provider options for GenerateFS and GenerateDirectory.
+// WithFSFileProviderOptions sets file provider options for GenerateFS and GenerateDirectory.
 // It is ignored for Generate.
-func WithGenerateFSFileProviderOptions(o ...FSFileProviderOption) GenerateOption {
+func WithFSFileProviderOptions(o ...FSFileProviderOption) GenerateOption {
 	return func(g *generator) {
 		g.fsFileProviderOption = o
 	}
 }
 
-// WithGenerateLoadOptions sets options for Load.
-func WithGenerateLoadOptions(o ...LoadOption) GenerateOption {
+// WithLoadOptions sets options for Load.
+func WithLoadOptions(o ...LoadOption) GenerateOption {
 	return func(g *generator) {
 		g.loadOptions = o
 	}
 }
 
-// WithGenerateResolveOptions sets options for Resolve.
-func WithGenerateResolveOptions(o ...ResolveOption) GenerateOption {
+// WithResolveOptions sets options for Resolve.
+func WithResolveOptions(o ...ResolveOption) GenerateOption {
 	return func(g *generator) {
 		g.resolveOptions = o
 	}
