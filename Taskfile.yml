@@ -1,6 +1,13 @@
 version: '3'
 
 tasks:
+  current-version:
+    cmds:
+      - 'echo "Version: {{.GIT_TAG_CURRENT}}"'
+    silent: true
+    vars:
+      GIT_TAG_CURRENT:
+        sh: 'git describe --tags --abbrev=0'
   release-version:
     cmds:
       - 'echo "Version: {{.GIT_TAG_CURRENT}} => {{.VERSION}}"'
