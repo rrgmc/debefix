@@ -39,8 +39,8 @@ go get github.com/RangelReale/debefix
 
 All field names starting with `_dbf` are reserved by the library.
 
-- `_dbfconfig`: {"refid": "", "tags": ["", ""]}
-- `_dbfdeps`: {<tableID>: {...table config...}}
+- `_dbfconfig`: `{"refid": "", "tags": ["", ""]}`
+- `_dbfdeps`: `{<tableID>: {...table config...}}`
 
 ## Generating SQL
 
