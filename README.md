@@ -48,13 +48,8 @@ func main() {
         panic(err)
     }
 
-    data, err := debefix.Load(debefix.NewDirectoryFileProvider("/x/y"))
-    if err != nil {
-        panic(err)
-    }
-
     // will send an INSERT SQL for each row to the db, taking table dependency in account for the correct order. 
-    err = postgres.Resolve(dbsql.NewSQLQueryInterface(db), data)
+    err = postgres.Generate(debefix.NewDirectoryFileProvider("/x/y"), dbsql.NewSQLQueryInterface(db))
     if err != nil {
         panic(err)
     }
