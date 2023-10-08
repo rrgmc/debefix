@@ -37,7 +37,6 @@ SQL can be generated using `github.com/RangelReale/debefix/db/sql/<dbtype>`.
 import (
     "sql"
 
-    "github.com/RangelReale/debefix"
     dbsql "github.com/RangelReale/debefix/db/sql"
     "github.com/RangelReale/debefix/db/sql/postgres"
 )
@@ -49,7 +48,7 @@ func main() {
     }
 
     // will send an INSERT SQL for each row to the db, taking table dependency in account for the correct order. 
-    err = postgres.Generate(debefix.NewDirectoryFileProvider("/x/y"), dbsql.NewSQLQueryInterface(db))
+    err = postgres.GenerateDirectory("/x/y", dbsql.NewSQLQueryInterface(db))
     if err != nil {
         panic(err)
     }
