@@ -25,7 +25,7 @@ func ResolveCheck(data *Data, options ...ResolveOption) error {
 
 type ResolveCallback func(ctx ResolveContext, fields map[string]any) error
 
-// WithResolveTags set Resolve to only resolve rows that contains at least one of these tags. If nil or 0 length,
+// WithResolveTags set [Resolve] to only resolve rows that contains at least one of these tags. If nil or 0 length,
 // no row filtering is performed.
 func WithResolveTags(tags []string) ResolveOption {
 	return fnResolveOption(func(r *resolver) {
@@ -33,7 +33,7 @@ func WithResolveTags(tags []string) ResolveOption {
 	})
 }
 
-// ResolveIncludeTagsFunc is the function signature for WithResolveTagsFunc
+// ResolveIncludeTagsFunc is the function signature for [WithResolveTagsFunc]
 type ResolveIncludeTagsFunc func(tableID string, rowTags []string) bool
 
 // WithResolveProgress sets a function to receive resolve progress.
@@ -57,7 +57,7 @@ func WithResolveTagsFunc(f ResolveIncludeTagsFunc) ResolveOption {
 	})
 }
 
-// DefaultResolveIncludeTagFunc returns a ResolveIncludeTagsFunc check checks if at least one tags is contained.
+// DefaultResolveIncludeTagFunc returns a [ResolveIncludeTagsFunc] check checks if at least one tags is contained.
 func DefaultResolveIncludeTagFunc(tags []string) ResolveIncludeTagsFunc {
 	return func(tableID string, rowTags []string) bool {
 		if len(tags) > 0 && !slices.ContainsFunc(rowTags, func(s string) bool {

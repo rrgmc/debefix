@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// FileProvider provides files and tags to Load. The order matters, so it should be deterministic.
+// FileProvider provides files and tags to [Load]. The order matters, so it should be deterministic.
 type FileProvider interface {
 	Load(FileProviderCallback) error
 }
@@ -31,14 +31,14 @@ type fsFileProvider struct {
 	tagFunc func(dirs []string) []string
 }
 
-// NewDirectoryFileProvider creates a FileProvider that list files from a directory, sorted by name.
+// NewDirectoryFileProvider creates a [FileProvider] that list files from a directory, sorted by name.
 // Only files with the ".dbf.yaml" extension are returned.
 // Returned file names are relative to the rootDir.
 func NewDirectoryFileProvider(rootDir string, options ...FSFileProviderOption) FileProvider {
 	return NewFSFileProvider(os.DirFS(rootDir), options...)
 }
 
-// NewFSFileProvider creates a FileProvider that list files from a fs.FS, sorted by name.
+// NewFSFileProvider creates a [FileProvider] that list files from a [fs.FS], sorted by name.
 // Only files with the ".dbf.yaml" extension are returned.
 func NewFSFileProvider(fs fs.FS, options ...FSFileProviderOption) FileProvider {
 	ret := &fsFileProvider{
@@ -59,6 +59,7 @@ func NewFSFileProvider(fs fs.FS, options ...FSFileProviderOption) FileProvider {
 }
 
 // WithDirectoryIncludeFunc sets a callback to allow choosing files that will be read.
+// Check entry [os.DirEntry.IsDir] to detect files or directories.
 func WithDirectoryIncludeFunc(include func(path string, entry os.DirEntry) bool) FSFileProviderOption {
 	return fnFSFileProviderOption(func(provider *fsFileProvider) {
 		provider.include = include

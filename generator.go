@@ -3,21 +3,21 @@ package debefix
 import "io/fs"
 
 // Generate loads files and calls a resolver callback to resolve the values.
-// It is a combination of Load and Resolve.
+// It is a combination of [Load] and [Resolve].
 func Generate(fileProvider FileProvider, resolver ResolveCallback, options ...GenerateOption) error {
 	return generate(func(g *generator) FileProvider {
 		return fileProvider
 	}, resolver, options...)
 }
 
-// GenerateFS is a version of Generate that loads from a fs.FS.
+// GenerateFS is a version of [Generate] that loads from a fs.FS.
 func GenerateFS(fs fs.FS, resolver ResolveCallback, options ...GenerateOption) error {
 	return generate(func(g *generator) FileProvider {
 		return NewFSFileProvider(fs, g.fsFileProviderOption...)
 	}, resolver, options...)
 }
 
-// GenerateDirectory is a version of Generate that loads from a directory name.
+// GenerateDirectory is a version of [Generate] that loads from a directory name.
 func GenerateDirectory(rootDir string, resolver ResolveCallback, options ...GenerateOption) error {
 	return generate(func(g *generator) FileProvider {
 		return NewDirectoryFileProvider(rootDir, g.fsFileProviderOption...)
@@ -44,7 +44,7 @@ func generate(getFileProvider func(g *generator) FileProvider, resolver ResolveC
 	return g.generate()
 }
 
-// WithGenerateResolveCheck sets whether to check the data using ResolveCheck of not. Default is false.
+// WithGenerateResolveCheck sets whether to check the data using [ResolveCheck]. Default is false.
 func WithGenerateResolveCheck(check bool) GenerateOption {
 	return fnInternalGenerateOption(func(g *generator) {
 		g.resolveCheck = check

@@ -13,7 +13,7 @@ type Value interface {
 	isValue()
 }
 
-// ValueRefID is a Value that references a field value in a table using the RefID (string ID).
+// ValueRefID is a [Value] that references a field value in a table using the RefID (string ID).
 type ValueRefID struct {
 	TableID   string
 	RefID     string
@@ -25,11 +25,11 @@ func (v ValueRefID) TableDepends() string {
 	return v.TableID
 }
 
-// ValueGenerated is a Value that will be generated in the future (possibly by a database).
+// ValueGenerated is a [Value] that will be generated in the future (possibly by a database).
 type ValueGenerated struct {
 }
 
-// ValueInternalID is a Value that references a field value in a table using the internal ID.
+// ValueInternalID is a [Value] that references a field value in a table using the internal ID.
 type ValueInternalID struct {
 	TableID    string
 	InternalID uuid.UUID
@@ -45,7 +45,7 @@ func (v ValueRefID) isValue()      {}
 func (v ValueGenerated) isValue()  {}
 func (v ValueInternalID) isValue() {}
 
-// valueTableDepends is an interface to indicate a Value adds a dependency on another table.
+// valueTableDepends is an interface to indicate that a [Value] adds a dependency on another table.
 type valueTableDepends interface {
 	TableDepends() string
 }
