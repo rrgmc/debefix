@@ -14,17 +14,19 @@ var (
 	ResolveCallbackError = errors.New("resolve callback error")
 )
 
+type TokenPosition = token.Position
+
 type ParseError struct {
 	ErrorMessage string
 	Path         string
-	Token        *token.Token
+	Position     *TokenPosition
 }
 
-func NewParseError(msg string, path string, token *token.Token) ParseError {
+func NewParseError(msg string, path string, position *TokenPosition) ParseError {
 	return ParseError{
 		ErrorMessage: msg,
 		Path:         path,
-		Token:        token,
+		Position:     position,
 	}
 }
 

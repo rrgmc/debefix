@@ -22,6 +22,6 @@ func getStringNode(node ast.Node) (string, error) {
 	case *ast.StringNode:
 		return n.Value, nil
 	default:
-		return "", NewParseError("node is not string", node.GetPath(), node.GetToken())
+		return "", NewParseError("node is not string", node.GetPath(), node.GetToken().Position)
 	}
 }
