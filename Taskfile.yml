@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  release-version:
+    cmds:
+      - 'echo "Current version: {{.GIT_TAG_CURRENT}}"'
+      - task: release-version-internal
+    vars:
+      GIT_TAG_CURRENT:
+        sh: 'git describe --tags --abbrev=0'
+    requires:
+      vars: [VERSION]
+    silent: true
+  release-version-internal:
+    internal: true
+    prompt: "Creating and pushing tag {{.VERSION}}. Are you sure?"
+    cmds:
+      - 'git tag {{.VERSION}}'
+      - 'git push --tags'
+    requires:
+      vars: [VERSION]
+    silent: true
