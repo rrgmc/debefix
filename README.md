@@ -35,6 +35,13 @@ go get github.com/RangelReale/debefix
 - `!dbfexpr "generated"`: indicates that this is a generated field that must be supplied at resolve time, and can later
   be used by other references once resolved.
 
+## Special fields
+
+All field names starting with `_dbf` are reserved by the library.
+
+- `_dbfconfig`: {"refid": "", "tags": ["", ""]}
+- `_dbfdeps`: {<tableID>: {...table config...}}
+
 ## Generating SQL
 
 SQL can be generated using `github.com/RangelReale/debefix/db/sql/<dbtype>`.
