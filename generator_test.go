@@ -84,21 +84,17 @@ func TestGenerateOptions(t *testing.T) {
 	err := GenerateFS(providerData, func(ctx ResolveContext, fields map[string]any) error {
 		return ResolveCheckCallback(ctx, fields)
 	},
-		WithFSFileProviderOptions(
-			WithDirectoryIncludeFunc(func(path string, entry os.DirEntry) bool {
-				called["fsfileprovider_option"] = true
-				return true
-			}),
-		),
-		WithLoadOptions(
-			WithLoadProgress(func(filename string) {
-				called["load_option"] = true
-			})),
-		WithResolveOptions(
-			WithResolveProgress(func(tableID, tableName string) {
-				called["resolve_option"] = true
+		WithDirectoryIncludeFunc(func(path string, entry os.DirEntry) bool {
+			called["fsfileprovider_option"] = true
+			return true
+		}),
+		WithLoadProgress(func(filename string) {
+			called["load_option"] = true
+		}),
+		WithResolveProgress(func(tableID, tableName string) {
+			called["resolve_option"] = true
 
-			})))
+		}))
 	require.NoError(t, err)
 
 	require.Equal(t, expected, called)

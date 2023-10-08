@@ -3,7 +3,7 @@ version: '3'
 tasks:
   release-version:
     cmds:
-      - 'echo "Current version: {{.GIT_TAG_CURRENT}}"'
+      - 'echo "Version: {{.GIT_TAG_CURRENT}} => {{.VERSION}}"'
       - task: release-version-internal
     vars:
       GIT_TAG_CURRENT:

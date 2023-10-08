@@ -13,7 +13,7 @@ import (
 func Resolve(data *Data, f ResolveCallback, options ...ResolveOption) error {
 	r := &resolver{data: data}
 	for _, opt := range options {
-		opt(r)
+		opt.apply(r)
 	}
 	return r.resolve(f)
 }
@@ -25,14 +25,12 @@ func ResolveCheck(data *Data, options ...ResolveOption) error {
 
 type ResolveCallback func(ctx ResolveContext, fields map[string]any) error
 
-type ResolveOption func(*resolver)
-
 // WithResolveTags set Resolve to only resolve rows that contains at least one of these tags. If nil or 0 length,
 // no row filtering is performed.
 func WithResolveTags(tags []string) ResolveOption {
-	return func(r *resolver) {
+	return fnResolveOption(func(r *resolver) {
 		r.includeTagsFunc = DefaultResolveIncludeTagFunc(tags)
-	}
+	})
 }
 
 // ResolveIncludeTagsFunc is the function signature for WithResolveTagsFunc
@@ -40,23 +38,23 @@ type ResolveIncludeTagsFunc func(tableID string, rowTags []string) bool
 
 // WithResolveProgress sets a function to receive resolve progress.
 func WithResolveProgress(progress func(tableID, tableName string)) ResolveOption {
-	return func(r *resolver) {
+	return fnResolveOption(func(r *resolver) {
 		r.progress = progress
-	}
+	})
 }
 
 // WithResolveRowProgress sets a function to receive resolve row progress.
 func WithResolveRowProgress(rowProgress func(tableID, tableName string, current, amount int, isIncluded bool)) ResolveOption {
-	return func(r *resolver) {
+	return fnResolveOption(func(r *resolver) {
 		r.rowProgress = rowProgress
-	}
+	})
 }
 
 // WithResolveTagsFunc sets a row tag filter function.
 func WithResolveTagsFunc(f ResolveIncludeTagsFunc) ResolveOption {
-	return func(r *resolver) {
+	return fnResolveOption(func(r *resolver) {
 		r.includeTagsFunc = f
-	}
+	})
 }
 
 // DefaultResolveIncludeTagFunc returns a ResolveIncludeTagsFunc check checks if at least one tags is contained.

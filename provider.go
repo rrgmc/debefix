@@ -45,7 +45,7 @@ func NewFSFileProvider(fs fs.FS, options ...FSFileProviderOption) FileProvider {
 		fs: fs,
 	}
 	for _, opt := range options {
-		opt(ret)
+		opt.apply(ret)
 	}
 	if ret.include == nil {
 		ret.include = func(string, os.DirEntry) bool {
@@ -58,27 +58,25 @@ func NewFSFileProvider(fs fs.FS, options ...FSFileProviderOption) FileProvider {
 	return ret
 }
 
-type FSFileProviderOption func(*fsFileProvider)
-
 // WithDirectoryIncludeFunc sets a callback to allow choosing files that will be read.
 func WithDirectoryIncludeFunc(include func(path string, entry os.DirEntry) bool) FSFileProviderOption {
-	return func(provider *fsFileProvider) {
+	return fnFSFileProviderOption(func(provider *fsFileProvider) {
 		provider.include = include
-	}
+	})
 }
 
 // WithDirectoryAsTag creates tags for each directory. Inner directories will be concatenated by a dot (.).
 func WithDirectoryAsTag() FSFileProviderOption {
-	return func(provider *fsFileProvider) {
+	return fnFSFileProviderOption(func(provider *fsFileProvider) {
 		provider.tagFunc = DefaultDirectoryTagFunc
-	}
+	})
 }
 
 // WithDirectoryTagFunc allows returning custom tags for each directory entry.
 func WithDirectoryTagFunc(tagFunc func(dirs []string) []string) FSFileProviderOption {
-	return func(provider *fsFileProvider) {
+	return fnFSFileProviderOption(func(provider *fsFileProvider) {
 		provider.tagFunc = tagFunc
-	}
+	})
 }
 
 // DefaultDirectoryTagFunc joins directories using a dot (.).

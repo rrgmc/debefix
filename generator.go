@@ -29,42 +29,49 @@ func generate(getFileProvider func(g *generator) FileProvider, resolver ResolveC
 		resolver: resolver,
 	}
 	for _, opt := range options {
-		opt(&g)
+		switch xopt := opt.(type) {
+		case FSFileProviderOption:
+			g.fsFileProviderOption = append(g.fsFileProviderOption, xopt)
+		case LoadOption:
+			g.loadOptions = append(g.loadOptions, xopt)
+		case ResolveOption:
+			g.resolveOptions = append(g.resolveOptions, xopt)
+		case internalGenerateOption:
+			xopt.apply(&g)
+		}
 	}
 	g.fileProvider = getFileProvider(&g)
 	return g.generate()
 }
 
-type GenerateOption func(g *generator)
-
 // WithGenerateResolveCheck sets whether to check the data using ResolveCheck of not. Default is false.
 func WithGenerateResolveCheck(check bool) GenerateOption {
-	return func(g *generator) {
+	return fnInternalGenerateOption(func(g *generator) {
 		g.resolveCheck = check
-	}
+	})
 }
 
-// WithFSFileProviderOptions sets file provider options for GenerateFS and GenerateDirectory.
-// It is ignored for Generate.
-func WithFSFileProviderOptions(o ...FSFileProviderOption) GenerateOption {
-	return func(g *generator) {
-		g.fsFileProviderOption = o
-	}
-}
-
-// WithLoadOptions sets options for Load.
-func WithLoadOptions(o ...LoadOption) GenerateOption {
-	return func(g *generator) {
-		g.loadOptions = o
-	}
-}
-
-// WithResolveOptions sets options for Resolve.
-func WithResolveOptions(o ...ResolveOption) GenerateOption {
-	return func(g *generator) {
-		g.resolveOptions = o
-	}
-}
+// // WithFSFileProviderOptions sets file provider options for GenerateFS and GenerateDirectory.
+// // It is ignored for Generate.
+// func WithFSFileProviderOptions(o ...FSFileProviderOption) GenerateOption {
+// 	return fnInternalGenerateOption(func(g *generator) {
+// 		g.fsFileProviderOption = o
+// 	})
+// }
+//
+// // WithLoadOptions sets options for Load.
+// func WithLoadOptions(o ...LoadOption) GenerateOption {
+// 	return func(g *generator) {
+// 		g.loadOptions = o
+// 	}
+// }
+//
+// // WithResolveOptions sets options for Resolve.
+// func WithResolveOptions(o ...ResolveOption) GenerateOption {
+// 	return func(g *generator) {
+// 		g.resolveOptions = o
+// 	}
+// }
 
 type generator struct {
 	fileProvider FileProvider

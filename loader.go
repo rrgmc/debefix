@@ -18,7 +18,7 @@ func Load(fileProvider FileProvider, options ...LoadOption) (*Data, error) {
 		fileProvider: fileProvider,
 	}
 	for _, opt := range options {
-		opt(l)
+		opt.apply(l)
 	}
 	err := l.load()
 	if err != nil {
@@ -27,13 +27,11 @@ func Load(fileProvider FileProvider, options ...LoadOption) (*Data, error) {
 	return &l.data, nil
 }
 
-type LoadOption func(l *loader)
-
 // WithLoadProgress sets a callback to report load progress.
 func WithLoadProgress(progress func(filename string)) LoadOption {
-	return func(l *loader) {
+	return fnLoadOption(func(l *loader) {
 		l.progress = progress
-	}
+	})
 }
 
 type loader struct {
