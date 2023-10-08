@@ -10,6 +10,9 @@ tasks:
         sh: 'git describe --tags --abbrev=0'
     requires:
       vars: [VERSION]
+    preconditions:
+      - sh: 'test -z "git status --porcelain"'
+        msg: 'there are uncommited git changes'
     silent: true
   release-version-internal:
     internal: true
