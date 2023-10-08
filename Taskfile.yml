@@ -11,7 +11,7 @@ tasks:
     requires:
       vars: [VERSION]
     preconditions:
-      - sh: 'test -z "git status --porcelain"'
+      - sh: 'test -z "$(git status --porcelain)"'
         msg: 'there are uncommited git changes'
     silent: true
   release-version-internal:
