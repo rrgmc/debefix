@@ -56,7 +56,7 @@ func (o fnResolveOption) isGenerateOption() {}
 type fnInternalGenerateOption func(item *generator)
 
 func (o fnInternalGenerateOption) apply(item *generator) {
-	o.apply(item)
+	o(item)
 }
 
 func (o fnInternalGenerateOption) isGenerateOption() {}

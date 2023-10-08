@@ -51,28 +51,6 @@ func WithGenerateResolveCheck(check bool) GenerateOption {
 	})
 }
 
-// // WithFSFileProviderOptions sets file provider options for GenerateFS and GenerateDirectory.
-// // It is ignored for Generate.
-// func WithFSFileProviderOptions(o ...FSFileProviderOption) GenerateOption {
-// 	return fnInternalGenerateOption(func(g *generator) {
-// 		g.fsFileProviderOption = o
-// 	})
-// }
-//
-// // WithLoadOptions sets options for Load.
-// func WithLoadOptions(o ...LoadOption) GenerateOption {
-// 	return func(g *generator) {
-// 		g.loadOptions = o
-// 	}
-// }
-//
-// // WithResolveOptions sets options for Resolve.
-// func WithResolveOptions(o ...ResolveOption) GenerateOption {
-// 	return func(g *generator) {
-// 		g.resolveOptions = o
-// 	}
-// }
-
 type generator struct {
 	fileProvider FileProvider
 	resolver     ResolveCallback

@@ -94,7 +94,8 @@ func TestGenerateOptions(t *testing.T) {
 		WithResolveProgress(func(tableID, tableName string) {
 			called["resolve_option"] = true
 
-		}))
+		}),
+		WithGenerateResolveCheck(true))
 	require.NoError(t, err)
 
 	require.Equal(t, expected, called)
