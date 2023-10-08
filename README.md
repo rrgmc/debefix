@@ -20,6 +20,12 @@ values from the parent row can be used, using the `parent:<fieldname>` expressio
 go get github.com/RangelReale/debefix
 ```
 
+## Goals
+
+- For developer seeding or test fixtures, not for inserting a huge amount of records.
+- YAML files are to be manually edited, so they must be easy to read and write.
+- Input can be files or memory, to allow creating simple tests.  
+
 ## Field value expressions
 
 - `!dbfexpr "refid:<table>:<refid>:<fieldname>"`: reference a **refid** field value in a table. This id is 
