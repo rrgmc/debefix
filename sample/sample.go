@@ -55,7 +55,7 @@ func main() {
 }
 
 func resolvePrint(data *debefix.Data, resolveTags []string) error {
-	return debefix.Resolve(data, func(ctx debefix.ResolveContext, fields map[string]any) error {
+	_, err := debefix.Resolve(data, func(ctx debefix.ResolveContext, fields map[string]any) error {
 		fmt.Printf("%s %s %s\n", strings.Repeat("=", 10), ctx.TableName(), strings.Repeat("=", 10))
 		spew.Dump(fields)
 
@@ -77,6 +77,7 @@ func resolvePrint(data *debefix.Data, resolveTags []string) error {
 
 		return nil
 	}, debefix.WithResolveTags(resolveTags))
+	return err
 }
 
 func resolveSQL(data *debefix.Data, resolveTags []string) error {
