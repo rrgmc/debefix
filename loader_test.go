@@ -4,7 +4,6 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/goccy/go-yaml/ast"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
@@ -414,22 +413,8 @@ func TestLoadTaggedDataParser(t *testing.T) {
 		},
 	})
 
-	data, err := Load(provider, WithLoadTaggedValueParser(func(tag *ast.TagNode) (bool, any, error) {
-		if tag.Start.Value == "!uuid" {
-			str, err := getStringNode(tag.Value)
-			if err != nil {
-				return false, nil, err
-			}
-
-			v, err := uuid.Parse(str)
-			if err != nil {
-				return false, nil, err
-			}
-
-			return true, v, nil
-		}
-		return false, nil, nil
-	}))
+	data, err := Load(provider,
+		WithLoadTaggedValueParser(ValueParserUUID()))
 	require.NoError(t, err)
 
 	usersTable, ok := data.Tables["users"]
