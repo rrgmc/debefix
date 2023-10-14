@@ -116,3 +116,22 @@ func (d *Data) ExtractRows(f func(table *Table, row Row) (bool, error)) (*Data, 
 	}
 	return data, nil
 }
+
+// ExtractRowsNamed extract rows matched by the callback.
+func (d *Data) ExtractRowsNamed(f func(table *Table, row Row) (bool, string, error)) (map[string]Row, error) {
+	ret := map[string]Row{}
+	var ferr error
+	d.WalkRows(func(table *Table, row Row) bool {
+		if ok, rowName, err := f(table, row); err != nil {
+			ferr = err
+			return false
+		} else if ok {
+			ret[rowName] = row
+		}
+		return true
+	})
+	if ferr != nil {
+		return nil, ferr
+	}
+	return ret, nil
+}
