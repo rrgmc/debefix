@@ -2,7 +2,7 @@ package debefix
 
 import "io/fs"
 
-// Generate loads files and calls a resolver callback to resolve the values.
+// Generate loads files and calls a resolver callback to resolve the values, and returns the resolved data.
 // It is a combination of [Load] and [Resolve].
 func Generate(fileProvider FileProvider, resolver ResolveCallback, options ...GenerateOption) (*Data, error) {
 	return generate(func(g *generator) FileProvider {

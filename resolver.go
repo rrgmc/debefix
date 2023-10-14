@@ -9,7 +9,8 @@ import (
 	"github.com/google/uuid"
 )
 
-// Resolve calls a callback for each table row, taking table dependency in account.
+// Resolve calls a callback for each table row, taking table dependency in account,
+// and returns the resolved data.
 func Resolve(data *Data, f ResolveCallback, options ...ResolveOption) (*Data, error) {
 	r := &resolver{data: data}
 	for _, opt := range options {
