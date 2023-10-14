@@ -78,3 +78,26 @@ func (t *Table) WalkData(f func(row Row) (bool, any, error)) (any, error) {
 	}
 	return nil, RowNotFound
 }
+
+// ExtractRows extract rows matched by the callback.
+func (d *Data) ExtractRows(f func(tableID string, row Row) (bool, error)) (*Data, error) {
+	data := &Data{
+		Tables: map[string]*Table{},
+	}
+	for tableID, table := range d.Tables {
+		for _, row := range table.Rows {
+			if ok, err := f(tableID, row); err != nil {
+				return nil, err
+			} else if ok {
+				if _, hasTable := data.Tables[tableID]; !hasTable {
+					data.Tables[tableID] = &Table{
+						ID:     table.ID,
+						Config: table.Config,
+					}
+				}
+				data.Tables[tableID].Rows = append(data.Tables[tableID].Rows, row)
+			}
+		}
+	}
+	return data, nil
+}
