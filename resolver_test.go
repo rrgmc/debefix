@@ -231,3 +231,39 @@ func TestResolveCallbackError(t *testing.T) {
 		"tags": 1,
 	}, rowCount)
 }
+
+func TestResolveReturnResolved(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tags:
+  rows:
+    - tag_id: !dbfexpr generated
+      tag_name: "All"
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	require.NoError(t, err)
+
+	rowCount := map[string]int{}
+	var retData *Data
+
+	err = Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+		rowCount[ctx.TableID()]++
+		require.IsType(t, &ResolveGenerate{}, fields["tag_id"])
+		ctx.ResolveField("tag_id", 935)
+		return nil
+	}, WithReturnResolved(func(resolvedData *Data) {
+		retData = resolvedData
+	}))
+	require.NoError(t, err)
+
+	require.Equal(t, map[string]int{
+		"tags": 1,
+	}, rowCount)
+
+	require.Len(t, retData.Tables, 1)
+	require.Len(t, retData.Tables["tags"].Rows, 1)
+	require.Equal(t, 935, retData.Tables["tags"].Rows[0].Fields["tag_id"])
+}

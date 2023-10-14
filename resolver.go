@@ -57,6 +57,13 @@ func WithResolveTagsFunc(f ResolveIncludeTagsFunc) ResolveOption {
 	})
 }
 
+// WithReturnResolved sets a callback to get the resolved data.
+func WithReturnResolved(f func(resolvedData *Data)) ResolveOption {
+	return fnResolveOption(func(r *resolver) {
+		r.returnResolved = f
+	})
+}
+
 // DefaultResolveIncludeTagFunc returns a [ResolveIncludeTagsFunc] check checks if at least one tags is contained.
 func DefaultResolveIncludeTagFunc(tags []string) ResolveIncludeTagsFunc {
 	return func(tableID string, rowTags []string) bool {
@@ -74,6 +81,7 @@ type resolver struct {
 	progress        func(tableID, tableName string)
 	rowProgress     func(tableID, tableName string, current, amount int, isIncluded bool)
 	includeTagsFunc ResolveIncludeTagsFunc
+	returnResolved  func(resolvedData *Data)
 
 	// tableData stores the already-parsed row's data.
 	resolvedData *Data
@@ -193,6 +201,10 @@ func (r *resolver) resolve(f ResolveCallback) error {
 				Fields:     saveFields,
 			})
 		}
+	}
+
+	if r.returnResolved != nil {
+		r.returnResolved(r.resolvedData)
 	}
 
 	return nil
