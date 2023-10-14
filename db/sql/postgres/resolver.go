@@ -8,7 +8,8 @@ import (
 
 // Resolve runs SQL INSERT queries on db.
 func Resolve(db sql.QueryInterface, data *debefix.Data, options ...debefix.ResolveOption) error {
-	return debefix.Resolve(data, ResolverFunc(db), options...)
+	_, err := debefix.Resolve(data, ResolverFunc(db), options...)
+	return err
 }
 
 // ResolverFunc is the debefix.ResolveCallback used by Resolve.

@@ -42,7 +42,7 @@ post_tags:
 	rowCount := map[string]int{}
 	var tableOrder []string
 
-	err = Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+	_, err = Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
 		rowCount[ctx.TableID()]++
 		tableOrder = append(tableOrder, ctx.TableID())
 		return ResolveCheckCallback(ctx, fields)
@@ -73,7 +73,7 @@ func TestResolveGenerated(t *testing.T) {
 
 	rowCount := map[string]int{}
 
-	err = Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+	_, err = Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
 		rowCount[ctx.TableID()]++
 		require.IsType(t, &ResolveGenerate{}, fields["tag_id"])
 		ctx.ResolveField("tag_id", 1)
@@ -125,7 +125,7 @@ post_tags:
 	rowCount := map[string]int{}
 	var tableOrder []string
 
-	err = Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+	_, err = Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
 		rowCount[ctx.TableID()]++
 		tableOrder = append(tableOrder, ctx.TableID())
 
@@ -221,7 +221,7 @@ func TestResolveCallbackError(t *testing.T) {
 
 	rowCount := map[string]int{}
 
-	err = Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+	_, err = Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
 		rowCount[ctx.TableID()]++
 		return cbError
 	})
@@ -247,16 +247,13 @@ func TestResolveReturnResolved(t *testing.T) {
 	require.NoError(t, err)
 
 	rowCount := map[string]int{}
-	var retData *Data
 
-	err = Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+	retData, err := Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
 		rowCount[ctx.TableID()]++
 		require.IsType(t, &ResolveGenerate{}, fields["tag_id"])
 		ctx.ResolveField("tag_id", 935)
 		return nil
-	}, WithReturnResolved(func(resolvedData *Data) {
-		retData = resolvedData
-	}))
+	})
 	require.NoError(t, err)
 
 	require.Equal(t, map[string]int{

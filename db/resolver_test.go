@@ -54,7 +54,7 @@ post_tags:
 	tables := map[string][]map[string]any{}
 	var tableOrder []string
 
-	err = debefix.Resolve(data, ResolverFunc(func(tableName string, fields map[string]any, returnFieldNames []string) (returnValues map[string]any, err error) {
+	_, err = debefix.Resolve(data, ResolverFunc(func(tableName string, fields map[string]any, returnFieldNames []string) (returnValues map[string]any, err error) {
 		tableOrder = append(tableOrder, tableName)
 		tables[tableName] = append(tables[tableName], fields)
 		return nil, nil
@@ -116,7 +116,7 @@ func TestResolverGenerated(t *testing.T) {
 
 	var tableOrder []string
 
-	err = debefix.Resolve(data, ResolverFunc(func(tableName string, fields map[string]any, returnFieldNames []string) (returnValues map[string]any, err error) {
+	_, err = debefix.Resolve(data, ResolverFunc(func(tableName string, fields map[string]any, returnFieldNames []string) (returnValues map[string]any, err error) {
 		tableOrder = append(tableOrder, tableName)
 		require.Equal(t, tableName, "public.tags")
 		require.Equal(t, returnFieldNames, []string{"tag_id"})

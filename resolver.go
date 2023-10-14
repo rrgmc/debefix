@@ -10,17 +10,22 @@ import (
 )
 
 // Resolve calls a callback for each table row, taking table dependency in account.
-func Resolve(data *Data, f ResolveCallback, options ...ResolveOption) error {
+func Resolve(data *Data, f ResolveCallback, options ...ResolveOption) (*Data, error) {
 	r := &resolver{data: data}
 	for _, opt := range options {
 		opt.apply(r)
 	}
-	return r.resolve(f)
+	err := r.resolve(f)
+	if err != nil {
+		return nil, err
+	}
+	return r.resolvedData, nil
 }
 
 // ResolveCheck checks if all dependencies between rows are resolvable.
 func ResolveCheck(data *Data, options ...ResolveOption) error {
-	return Resolve(data, ResolveCheckCallback, options...)
+	_, err := Resolve(data, ResolveCheckCallback, options...)
+	return err
 }
 
 type ResolveCallback func(ctx ResolveContext, fields map[string]any) error
@@ -57,13 +62,6 @@ func WithResolveTagsFunc(f ResolveIncludeTagsFunc) ResolveOption {
 	})
 }
 
-// WithReturnResolved sets a callback to get the resolved data.
-func WithReturnResolved(f func(resolvedData *Data)) ResolveOption {
-	return fnResolveOption(func(r *resolver) {
-		r.returnResolved = f
-	})
-}
-
 // DefaultResolveIncludeTagFunc returns a [ResolveIncludeTagsFunc] check checks if at least one tags is contained.
 func DefaultResolveIncludeTagFunc(tags []string) ResolveIncludeTagsFunc {
 	return func(tableID string, rowTags []string) bool {
@@ -78,13 +76,10 @@ func DefaultResolveIncludeTagFunc(tags []string) ResolveIncludeTagsFunc {
 
 type resolver struct {
 	data            *Data
+	resolvedData    *Data
 	progress        func(tableID, tableName string)
 	rowProgress     func(tableID, tableName string, current, amount int, isIncluded bool)
 	includeTagsFunc ResolveIncludeTagsFunc
-	returnResolved  func(resolvedData *Data)
-
-	// tableData stores the already-parsed row's data.
-	resolvedData *Data
 }
 
 func (r *resolver) resolve(f ResolveCallback) error {
@@ -201,10 +196,6 @@ func (r *resolver) resolve(f ResolveCallback) error {
 				Fields:     saveFields,
 			})
 		}
-	}
-
-	if r.returnResolved != nil {
-		r.returnResolved(r.resolvedData)
 	}
 
 	return nil

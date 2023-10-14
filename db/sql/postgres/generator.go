@@ -9,15 +9,18 @@ import (
 
 // Generate loads files and inserts records in the database.
 func Generate(fileProvider debefix.FileProvider, db sql.QueryInterface, options ...debefix.GenerateOption) error {
-	return debefix.Generate(fileProvider, ResolverFunc(db), options...)
+	_, err := debefix.Generate(fileProvider, ResolverFunc(db), options...)
+	return err
 }
 
 // GenerateFS is a version of Generate that loads from a fs.FS.
 func GenerateFS(fs fs.FS, db sql.QueryInterface, options ...debefix.GenerateOption) error {
-	return debefix.GenerateFS(fs, ResolverFunc(db), options...)
+	_, err := debefix.GenerateFS(fs, ResolverFunc(db), options...)
+	return err
 }
 
 // GenerateDirectory is a version of Generate that loads from a directory name.
 func GenerateDirectory(rootDir string, db sql.QueryInterface, options ...debefix.GenerateOption) error {
-	return debefix.GenerateDirectory(rootDir, ResolverFunc(db), options...)
+	_, err := debefix.GenerateDirectory(rootDir, ResolverFunc(db), options...)
+	return err
 }

@@ -39,7 +39,7 @@ post_tags:
 	rowCount := map[string]int{}
 	var tableOrder []string
 
-	err := Generate(provider, func(ctx ResolveContext, fields map[string]any) error {
+	_, err := Generate(provider, func(ctx ResolveContext, fields map[string]any) error {
 		rowCount[ctx.TableID()]++
 		tableOrder = append(tableOrder, ctx.TableID())
 		return ResolveCheckCallback(ctx, fields)
@@ -81,7 +81,7 @@ func TestGenerateOptions(t *testing.T) {
 		"resolve_option":        true,
 	}
 
-	err := GenerateFS(providerData, func(ctx ResolveContext, fields map[string]any) error {
+	_, err := GenerateFS(providerData, func(ctx ResolveContext, fields map[string]any) error {
 		return ResolveCheckCallback(ctx, fields)
 	},
 		WithDirectoryIncludeFunc(func(path string, entry os.DirEntry) bool {
