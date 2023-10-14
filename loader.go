@@ -255,19 +255,21 @@ func (l *loader) loadFieldValue(node ast.Node, parent parentRowInfo) (any, error
 			}
 		}
 
-		if len(l.taggedValueParser) > 0 {
-			for _, parser := range l.taggedValueParser {
-				ok, tvalue, err := parser.Parse(n)
-				if err != nil {
-					return nil, err
-				} else if ok {
-					return tvalue, nil
+		if !strings.HasPrefix(n.Start.Value, "!!") { // !! is reserved by YAML.
+			if len(l.taggedValueParser) > 0 {
+				for _, valueParser := range l.taggedValueParser {
+					ok, tvalue, err := valueParser.Parse(n)
+					if err != nil {
+						return nil, err
+					} else if ok {
+						return tvalue, nil
+					}
 				}
 			}
-		}
 
-		return nil, NewParseError(fmt.Sprintf("unknown value tag: %s", n.Start.Value),
-			n.GetPath(), n.GetToken().Position)
+			return nil, NewParseError(fmt.Sprintf("unknown value tag: %s", n.Start.Value),
+				n.GetPath(), n.GetToken().Position)
+		}
 	}
 
 	var value any

@@ -408,7 +408,8 @@ func TestLoadTaggedDataParser(t *testing.T) {
 		"users.dbf.yaml": &fstest.MapFile{
 			Data: []byte(`users:
   rows:
-    - user_id: !uuid e850cd47-6a5d-4fc2-aed3-ca917b51577d
+    - user_id: !uuid "e850cd47-6a5d-4fc2-aed3-ca917b51577d"
+      name: !!str "John"
 `),
 		},
 	})
@@ -424,5 +425,6 @@ func TestLoadTaggedDataParser(t *testing.T) {
 
 	require.Equal(t, map[string]any{
 		"user_id": uuid.MustParse("e850cd47-6a5d-4fc2-aed3-ca917b51577d"),
+		"name":    "John",
 	}, usersTable.Rows[0].Fields)
 }
