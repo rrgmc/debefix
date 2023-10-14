@@ -79,25 +79,40 @@ func (t *Table) WalkData(f func(row Row) (bool, any, error)) (any, error) {
 	return nil, RowNotFound
 }
 
+// WalkRows calls a callback for each row in each table.
+func (d *Data) WalkRows(f func(table *Table, row Row) bool) {
+	for _, table := range d.Tables {
+		for _, row := range table.Rows {
+			if cont := f(table, row); !cont {
+				return
+			}
+		}
+	}
+}
+
 // ExtractRows extract rows matched by the callback.
-func (d *Data) ExtractRows(f func(tableID string, row Row) (bool, error)) (*Data, error) {
+func (d *Data) ExtractRows(f func(table *Table, row Row) (bool, error)) (*Data, error) {
 	data := &Data{
 		Tables: map[string]*Table{},
 	}
-	for tableID, table := range d.Tables {
-		for _, row := range table.Rows {
-			if ok, err := f(tableID, row); err != nil {
-				return nil, err
-			} else if ok {
-				if _, hasTable := data.Tables[tableID]; !hasTable {
-					data.Tables[tableID] = &Table{
-						ID:     table.ID,
-						Config: table.Config,
-					}
+	var ferr error
+	d.WalkRows(func(table *Table, row Row) bool {
+		if ok, err := f(table, row); err != nil {
+			ferr = err
+			return false
+		} else if ok {
+			if _, hasTable := data.Tables[table.ID]; !hasTable {
+				data.Tables[table.ID] = &Table{
+					ID:     table.ID,
+					Config: table.Config,
 				}
-				data.Tables[tableID].Rows = append(data.Tables[tableID].Rows, row)
 			}
+			data.Tables[table.ID].Rows = append(data.Tables[table.ID].Rows, row)
 		}
+		return true
+	})
+	if ferr != nil {
+		return nil, ferr
 	}
 	return data, nil
 }

@@ -10,12 +10,14 @@ func TestDataExtractRows(t *testing.T) {
 	data := &Data{
 		Tables: map[string]*Table{
 			"tags": {
+				ID: "tags",
 				Rows: Rows{
 					Row{Fields: map[string]any{"x": 1}},
 					Row{Fields: map[string]any{"x": 2}},
 				},
 			},
 			"posts": {
+				ID: "posts",
 				Rows: Rows{
 					Row{Fields: map[string]any{"a": 5}},
 					Row{Fields: map[string]any{"a": 3}},
@@ -25,9 +27,9 @@ func TestDataExtractRows(t *testing.T) {
 		},
 	}
 
-	rows, err := data.ExtractRows(func(tableID string, row Row) (bool, error) {
-		return tableID == "tags" && row.Fields["x"] == 2 ||
-				tableID == "posts" && row.Fields["a"].(int) <= 3,
+	rows, err := data.ExtractRows(func(table *Table, row Row) (bool, error) {
+		return (table.ID == "tags" && row.Fields["x"] == 2) ||
+				(table.ID == "posts" && row.Fields["a"].(int) <= 3),
 			nil
 	})
 	require.NoError(t, err)
