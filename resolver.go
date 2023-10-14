@@ -76,17 +76,7 @@ type resolver struct {
 	includeTagsFunc ResolveIncludeTagsFunc
 
 	// tableData stores the already-parsed row's data.
-	tableData map[string]*resolverTable
-}
-
-type resolverTable struct {
-	rows []resolverRow
-}
-
-type resolverRow struct {
-	fields     map[string]any
-	id         string
-	internalID uuid.UUID
+	resolvedData *Data
 }
 
 func (r *resolver) resolve(f ResolveCallback) error {
@@ -186,16 +176,21 @@ func (r *resolver) resolve(f ResolveCallback) error {
 			}
 
 			// store table row in memory
-			if r.tableData == nil {
-				r.tableData = map[string]*resolverTable{}
+			if r.resolvedData == nil {
+				r.resolvedData = &Data{
+					Tables: map[string]*Table{},
+				}
 			}
-			if _, ok := r.tableData[table.ID]; !ok {
-				r.tableData[table.ID] = &resolverTable{}
+			if _, ok := r.resolvedData.Tables[table.ID]; !ok {
+				r.resolvedData.Tables[table.ID] = &Table{
+					ID:     table.ID,
+					Config: table.Config,
+				}
 			}
-			r.tableData[table.ID].rows = append(r.tableData[table.ID].rows, resolverRow{
-				fields:     saveFields,
-				id:         row.Config.RefID,
-				internalID: row.InternalID,
+			r.resolvedData.Tables[table.ID].Rows = append(r.resolvedData.Tables[table.ID].Rows, Row{
+				Config:     row.Config,
+				InternalID: row.InternalID,
+				Fields:     saveFields,
 			})
 		}
 	}
@@ -209,9 +204,9 @@ func (r *resolver) resolveValue(value Value) (any, error) {
 	case *ValueGenerated:
 		return &ResolveGenerate{}, nil
 	case *ValueRefID:
-		vrowfield, err := r.walkTableData(fv.TableID, func(row resolverRow) (bool, any, error) {
-			if row.id == fv.RefID {
-				if rowfield, ok := row.fields[fv.FieldName]; ok {
+		vrowfield, err := r.resolvedData.WalkTableData(fv.TableID, func(row Row) (bool, any, error) {
+			if row.Config.RefID == fv.RefID {
+				if rowfield, ok := row.Fields[fv.FieldName]; ok {
 					return true, rowfield, nil
 				} else {
 					return false, nil, fmt.Errorf("could not find field %s in refid table %s", fv.FieldName, fv.TableID)
@@ -224,9 +219,9 @@ func (r *resolver) resolveValue(value Value) (any, error) {
 		}
 		return vrowfield, nil
 	case *ValueInternalID:
-		vrowfield, err := r.walkTableData(fv.TableID, func(row resolverRow) (bool, any, error) {
-			if row.internalID == fv.InternalID {
-				if rowfield, ok := row.fields[fv.FieldName]; ok {
+		vrowfield, err := r.data.WalkTableData(fv.TableID, func(row Row) (bool, any, error) {
+			if row.InternalID == fv.InternalID {
+				if rowfield, ok := row.Fields[fv.FieldName]; ok {
 					return true, rowfield, nil
 				} else {
 					return false, nil, fmt.Errorf("could not find field %s in internalid table %s", fv.FieldName, fv.TableID)
@@ -250,25 +245,6 @@ func (r *resolver) includeTag(tableID string, rowTags []string) bool {
 	}
 
 	return r.includeTagsFunc(tableID, rowTags)
-}
-
-// walkTableData searches for rows in tables.
-func (r *resolver) walkTableData(tableID string, f func(row resolverRow) (bool, any, error)) (any, error) {
-	vdb, ok := r.tableData[tableID]
-	if !ok {
-		return nil, fmt.Errorf("could not find table %s", tableID)
-	}
-	for _, vrow := range vdb.rows {
-		ok, v, err := f(vrow)
-		if err != nil {
-			return nil, err
-		}
-		if ok {
-			return v, nil
-		}
-	}
-
-	return nil, errors.New("row not found in data")
 }
 
 // ResolveCheckCallback is the callback for the ResolveCheck function.

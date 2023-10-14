@@ -55,3 +55,26 @@ func (c *TableConfig) Merge(other *TableConfig) error {
 
 	return nil
 }
+
+// WalkTableData searches for rows in tables.
+func (d *Data) WalkTableData(tableID string, f func(row Row) (bool, any, error)) (any, error) {
+	vdb, ok := d.Tables[tableID]
+	if !ok {
+		return nil, fmt.Errorf("could not find table %s", tableID)
+	}
+	return vdb.WalkData(f)
+}
+
+// WalkData searches for rows in the table.
+func (t *Table) WalkData(f func(row Row) (bool, any, error)) (any, error) {
+	for _, vrow := range t.Rows {
+		ok, v, err := f(vrow)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			return v, nil
+		}
+	}
+	return nil, RowNotFound
+}

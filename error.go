@@ -12,6 +12,7 @@ var (
 	ResolveValueError    = errors.New("resolve value error")
 	ResolveError         = errors.New("resolve error")
 	ResolveCallbackError = errors.New("resolve callback error")
+	RowNotFound          = errors.New("row not found in data")
 )
 
 type TokenPosition = token.Position
