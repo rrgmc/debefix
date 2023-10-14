@@ -117,7 +117,7 @@ func (d *Data) ExtractRows(f func(table *Table, row Row) (bool, error)) (*Data, 
 	return data, nil
 }
 
-// ExtractRowsNamed extract rows matched by the callback.
+// ExtractRowsNamed extract rows matched by the callback into a named map.
 func (d *Data) ExtractRowsNamed(f func(table *Table, row Row) (bool, string, error)) (map[string]Row, error) {
 	ret := map[string]Row{}
 	var ferr error
