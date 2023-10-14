@@ -1,6 +1,6 @@
 module github.com/RangelReale/debefix
 
-go 1.21.1
+go 1.21
 
 require (
 	github.com/goccy/go-yaml v1.11.2
