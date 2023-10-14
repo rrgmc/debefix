@@ -34,10 +34,17 @@ func WithLoadProgress(progress func(filename string)) LoadOption {
 	})
 }
 
+func WithLoadTaggedValueParser(parser func(tag *ast.TagNode) (bool, any, error)) LoadOption {
+	return fnLoadOption(func(l *loader) {
+		l.taggedValueParser = parser
+	})
+}
+
 type loader struct {
-	fileProvider FileProvider
-	data         Data
-	progress     func(filename string)
+	fileProvider      FileProvider
+	data              Data
+	progress          func(filename string)
+	taggedValueParser func(tag *ast.TagNode) (bool, any, error)
 }
 
 func (l *loader) load() error {
@@ -246,6 +253,18 @@ func (l *loader) loadFieldValue(node ast.Node, parent parentRowInfo) (any, error
 					n.GetPath(), n.GetToken().Position)
 			}
 		}
+
+		if l.taggedValueParser != nil {
+			ok, tvalue, err := l.taggedValueParser(n)
+			if err != nil {
+				return nil, err
+			} else if ok {
+				return tvalue, nil
+			}
+		}
+
+		return nil, NewParseError(fmt.Sprintf("unknown value tag: %s", n.Start.Value),
+			n.GetPath(), n.GetToken().Position)
 	}
 
 	var value any

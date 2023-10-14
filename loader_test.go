@@ -4,6 +4,8 @@ import (
 	"testing"
 	"testing/fstest"
 
+	"github.com/goccy/go-yaml/ast"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -400,4 +402,42 @@ posts:
 
 	_, err := Load(provider)
 	require.ErrorIs(t, err, ValueError)
+}
+
+func TestLoadTaggedDataParser(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`users:
+  rows:
+    - user_id: !uuid e850cd47-6a5d-4fc2-aed3-ca917b51577d
+`),
+		},
+	})
+
+	data, err := Load(provider, WithLoadTaggedValueParser(func(tag *ast.TagNode) (bool, any, error) {
+		if tag.Start.Value == "!uuid" {
+			str, err := getStringNode(tag.Value)
+			if err != nil {
+				return false, nil, err
+			}
+
+			v, err := uuid.Parse(str)
+			if err != nil {
+				return false, nil, err
+			}
+
+			return true, v, nil
+		}
+		return false, nil, nil
+	}))
+	require.NoError(t, err)
+
+	usersTable, ok := data.Tables["users"]
+	require.True(t, ok, "users table not found")
+
+	require.Len(t, usersTable.Rows, 1)
+
+	require.Equal(t, map[string]any{
+		"user_id": uuid.MustParse("e850cd47-6a5d-4fc2-aed3-ca917b51577d"),
+	}, usersTable.Rows[0].Fields)
 }
