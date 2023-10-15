@@ -223,7 +223,7 @@ func (r *resolver) resolveValue(value Value) (any, error) {
 		}
 		return vrowfield, nil
 	case *ValueInternalID:
-		vrowfield, err := r.data.WalkTableData(fv.TableID, func(row Row) (bool, any, error) {
+		vrowfield, err := r.resolvedData.WalkTableData(fv.TableID, func(row Row) (bool, any, error) {
 			if row.InternalID == fv.InternalID {
 				if rowfield, ok := row.Fields[fv.FieldName]; ok {
 					return true, rowfield, nil
