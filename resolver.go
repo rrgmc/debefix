@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/RangelReale/debefix/internal/external/depgraph"
 	"github.com/google/uuid"
+	"github.com/rrgmc/debefix/internal/external/depgraph"
 )
 
 // Resolve calls a callback for each table row, taking table dependency in account,

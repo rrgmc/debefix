@@ -4,7 +4,7 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/RangelReale/debefix"
+	"github.com/rrgmc/debefix"
 	"github.com/stretchr/testify/require"
 )
 

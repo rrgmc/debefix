@@ -4,8 +4,8 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/RangelReale/debefix"
-	"github.com/RangelReale/debefix/db/sql"
+	"github.com/rrgmc/debefix"
+	"github.com/rrgmc/debefix/db/sql"
 	"github.com/stretchr/testify/require"
 )
 

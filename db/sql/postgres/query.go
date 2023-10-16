@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/RangelReale/debefix/db/sql"
+	"github.com/rrgmc/debefix/db/sql"
 )
 
 // PlaceholderProvider generates postgres-compatible placeholders ($1, $2).

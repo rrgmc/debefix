@@ -7,11 +7,11 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/RangelReale/debefix"
-	"github.com/RangelReale/debefix/db/sql"
-	"github.com/RangelReale/debefix/db/sql/postgres"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/google/uuid"
+	"github.com/rrgmc/debefix"
+	"github.com/rrgmc/debefix/db/sql"
+	"github.com/rrgmc/debefix/db/sql/postgres"
 )
 
 func currentSourceDirectory() (string, error) {

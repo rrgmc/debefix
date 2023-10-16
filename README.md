@@ -1,5 +1,5 @@
 # debefix - Database seeding and fixtures
-[![GoDoc](https://godoc.org/github.com/RangelReale/debefix?status.png)](https://godoc.org/github.com/RangelReale/debefix)
+[![GoDoc](https://godoc.org/github.com/rrgmc/debefix?status.png)](https://godoc.org/github.com/rrgmc/debefix)
 
 debefix is a Go library (and a cli in the future) to seed database data and/or create fixtures for DB tests.
 
@@ -17,7 +17,7 @@ values from the parent row can be used, using the `parent:<fieldname>` expressio
 ## Install
 
 ```shell
-go get github.com/RangelReale/debefix
+go get github.com/rrgmc/debefix
 ```
 
 ## Goals
@@ -44,14 +44,14 @@ All field names starting with `_dbf` are reserved by the library.
 
 ## Generating SQL
 
-SQL can be generated using `github.com/RangelReale/debefix/db/sql/<dbtype>`.
+SQL can be generated using `github.com/rrgmc/debefix/db/sql/<dbtype>`.
 
 ```go
 import (
     "sql"
 
-    dbsql "github.com/RangelReale/debefix/db/sql"
-    "github.com/RangelReale/debefix/db/sql/postgres"
+    dbsql "github.com/rrgmc/debefix/db/sql"
+    "github.com/rrgmc/debefix/db/sql/postgres"
 )
 
 func main() {
@@ -70,7 +70,7 @@ func main() {
 
 ## Generating Non-SQL
 
-The import `github.com/RangelReale/debefix/db` contains a `ResolverFunc` that is not directly tied to SQL, it can be
+The import `github.com/rrgmc/debefix/db` contains a `ResolverFunc` that is not directly tied to SQL, it can be
 used to insert data in any database that has the concepts of "tables" with a list of field/values.
 
 As inner maps/arrays are supported by YAML, data with more complex structure should work without any problems.

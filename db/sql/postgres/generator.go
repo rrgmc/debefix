@@ -3,8 +3,8 @@ package postgres
 import (
 	"io/fs"
 
-	"github.com/RangelReale/debefix"
-	"github.com/RangelReale/debefix/db/sql"
+	"github.com/rrgmc/debefix"
+	"github.com/rrgmc/debefix/db/sql"
 )
 
 // Generate loads files and inserts records in the database.

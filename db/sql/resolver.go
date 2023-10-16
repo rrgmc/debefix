@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/RangelReale/debefix/db"
+	"github.com/rrgmc/debefix/db"
 )
 
 // ResolverDBCallback is a db.ResolverDBCallback to generate SQL-based database records.

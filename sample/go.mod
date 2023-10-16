@@ -1,9 +1,9 @@
-module github.com/RangelReale/debefix/sample
+module github.com/rrgmc/debefix/sample
 
 go 1.21.1
 
 require (
-	github.com/RangelReale/debefix v0.0.0
+	github.com/rrgmc/debefix v0.0.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/google/uuid v1.3.1
 )
@@ -17,4 +17,4 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 )
 
-replace github.com/RangelReale/debefix v0.0.0 => ../
+replace github.com/rrgmc/debefix v0.0.0 => ../

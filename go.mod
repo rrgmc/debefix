@@ -1,4 +1,4 @@
-module github.com/RangelReale/debefix
+module github.com/rrgmc/debefix
 
 go 1.21
 
