@@ -189,6 +189,8 @@ func (d *Data) ExtractRowsNamed(f func(table *Table, row Row) (bool, string, err
 	return ret, nil
 }
 
+// MergeData merge a list of [Data] objects into a new instance.
+// The data is deep-copied, the source [Data] instances are never modified in any way.
 func MergeData(list ...*Data) (*Data, error) {
 	retData := &Data{
 		Tables: map[string]*Table{},
