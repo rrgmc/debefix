@@ -34,7 +34,7 @@ func FilterData[T any](data *debefix.Data, tableID string, f func(row debefix.Ro
 				if len(optns.filterFields) > 0 {
 					isFilter := 0
 					for filterField, filterValue := range optns.filterFields {
-						fieldValue, isField := optns.filterFields[filterField]
+						fieldValue, isField := row.Fields[filterField]
 						if !isField {
 							return false, fmt.Errorf("field '%s' does not exists", filterField)
 						}

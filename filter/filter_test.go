@@ -53,6 +53,18 @@ var allTestData = []filterDataTestValue{
 		City:      "SF",
 		CreatedAt: time.Now().Add(-100 * time.Hour),
 	},
+	{
+		Name:      "Jay",
+		Age:       91,
+		City:      "LV",
+		CreatedAt: time.Now().Add(-30 * time.Hour),
+	},
+	{
+		Name:      "McDonald",
+		Age:       41,
+		City:      "SF",
+		CreatedAt: time.Now().Add(-500 * time.Hour),
+	},
 }
 
 var allTestTable *debefix.Table
@@ -89,6 +101,17 @@ func TestFilterData(t *testing.T) {
 				allTestData[2],
 			},
 			options: []FilterDataOption{WithFilterRefIDs([]string{"jane", "mary"})},
+		},
+		{
+			name: "filter fields",
+			expected: []filterDataTestValue{
+				allTestData[2],
+				allTestData[4],
+			},
+			options: []FilterDataOption{WithFilterFields(map[string]any{
+				"age":  41,
+				"city": "SF",
+			})},
 		},
 	}
 
