@@ -39,7 +39,11 @@ type Table struct {
 
 // Merge merges source into d. A deep copy is done to ensure source is never modified.
 func (t *Table) Merge(source *Table) error {
-	if source.ID != t.ID {
+	if source.ID != "" && t.ID == "" {
+		t.ID = source.ID
+	} else if source.ID == "" && t.ID != "" {
+		// do nothing, can't change source
+	} else if source.ID != t.ID {
 		return fmt.Errorf("table IDs don't match (%s - %s)", source.ID, t.ID)
 	}
 

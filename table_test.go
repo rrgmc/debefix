@@ -108,7 +108,7 @@ func TestDataMerge(t *testing.T) {
 	data2 := &Data{
 		Tables: map[string]*Table{
 			"tags": {
-				ID: "tags",
+				// ID: "tags", // if data already exists, not setting will keep previous value
 				Rows: Rows{
 					Row{Fields: map[string]any{"x": 3}},
 					Row{Fields: map[string]any{"x": 4}},
