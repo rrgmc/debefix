@@ -1,11 +1,15 @@
 package debefix
 
 import (
+	"errors"
+	"strings"
 	"testing"
 	"testing/fstest"
 
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
+	is "gotest.tools/v3/assert/cmp"
 )
 
 func TestLoad(t *testing.T) {
@@ -28,26 +32,26 @@ func TestLoad(t *testing.T) {
 	})
 
 	data, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	usersTable, ok := data.Tables["users"]
-	require.True(t, ok, "users table not found")
+	assert.Assert(t, ok, "users table not found")
 
-	require.Equal(t, "public.user", usersTable.Config.TableName)
+	assert.Equal(t, "public.user", usersTable.Config.TableName)
 
-	require.Len(t, usersTable.Rows, 2)
+	assert.Assert(t, is.Len(usersTable.Rows, 2))
 
-	require.Equal(t, map[string]any{
+	assert.DeepEqual(t, map[string]any{
 		"user_id": uint64(1),
 		"name":    "John Doe",
 	}, usersTable.Rows[0].Fields)
-	require.Equal(t, "johndoe", usersTable.Rows[0].Config.RefID)
+	assert.Equal(t, "johndoe", usersTable.Rows[0].Config.RefID)
 
-	require.Equal(t, map[string]any{
+	assert.DeepEqual(t, map[string]any{
 		"user_id": uint64(2),
 		"name":    "Jane Doe",
 	}, usersTable.Rows[1].Fields)
-	require.Equal(t, "janedoe", usersTable.Rows[1].Config.RefID)
+	assert.Equal(t, "janedoe", usersTable.Rows[1].Config.RefID)
 }
 
 func TestLoad2TablesSameFile(t *testing.T) {
@@ -66,22 +70,22 @@ tags:
 	})
 
 	data, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	usersTable, ok := data.Tables["users"]
-	require.True(t, ok, "users table not found")
+	assert.Assert(t, ok, "users table not found")
 
 	tagsTable, ok := data.Tables["tags"]
-	require.True(t, ok, "tags table not found")
+	assert.Assert(t, ok, "tags table not found")
 
-	require.Len(t, usersTable.Rows, 1)
-	require.Equal(t, map[string]any{
+	assert.Assert(t, is.Len(usersTable.Rows, 1))
+	assert.DeepEqual(t, map[string]any{
 		"user_id": uint64(1),
 		"name":    "John",
 	}, usersTable.Rows[0].Fields)
 
-	require.Len(t, tagsTable.Rows, 1)
-	require.Equal(t, map[string]any{
+	assert.Assert(t, is.Len(tagsTable.Rows, 1))
+	assert.DeepEqual(t, map[string]any{
 		"tag_id":   uint64(2),
 		"tag_name": "All",
 	}, tagsTable.Rows[0].Fields)
@@ -106,22 +110,22 @@ func TestLoad2TablesSeparateFiles(t *testing.T) {
 	})
 
 	data, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	usersTable, ok := data.Tables["users"]
-	require.True(t, ok, "users table not found")
+	assert.Assert(t, ok, "users table not found")
 
 	tagsTable, ok := data.Tables["tags"]
-	require.True(t, ok, "tags table not found")
+	assert.Assert(t, ok, "tags table not found")
 
-	require.Len(t, usersTable.Rows, 1)
-	require.Equal(t, map[string]any{
+	assert.Assert(t, is.Len(usersTable.Rows, 1))
+	assert.DeepEqual(t, map[string]any{
 		"user_id": uint64(1),
 		"name":    "John",
 	}, usersTable.Rows[0].Fields)
 
-	require.Len(t, tagsTable.Rows, 1)
-	require.Equal(t, map[string]any{
+	assert.Assert(t, is.Len(tagsTable.Rows, 1))
+	assert.DeepEqual(t, map[string]any{
 		"tag_id":   uint64(2),
 		"tag_name": "All",
 	}, tagsTable.Rows[0].Fields)
@@ -149,24 +153,24 @@ func TestLoadExtValueTypes(t *testing.T) {
 	})
 
 	data, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	usersTable, ok := data.Tables["users"]
-	require.True(t, ok, "users table not found")
+	assert.Assert(t, ok, "users table not found")
 
-	require.Len(t, usersTable.Rows, 2)
+	assert.Assert(t, is.Len(usersTable.Rows, 2))
 
-	require.Equal(t, map[string]any{
+	assert.DeepEqual(t, map[string]any{
 		"gender": "male",
 		"age":    "old",
 	}, usersTable.Rows[0].Fields["attributes"])
-	require.Equal(t, []any{"carpenter", "office"}, usersTable.Rows[0].Fields["tags"])
+	assert.DeepEqual(t, []any{"carpenter", "office"}, usersTable.Rows[0].Fields["tags"])
 
-	require.Equal(t, map[string]any{
+	assert.DeepEqual(t, map[string]any{
 		"gender": "female",
 		"age":    "mid",
 	}, usersTable.Rows[1].Fields["attributes"])
-	require.Equal(t, []any{"firefighter", "outdoors"}, usersTable.Rows[1].Fields["tags"])
+	assert.DeepEqual(t, []any{"firefighter", "outdoors"}, usersTable.Rows[1].Fields["tags"])
 }
 
 func TestLoadExprRefID(t *testing.T) {
@@ -182,13 +186,13 @@ func TestLoadExprRefID(t *testing.T) {
 	})
 
 	data, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	postsTable, ok := data.Tables["posts"]
-	require.True(t, ok, "posts table not found")
+	assert.Assert(t, ok, "posts table not found")
 
-	require.Len(t, postsTable.Rows, 1)
-	require.Equal(t,
+	assert.Assert(t, is.Len(postsTable.Rows, 1))
+	assert.DeepEqual(t,
 		&ValueRefID{TableID: "tags", RefID: "all", FieldName: "tag_id"},
 		postsTable.Rows[0].Fields["tag_id"])
 }
@@ -215,33 +219,33 @@ post_tags:
 	})
 
 	data, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	postsTable, ok := data.Tables["posts"]
-	require.True(t, ok, "posts table not found")
+	assert.Assert(t, ok, "posts table not found")
 
 	tagsTable, ok := data.Tables["tags"]
-	require.True(t, ok, "tags table not found")
+	assert.Assert(t, ok, "tags table not found")
 
 	postTagsTable, ok := data.Tables["post_tags"]
-	require.True(t, ok, "post_tags table not found")
+	assert.Assert(t, ok, "post_tags table not found")
 
-	require.Len(t, tagsTable.Rows, 1)
-	require.Equal(t, map[string]any{
+	assert.Assert(t, is.Len(tagsTable.Rows, 1))
+	assert.DeepEqual(t, map[string]any{
 		"tag_id":   uint64(2),
 		"tag_name": "All",
 	}, tagsTable.Rows[0].Fields)
 
-	require.Len(t, postsTable.Rows, 1)
-	require.Equal(t, map[string]any{
+	assert.Assert(t, is.Len(postsTable.Rows, 1))
+	assert.DeepEqual(t, map[string]any{
 		"post_id": uint64(1),
 		"tag_id":  &ValueInternalID{TableID: "tags", InternalID: tagsTable.Rows[0].InternalID, FieldName: "tag_id"},
 		"title":   "First post",
 	}, postsTable.Rows[0].Fields)
 
-	require.Equal(t, []string{"tags"}, postsTable.Config.Depends)
+	assert.DeepEqual(t, []string{"tags"}, postsTable.Config.Depends)
 
-	require.Equal(t, []string{"tags"}, postTagsTable.Config.Depends)
+	assert.DeepEqual(t, []string{"tags"}, postTagsTable.Config.Depends)
 }
 
 func TestLoadFileOrder(t *testing.T) {
@@ -270,24 +274,24 @@ func TestLoadFileOrder(t *testing.T) {
 	})
 
 	data, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	usersTable, ok := data.Tables["users"]
-	require.True(t, ok, "users table not found")
+	assert.Assert(t, ok, "users table not found")
 
-	require.Len(t, usersTable.Rows, 3)
+	assert.Assert(t, is.Len(usersTable.Rows, 3))
 
-	require.Equal(t, map[string]any{
+	assert.DeepEqual(t, map[string]any{
 		"user_id": uint64(5),
 		"name":    "Jane",
 	}, usersTable.Rows[0].Fields)
 
-	require.Equal(t, map[string]any{
+	assert.DeepEqual(t, map[string]any{
 		"user_id": uint64(1),
 		"name":    "John",
 	}, usersTable.Rows[1].Fields)
 
-	require.Equal(t, map[string]any{
+	assert.DeepEqual(t, map[string]any{
 		"user_id": uint64(10),
 		"name":    "Mary",
 	}, usersTable.Rows[2].Fields)
@@ -311,16 +315,22 @@ func TestLoadTags(t *testing.T) {
 	}, WithDirectoryAsTag())
 
 	data, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	usersTable, ok := data.Tables["users"]
-	require.True(t, ok, "users table not found")
+	assert.Assert(t, ok, "users table not found")
 
-	require.Len(t, usersTable.Rows, 2)
-	require.Len(t, usersTable.Rows[0].Config.Tags, 3)
-	require.Len(t, usersTable.Rows[1].Config.Tags, 2)
-	require.Subset(t, usersTable.Rows[0].Config.Tags, []string{"base", "first", "all"})
-	require.Subset(t, usersTable.Rows[1].Config.Tags, []string{"base", "second"})
+	assert.Assert(t, is.Len(usersTable.Rows, 2))
+	assert.Assert(t, is.Len(usersTable.Rows[0].Config.Tags, 3))
+	assert.Assert(t, is.Len(usersTable.Rows[1].Config.Tags, 2))
+	assert.DeepEqual(t, usersTable.Rows[0].Config.Tags, []string{"base", "first", "all"},
+		cmpopts.SortSlices(func(a, b string) bool {
+			return strings.Compare(a, b) < 0
+		}))
+	assert.DeepEqual(t, usersTable.Rows[1].Config.Tags, []string{"base", "second"},
+		cmpopts.SortSlices(func(a, b string) bool {
+			return strings.Compare(a, b) < 0
+		}))
 }
 
 func TestLoadInvalid(t *testing.T) {
@@ -334,7 +344,8 @@ func TestLoadInvalid(t *testing.T) {
 	})
 
 	_, err := Load(provider)
-	require.ErrorAs(t, err, &ParseError{})
+
+	assert.Assert(t, errors.As(err, &ParseError{}), "err (%T) = %v is not *ParseError", err, err)
 }
 
 func TestLoadInvalidRowType(t *testing.T) {
@@ -348,7 +359,7 @@ func TestLoadInvalidRowType(t *testing.T) {
 	})
 
 	_, err := Load(provider)
-	require.ErrorAs(t, err, &ParseError{})
+	assert.Assert(t, errors.As(err, &ParseError{}), "err (%T) = %v is not *ParseError", err, err)
 }
 
 func TestLoadInvalidKeyType(t *testing.T) {
@@ -362,7 +373,7 @@ func TestLoadInvalidKeyType(t *testing.T) {
 	})
 
 	_, err := Load(provider)
-	require.ErrorAs(t, err, &ParseError{})
+	assert.Assert(t, errors.As(err, &ParseError{}), "err (%T) = %v is not *ParseError", err, err)
 }
 
 func TestLoadRowSingleField(t *testing.T) {
@@ -376,7 +387,7 @@ func TestLoadRowSingleField(t *testing.T) {
 	})
 
 	_, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 }
 
 func TestLoadNoParent(t *testing.T) {
@@ -400,7 +411,7 @@ posts:
 	})
 
 	_, err := Load(provider)
-	require.ErrorIs(t, err, ValueError)
+	assert.ErrorIs(t, err, ValueError)
 }
 
 func TestLoadTaggedDataParser(t *testing.T) {
@@ -416,14 +427,14 @@ func TestLoadTaggedDataParser(t *testing.T) {
 
 	data, err := Load(provider,
 		WithLoadTaggedValueParser(ValueParserUUID()))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	usersTable, ok := data.Tables["users"]
-	require.True(t, ok, "users table not found")
+	assert.Assert(t, ok, "users table not found")
 
-	require.Len(t, usersTable.Rows, 1)
+	assert.Assert(t, is.Len(usersTable.Rows, 1))
 
-	require.Equal(t, map[string]any{
+	assert.DeepEqual(t, map[string]any{
 		"user_id": uuid.MustParse("e850cd47-6a5d-4fc2-aed3-ca917b51577d"),
 		"name":    "John",
 	}, usersTable.Rows[0].Fields)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/rrgmc/debefix"
 	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
 func TestResolver(t *testing.T) {
@@ -49,7 +50,7 @@ post_tags:
 	})
 
 	data, err := debefix.Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	tables := map[string][]map[string]any{}
 	var tableOrder []string
@@ -59,12 +60,12 @@ post_tags:
 		tables[tableName] = append(tables[tableName], fields)
 		return nil, nil
 	}))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
-	require.Equal(t, []string{"public.tags", "public.tags", "public.posts", "public.posts",
+	assert.DeepEqual(t, []string{"public.tags", "public.tags", "public.posts", "public.posts",
 		"public.post_tags", "public.post_tags"}, tableOrder)
 
-	require.Equal(t, []map[string]any{
+	assert.DeepEqual(t, []map[string]any{
 		{
 			"tag_id":   uint64(2),
 			"tag_name": "All",
@@ -75,7 +76,7 @@ post_tags:
 		},
 	}, tables["public.tags"])
 
-	require.Equal(t, []map[string]any{
+	assert.DeepEqual(t, []map[string]any{
 		{
 			"post_id": uint64(1),
 			"title":   "First post",
@@ -86,7 +87,7 @@ post_tags:
 		},
 	}, tables["public.posts"])
 
-	require.Equal(t, []map[string]any{
+	assert.DeepEqual(t, []map[string]any{
 		{
 			"post_id": uint64(1),
 			"tag_id":  uint64(2),
@@ -112,20 +113,20 @@ func TestResolverGenerated(t *testing.T) {
 	})
 
 	data, err := debefix.Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	var tableOrder []string
 
 	_, err = debefix.Resolve(data, ResolverFunc(func(tableName string, fields map[string]any, returnFieldNames []string) (returnValues map[string]any, err error) {
 		tableOrder = append(tableOrder, tableName)
-		require.Equal(t, tableName, "public.tags")
-		require.Equal(t, returnFieldNames, []string{"tag_id"})
-		require.NotContains(t, fields, "tag_id")
+		assert.Equal(t, tableName, "public.tags")
+		assert.DeepEqual(t, returnFieldNames, []string{"tag_id"})
+		require.NotContains(t, fields, "tag_id") // TODO: https://github.com/gotestyourself/gotest.tools/issues/147
 		return map[string]any{
 			"tag_id": 1,
 		}, nil
 	}))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
-	require.Equal(t, []string{"public.tags"}, tableOrder)
+	assert.DeepEqual(t, []string{"public.tags"}, tableOrder)
 }

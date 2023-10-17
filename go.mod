@@ -4,8 +4,10 @@ go 1.21
 
 require (
 	github.com/goccy/go-yaml v1.11.2
+	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.1
 	github.com/stretchr/testify v1.8.4
+	gotest.tools/v3 v3.5.1
 )
 
 require (

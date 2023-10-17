@@ -5,7 +5,8 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
+	is "gotest.tools/v3/assert/cmp"
 )
 
 func TestResolve(t *testing.T) {
@@ -37,7 +38,7 @@ post_tags:
 	})
 
 	data, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	rowCount := map[string]int{}
 	var tableOrder []string
@@ -47,14 +48,14 @@ post_tags:
 		tableOrder = append(tableOrder, ctx.TableID())
 		return ResolveCheckCallback(ctx, fields)
 	})
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
-	require.Equal(t, map[string]int{
+	assert.DeepEqual(t, map[string]int{
 		"tags":      2,
 		"posts":     1,
 		"post_tags": 1,
 	}, rowCount)
-	require.Equal(t, []string{"tags", "tags", "posts", "post_tags"}, tableOrder)
+	assert.DeepEqual(t, []string{"tags", "tags", "posts", "post_tags"}, tableOrder)
 }
 
 func TestResolveGenerated(t *testing.T) {
@@ -69,19 +70,19 @@ func TestResolveGenerated(t *testing.T) {
 	})
 
 	data, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	rowCount := map[string]int{}
 
 	_, err = Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
 		rowCount[ctx.TableID()]++
-		require.IsType(t, &ResolveGenerate{}, fields["tag_id"])
+		assert.DeepEqual(t, &ResolveGenerate{}, fields["tag_id"])
 		ctx.ResolveField("tag_id", 1)
 		return nil
 	})
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
-	require.Equal(t, map[string]int{
+	assert.DeepEqual(t, map[string]int{
 		"tags": 1,
 	}, rowCount)
 }
@@ -120,7 +121,7 @@ post_tags:
 	})
 
 	data, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	rowCount := map[string]int{}
 	var tableOrder []string
@@ -131,22 +132,22 @@ post_tags:
 
 		switch ctx.TableID() {
 		case "tags":
-			require.Equal(t, "All", fields["tag_name"])
+			assert.Equal(t, "All", fields["tag_name"])
 		case "posts":
-			require.Equal(t, "First post", fields["title"])
+			assert.Equal(t, "First post", fields["title"])
 		default:
 			t.Fatalf("unexpected table id: %s", ctx.TableID())
 		}
 
 		return ResolveCheckCallback(ctx, fields)
 	}, WithResolveTags([]string{"include"}))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
-	require.Equal(t, map[string]int{
+	assert.DeepEqual(t, map[string]int{
 		"tags":  1,
 		"posts": 1,
 	}, rowCount)
-	require.Equal(t, []string{"tags", "posts"}, tableOrder)
+	assert.DeepEqual(t, []string{"tags", "posts"}, tableOrder)
 }
 
 func TestResolveUnresolvedRefID(t *testing.T) {
@@ -170,10 +171,10 @@ posts:
 	})
 
 	data, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = ResolveCheck(data)
-	require.ErrorIs(t, err, ResolveValueError)
+	assert.ErrorIs(t, err, ResolveValueError)
 }
 
 func TestResolveInvalidDependency(t *testing.T) {
@@ -197,10 +198,10 @@ posts:
 	})
 
 	data, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = ResolveCheck(data)
-	require.ErrorIs(t, err, ResolveError)
+	assert.ErrorIs(t, err, ResolveError)
 }
 
 func TestResolveCallbackError(t *testing.T) {
@@ -215,7 +216,7 @@ func TestResolveCallbackError(t *testing.T) {
 	})
 
 	data, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	cbError := errors.New("test error")
 
@@ -225,9 +226,9 @@ func TestResolveCallbackError(t *testing.T) {
 		rowCount[ctx.TableID()]++
 		return cbError
 	})
-	require.ErrorIs(t, err, cbError)
+	assert.ErrorIs(t, err, cbError)
 
-	require.Equal(t, map[string]int{
+	assert.DeepEqual(t, map[string]int{
 		"tags": 1,
 	}, rowCount)
 }
@@ -244,23 +245,23 @@ func TestResolveReturnResolved(t *testing.T) {
 	})
 
 	data, err := Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	rowCount := map[string]int{}
 
 	retData, err := Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
 		rowCount[ctx.TableID()]++
-		require.IsType(t, &ResolveGenerate{}, fields["tag_id"])
+		assert.DeepEqual(t, &ResolveGenerate{}, fields["tag_id"])
 		ctx.ResolveField("tag_id", 935)
 		return nil
 	})
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
-	require.Equal(t, map[string]int{
+	assert.DeepEqual(t, map[string]int{
 		"tags": 1,
 	}, rowCount)
 
-	require.Len(t, retData.Tables, 1)
-	require.Len(t, retData.Tables["tags"].Rows, 1)
-	require.Equal(t, 935, retData.Tables["tags"].Rows[0].Fields["tag_id"])
+	assert.Assert(t, is.Len(retData.Tables, 1))
+	assert.Assert(t, is.Len(retData.Tables["tags"].Rows, 1))
+	assert.Equal(t, 935, retData.Tables["tags"].Rows[0].Fields["tag_id"])
 }

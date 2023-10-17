@@ -6,7 +6,7 @@ import (
 
 	"github.com/rrgmc/debefix"
 	"github.com/rrgmc/debefix/db"
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
 func TestResolve(t *testing.T) {
@@ -50,7 +50,7 @@ post_tags:
 	})
 
 	data, err := debefix.Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	type sqlQuery struct {
 		SQL  string
@@ -93,9 +93,9 @@ post_tags:
 		})
 		return nil, nil
 	}), DefaultSQLBuilder{})))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
-	require.Equal(t, expectedQueryList, queryList)
+	assert.DeepEqual(t, expectedQueryList, queryList)
 }
 
 func TestResolveGenerated(t *testing.T) {
@@ -139,7 +139,7 @@ post_tags:
 	})
 
 	data, err := debefix.Load(provider)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	type sqlQuery struct {
 		SQL  string
@@ -193,7 +193,7 @@ post_tags:
 
 		return ret, nil
 	}), DefaultSQLBuilder{})))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
-	require.Equal(t, expectedQueryList, queryList)
+	assert.DeepEqual(t, expectedQueryList, queryList)
 }

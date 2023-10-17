@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
+	is "gotest.tools/v3/assert/cmp"
 )
 
 func TestDataExtractRows(t *testing.T) {
@@ -33,14 +34,14 @@ func TestDataExtractRows(t *testing.T) {
 				(table.ID == "posts" && row.Fields["a"].(int) <= 3),
 			nil
 	})
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
-	require.Len(t, rows.Tables["tags"].Rows, 1)
-	require.Len(t, rows.Tables["posts"].Rows, 2)
+	assert.Assert(t, is.Len(rows.Tables["tags"].Rows, 1))
+	assert.Assert(t, is.Len(rows.Tables["posts"].Rows, 2))
 
-	require.Equal(t, map[string]any{"x": 2}, rows.Tables["tags"].Rows[0].Fields)
-	require.Equal(t, map[string]any{"a": 3}, rows.Tables["posts"].Rows[0].Fields)
-	require.Equal(t, map[string]any{"a": 2}, rows.Tables["posts"].Rows[1].Fields)
+	assert.DeepEqual(t, map[string]any{"x": 2}, rows.Tables["tags"].Rows[0].Fields)
+	assert.DeepEqual(t, map[string]any{"a": 3}, rows.Tables["posts"].Rows[0].Fields)
+	assert.DeepEqual(t, map[string]any{"a": 2}, rows.Tables["posts"].Rows[1].Fields)
 }
 
 func TestDataExtractRowsNamed(t *testing.T) {
@@ -74,11 +75,11 @@ func TestDataExtractRowsNamed(t *testing.T) {
 		}
 		return false, "", nil
 	})
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
-	require.Len(t, rows, 3)
+	assert.Assert(t, is.Len(rows, 3))
 
-	require.Equal(t, map[string]any{"x": 2}, rows["tags:2"].Fields)
-	require.Equal(t, map[string]any{"a": 3}, rows["posts:3"].Fields)
-	require.Equal(t, map[string]any{"a": 2}, rows["posts:2"].Fields)
+	assert.DeepEqual(t, map[string]any{"x": 2}, rows["tags:2"].Fields)
+	assert.DeepEqual(t, map[string]any{"a": 3}, rows["posts:3"].Fields)
+	assert.DeepEqual(t, map[string]any{"a": 2}, rows["posts:2"].Fields)
 }

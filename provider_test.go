@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
 func TestDirectoryFileProviderChecksExtension(t *testing.T) {
@@ -17,10 +17,10 @@ func TestDirectoryFileProviderChecksExtension(t *testing.T) {
 		files[info.Name] = true
 		return nil
 	})
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	// should not load file without .dbf.yaml
-	require.Equal(t, len(testFS)-1, len(files), "loaded more files than expected")
+	assert.Equal(t, len(testFS)-1, len(files), "loaded more files than expected")
 }
 
 func TestDirectoryFileProviderDirectoryAsTags(t *testing.T) {
@@ -34,10 +34,10 @@ func TestDirectoryFileProviderDirectoryAsTags(t *testing.T) {
 			tag, _, _ = strings.Cut(info.Name, "/")
 		}
 
-		require.Equal(t, []string{tag}, info.Tags)
+		assert.DeepEqual(t, []string{tag}, info.Tags)
 		return nil
 	})
-	require.NoError(t, err)
+	assert.NilError(t, err)
 }
 
 func TestDirectoryFileProviderDirectoryAsTagsFunc(t *testing.T) {
@@ -53,10 +53,10 @@ func TestDirectoryFileProviderDirectoryAsTagsFunc(t *testing.T) {
 			tag, _, _ = strings.Cut(info.Name, "/")
 		}
 
-		require.Equal(t, []string{"a." + tag}, info.Tags)
+		assert.DeepEqual(t, []string{"a." + tag}, info.Tags)
 		return nil
 	})
-	require.NoError(t, err)
+	assert.NilError(t, err)
 }
 
 func TestDirectoryFileProviderIgnoresFiles(t *testing.T) {
@@ -65,8 +65,8 @@ func TestDirectoryFileProviderIgnoresFiles(t *testing.T) {
 	}))
 
 	err := provider.Load(func(info FileInfo) error {
-		require.False(t, strings.HasPrefix(info.Name, "test1/inner/"))
+		assert.Assert(t, !strings.HasPrefix(info.Name, "test1/inner/"))
 		return nil
 	})
-	require.NoError(t, err)
+	assert.NilError(t, err)
 }

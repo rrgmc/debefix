@@ -6,7 +6,7 @@ import (
 
 	"github.com/rrgmc/debefix"
 	"github.com/rrgmc/debefix/db/sql"
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
 func TestGenerate(t *testing.T) {
@@ -53,9 +53,9 @@ func TestGenerate(t *testing.T) {
 		})
 		return nil, nil
 	}))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
-	require.Equal(t, expectedQueryList, queryList)
+	assert.DeepEqual(t, expectedQueryList, queryList)
 
 	// same test using FS
 
@@ -68,8 +68,8 @@ func TestGenerate(t *testing.T) {
 		})
 		return nil, nil
 	}))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
-	require.Equal(t, expectedQueryList, queryList)
+	assert.DeepEqual(t, expectedQueryList, queryList)
 
 }

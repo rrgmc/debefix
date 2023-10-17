@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/rrgmc/debefix"
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
 type filterDataTestValue struct {
@@ -143,8 +143,8 @@ func TestFilterData(t *testing.T) {
 			}, "test1", func(row debefix.Row) (filterDataTestValue, error) {
 				return fromRow(row.Fields), nil
 			}, test.options...)
-			require.NoError(t, err)
-			require.Equal(t, test.expected, data)
+			assert.NilError(t, err)
+			assert.DeepEqual(t, test.expected, data)
 		})
 	}
 }

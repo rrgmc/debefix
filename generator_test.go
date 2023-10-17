@@ -5,7 +5,7 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
 func TestGenerate(t *testing.T) {
@@ -44,14 +44,14 @@ post_tags:
 		tableOrder = append(tableOrder, ctx.TableID())
 		return ResolveCheckCallback(ctx, fields)
 	})
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
-	require.Equal(t, map[string]int{
+	assert.DeepEqual(t, map[string]int{
 		"tags":      2,
 		"posts":     1,
 		"post_tags": 1,
 	}, rowCount)
-	require.Equal(t, []string{"tags", "tags", "posts", "post_tags"}, tableOrder)
+	assert.DeepEqual(t, []string{"tags", "tags", "posts", "post_tags"}, tableOrder)
 }
 
 func TestGenerateOptions(t *testing.T) {
@@ -96,7 +96,7 @@ func TestGenerateOptions(t *testing.T) {
 
 		}),
 		WithGenerateResolveCheck(true))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
-	require.Equal(t, expected, called)
+	assert.DeepEqual(t, expected, called)
 }
