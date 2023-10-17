@@ -36,7 +36,7 @@ func FilterData[T any](data *debefix.Data, tableID string, f func(row debefix.Ro
 					for filterField, filterValue := range optns.filterFields {
 						fieldValue, isField := optns.filterFields[filterField]
 						if !isField {
-							return false, fmt.Errorf("field '%s' does not exists")
+							return false, fmt.Errorf("field '%s' does not exists", filterField)
 						}
 						if cmp.Equal(filterValue, fieldValue, opt.TimeWithThreshold(time.Hour)) {
 							isFilter++
