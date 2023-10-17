@@ -46,7 +46,7 @@ func TestGenerate(t *testing.T) {
 
 	var queryList []sqlQuery
 
-	err := Generate(debefix.NewFSFileProvider(providerData), sql.QueryInterfaceFunc(func(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+	_, err := Generate(debefix.NewFSFileProvider(providerData), sql.QueryInterfaceFunc(func(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
 		queryList = append(queryList, sqlQuery{
 			SQL:  query,
 			Args: args,
@@ -61,7 +61,7 @@ func TestGenerate(t *testing.T) {
 
 	queryList = nil
 
-	err = GenerateFS(providerData, sql.QueryInterfaceFunc(func(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+	_, err = GenerateFS(providerData, sql.QueryInterfaceFunc(func(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
 		queryList = append(queryList, sqlQuery{
 			SQL:  query,
 			Args: args,

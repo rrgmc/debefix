@@ -6,10 +6,9 @@ import (
 	"github.com/rrgmc/debefix/db/sql"
 )
 
-// Resolve runs SQL INSERT queries on db.
-func Resolve(db sql.QueryInterface, data *debefix.Data, options ...debefix.ResolveOption) error {
-	_, err := debefix.Resolve(data, ResolverFunc(db), options...)
-	return err
+// Resolve runs SQL INSERT queries on db, and returns the resolved data.
+func Resolve(db sql.QueryInterface, data *debefix.Data, options ...debefix.ResolveOption) (*debefix.Data, error) {
+	return debefix.Resolve(data, ResolverFunc(db), options...)
 }
 
 // ResolverFunc is the debefix.ResolveCallback used by Resolve.
