@@ -10,6 +10,8 @@ import (
 	"gotest.tools/v3/assert/opt"
 )
 
+// FilterData returns a filtered set of a single table of [debefix.Data], converting a [debefix.Row] to a
+// concrete type using generics.
 func FilterData[T any](data *debefix.Data, tableID string, f func(row debefix.Row) (T, error),
 	options ...FilterDataOption) ([]T, error) {
 	var optns filterDataOptions
@@ -63,7 +65,7 @@ func FilterData[T any](data *debefix.Data, tableID string, f func(row debefix.Ro
 			return true, nil
 		})
 	if err != nil {
-		return nil, fmt.Errorf("error loading fixture for '%s`: %w", tableID, err)
+		return nil, fmt.Errorf("error loading data for '%s`: %w", tableID, err)
 	}
 
 	return ret, nil
@@ -79,6 +81,7 @@ type filterDataOptions struct {
 type FilterDataOption func(*filterDataOptions)
 
 // WithFilterAll include all records by default, depending on other filters if they exist.
+// By default, if no filters were set, no record would be returned. Use this to return all rows in this case.
 // All requested filters must return true to select the row.
 func WithFilterAll(filterAll bool) FilterDataOption {
 	return func(o *filterDataOptions) {
