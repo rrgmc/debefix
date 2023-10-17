@@ -65,6 +65,12 @@ var allTestData = []filterDataTestValue{
 		City:      "SF",
 		CreatedAt: time.Now().Add(-500 * time.Hour),
 	},
+	{
+		Name:      "Leno",
+		Age:       41,
+		City:      "LV",
+		CreatedAt: time.Now().Add(-12 * time.Hour),
+	},
 }
 
 var allTestTable *debefix.Table
@@ -95,6 +101,10 @@ func TestFilterData(t *testing.T) {
 			options:  []FilterDataOption{WithFilterAll(true)},
 		},
 		{
+			name:    "get none",
+			options: []FilterDataOption{},
+		},
+		{
 			name: "filter refid",
 			expected: []filterDataTestValue{
 				allTestData[0],
@@ -111,6 +121,15 @@ func TestFilterData(t *testing.T) {
 			options: []FilterDataOption{WithFilterFields(map[string]any{
 				"age":  41,
 				"city": "SF",
+			})},
+		},
+		{
+			name: "filter row",
+			expected: []filterDataTestValue{
+				allTestData[3],
+			},
+			options: []FilterDataOption{WithFilterRow(func(row debefix.Row) (bool, error) {
+				return row.Fields["age"].(int) == 91, nil
 			})},
 		},
 	}
