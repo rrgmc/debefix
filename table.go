@@ -2,6 +2,8 @@ package debefix
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 
 	"github.com/google/uuid"
 )
@@ -11,10 +13,45 @@ type Data struct {
 	Tables map[string]*Table
 }
 
+// Merge merges source into d. A deep copy is done to ensure source is never modified.
+func (d *Data) Merge(source *Data) error {
+	for sourceTableID, sourceTable := range source.Tables {
+		table, ok := d.Tables[sourceTableID]
+		if !ok {
+			table = &Table{
+				ID: sourceTable.ID,
+			}
+			d.Tables[sourceTableID] = table
+		}
+		err := table.Merge(sourceTable)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 type Table struct {
 	ID     string
 	Config TableConfig
 	Rows   Rows
+}
+
+// Merge merges source into d. A deep copy is done to ensure source is never modified.
+func (t *Table) Merge(source *Table) error {
+	if source.ID != t.ID {
+		return fmt.Errorf("table IDs don't match (%s - %s)", source.ID, t.ID)
+	}
+
+	err := t.Config.Merge(&source.Config)
+	if err != nil {
+		return err
+	}
+
+	for _, sourceRow := range source.Rows {
+		t.Rows = append(t.Rows, sourceRow.Clone())
+	}
+	return nil
 }
 
 type TableConfig struct {
@@ -28,9 +65,25 @@ type Row struct {
 	Fields     map[string]any
 }
 
+// Clone does a deep copy of the row, to ensure source is never modified.
+func (r Row) Clone() Row {
+	return Row{
+		InternalID: r.InternalID,
+		Config:     r.Config.Clone(),
+		Fields:     maps.Clone(r.Fields),
+	}
+}
+
 type RowConfig struct {
 	RefID string   `yaml:"refid"`
 	Tags  []string `yaml:"tags"`
+}
+
+func (r RowConfig) Clone() RowConfig {
+	return RowConfig{
+		RefID: r.RefID,
+		Tags:  slices.Clone(r.Tags),
+	}
 }
 
 type Rows []Row
@@ -134,4 +187,17 @@ func (d *Data) ExtractRowsNamed(f func(table *Table, row Row) (bool, string, err
 		return nil, ferr
 	}
 	return ret, nil
+}
+
+func MergeData(list ...*Data) (*Data, error) {
+	retData := &Data{
+		Tables: map[string]*Table{},
+	}
+	for _, data := range list {
+		err := retData.Merge(data)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return retData, nil
 }
