@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -11,52 +12,93 @@ import (
 type filterDataTestValue struct {
 	Name      string
 	Age       int
+	City      string
 	CreatedAt time.Time
 }
 
+func (d filterDataTestValue) toRow() map[string]any {
+	return map[string]any{
+		"name":       d.Name,
+		"age":        d.Age,
+		"city":       d.City,
+		"created_at": d.CreatedAt,
+	}
+}
+
+func fromRow(fields map[string]any) filterDataTestValue {
+	return filterDataTestValue{
+		Name:      fields["name"].(string),
+		Age:       fields["age"].(int),
+		City:      fields["city"].(string),
+		CreatedAt: fields["created_at"].(time.Time),
+	}
+}
+
+var allTestData = []filterDataTestValue{
+	{
+		Name:      "Mary",
+		Age:       54,
+		City:      "SF",
+		CreatedAt: time.Now().Add(-200 * time.Hour),
+	},
+	{
+		Name:      "John",
+		Age:       32,
+		City:      "LA",
+		CreatedAt: time.Now(),
+	},
+	{
+		Name:      "Jane",
+		Age:       41,
+		City:      "SF",
+		CreatedAt: time.Now().Add(-100 * time.Hour),
+	},
+}
+
+var allTestTable *debefix.Table
+
+func init() {
+	allTestTable = &debefix.Table{
+		ID: "test1",
+	}
+	for _, data := range allTestData {
+		allTestTable.Rows = append(allTestTable.Rows, debefix.Row{
+			Config: debefix.RowConfig{
+				RefID: strings.ToLower(data.Name),
+			},
+			Fields: data.toRow(),
+		})
+	}
+}
+
 func TestFilterData(t *testing.T) {
+	expected := allTestData
+
+	data, err := FilterData[filterDataTestValue](&debefix.Data{
+		Tables: map[string]*debefix.Table{
+			"test1": allTestTable,
+		},
+	}, "test1", func(row debefix.Row) (filterDataTestValue, error) {
+		return fromRow(row.Fields), nil
+	}, WithFilterAll(true))
+
+	require.NoError(t, err)
+	require.Equal(t, expected, data)
+}
+
+func TestFilterDataRefID(t *testing.T) {
 	expected := []filterDataTestValue{
-		{
-			Name:      "John",
-			Age:       54,
-			CreatedAt: time.Now(),
-		},
-		{
-			Name:      "Jane",
-			Age:       54,
-			CreatedAt: time.Now().Add(-100 * time.Hour),
-		},
+		allTestData[0],
+		allTestData[2],
 	}
 
 	data, err := FilterData[filterDataTestValue](&debefix.Data{
 		Tables: map[string]*debefix.Table{
-			"test1": &debefix.Table{
-				ID: "test1",
-				Rows: debefix.Rows{
-					debefix.Row{
-						Fields: map[string]any{
-							"name":       expected[0].Name,
-							"age":        expected[0].Age,
-							"created_at": expected[0].CreatedAt,
-						},
-					},
-					debefix.Row{
-						Fields: map[string]any{
-							"name":       expected[1].Name,
-							"age":        expected[1].Age,
-							"created_at": expected[1].CreatedAt,
-						},
-					},
-				},
-			},
+			"test1": allTestTable,
 		},
 	}, "test1", func(row debefix.Row) (filterDataTestValue, error) {
-		return filterDataTestValue{
-			Name:      row.Fields["name"].(string),
-			Age:       row.Fields["age"].(int),
-			CreatedAt: row.Fields["created_at"].(time.Time),
-		}, nil
-	}, WithFilterAll(true))
+		return fromRow(row.Fields), nil
+	}, WithFilterRefIDs([]string{"jane", "mary"}))
 
 	require.NoError(t, err)
 	require.Equal(t, expected, data)
