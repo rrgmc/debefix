@@ -72,34 +72,37 @@ func init() {
 }
 
 func TestFilterData(t *testing.T) {
-	expected := allTestData
-
-	data, err := FilterData[filterDataTestValue](&debefix.Data{
-		Tables: map[string]*debefix.Table{
-			"test1": allTestTable,
+	tests := []struct {
+		name     string
+		expected []filterDataTestValue
+		options  []FilterDataOption
+	}{
+		{
+			name:     "get all",
+			expected: allTestData,
+			options:  []FilterDataOption{WithFilterAll(true)},
 		},
-	}, "test1", func(row debefix.Row) (filterDataTestValue, error) {
-		return fromRow(row.Fields), nil
-	}, WithFilterAll(true))
-
-	require.NoError(t, err)
-	require.Equal(t, expected, data)
-}
-
-func TestFilterDataRefID(t *testing.T) {
-	expected := []filterDataTestValue{
-		allTestData[0],
-		allTestData[2],
+		{
+			name: "filter refid",
+			expected: []filterDataTestValue{
+				allTestData[0],
+				allTestData[2],
+			},
+			options: []FilterDataOption{WithFilterRefIDs([]string{"jane", "mary"})},
+		},
 	}
 
-	data, err := FilterData[filterDataTestValue](&debefix.Data{
-		Tables: map[string]*debefix.Table{
-			"test1": allTestTable,
-		},
-	}, "test1", func(row debefix.Row) (filterDataTestValue, error) {
-		return fromRow(row.Fields), nil
-	}, WithFilterRefIDs([]string{"jane", "mary"}))
-
-	require.NoError(t, err)
-	require.Equal(t, expected, data)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			data, err := FilterData[filterDataTestValue](&debefix.Data{
+				Tables: map[string]*debefix.Table{
+					"test1": allTestTable,
+				},
+			}, "test1", func(row debefix.Row) (filterDataTestValue, error) {
+				return fromRow(row.Fields), nil
+			}, test.options...)
+			require.NoError(t, err)
+			require.Equal(t, test.expected, data)
+		})
+	}
 }
