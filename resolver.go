@@ -84,6 +84,10 @@ type resolver struct {
 }
 
 func (r *resolver) resolve(f ResolveCallback) error {
+	r.resolvedData = &Data{
+		Tables: map[string]*Table{},
+	}
+
 	// build table dependency graph
 	depg := depgraph.New()
 
@@ -180,11 +184,6 @@ func (r *resolver) resolve(f ResolveCallback) error {
 			}
 
 			// store table row in memory
-			if r.resolvedData == nil {
-				r.resolvedData = &Data{
-					Tables: map[string]*Table{},
-				}
-			}
 			if _, ok := r.resolvedData.Tables[table.ID]; !ok {
 				r.resolvedData.Tables[table.ID] = &Table{
 					ID:     table.ID,

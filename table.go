@@ -15,6 +15,13 @@ type Data struct {
 
 // Merge merges source into d. A deep copy is done to ensure source is never modified.
 func (d *Data) Merge(source *Data) error {
+	if source.Tables == nil {
+		return nil
+	}
+	if d.Tables == nil {
+		d.Tables = map[string]*Table{}
+	}
+
 	for sourceTableID, sourceTable := range source.Tables {
 		table, ok := d.Tables[sourceTableID]
 		if !ok {
@@ -115,6 +122,9 @@ func (c *TableConfig) Merge(other *TableConfig) error {
 
 // WalkTableData searches for rows in tables.
 func (d *Data) WalkTableData(tableID string, f func(row Row) (bool, any, error)) (any, error) {
+	if d.Tables == nil {
+		return nil, fmt.Errorf("could not find table %s", tableID)
+	}
 	vdb, ok := d.Tables[tableID]
 	if !ok {
 		return nil, fmt.Errorf("could not find table %s", tableID)
@@ -138,6 +148,9 @@ func (t *Table) WalkData(f func(row Row) (bool, any, error)) (any, error) {
 
 // WalkRows calls a callback for each row in each table.
 func (d *Data) WalkRows(f func(table *Table, row Row) bool) {
+	if d.Tables == nil {
+		return
+	}
 	for _, table := range d.Tables {
 		for _, row := range table.Rows {
 			if cont := f(table, row); !cont {
