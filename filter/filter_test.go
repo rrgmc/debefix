@@ -91,14 +91,30 @@ func init() {
 
 func TestFilterData(t *testing.T) {
 	tests := []struct {
-		name     string
-		expected []filterDataTestValue
-		options  []FilterDataOption
+		name        string
+		expected    []filterDataTestValue
+		options     []FilterDataOption
+		sortCompare func(filterDataTestValue, filterDataTestValue) int
 	}{
 		{
 			name:     "get all",
 			expected: allTestData,
 			options:  []FilterDataOption{WithFilterAll(true)},
+		},
+		{
+			name: "get all sorted by name",
+			expected: []filterDataTestValue{
+				allTestData[2],
+				allTestData[3],
+				allTestData[1],
+				allTestData[5],
+				allTestData[0],
+				allTestData[4],
+			},
+			options: []FilterDataOption{WithFilterAll(true)},
+			sortCompare: func(a filterDataTestValue, b filterDataTestValue) int {
+				return strings.Compare(a.Name, b.Name)
+			},
 		},
 		{
 			name:    "get none",
@@ -142,7 +158,7 @@ func TestFilterData(t *testing.T) {
 				},
 			}, "test1", func(row debefix.Row) (filterDataTestValue, error) {
 				return fromRow(row.Fields), nil
-			}, test.options...)
+			}, test.sortCompare, test.options...)
 			assert.NilError(t, err)
 			assert.DeepEqual(t, test.expected, data)
 		})

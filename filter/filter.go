@@ -12,8 +12,9 @@ import (
 
 // FilterData returns a filtered set of a single table of [debefix.Data], converting a [debefix.Row] to a
 // concrete type using generics.
+// If sortCompare is not nil, the result is sorted with [slices.SortFunc].
 func FilterData[T any](data *debefix.Data, tableID string, f func(row debefix.Row) (T, error),
-	options ...FilterDataOption) ([]T, error) {
+	sortCompare func(T, T) int, options ...FilterDataOption) ([]T, error) {
 	var optns filterDataOptions
 	for _, op := range options {
 		op(&optns)
@@ -66,6 +67,10 @@ func FilterData[T any](data *debefix.Data, tableID string, f func(row debefix.Ro
 		})
 	if err != nil {
 		return nil, fmt.Errorf("error loading data for '%s`: %w", tableID, err)
+	}
+
+	if sortCompare != nil {
+		slices.SortFunc(ret, sortCompare)
 	}
 
 	return ret, nil
