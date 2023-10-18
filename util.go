@@ -2,6 +2,7 @@ package debefix
 
 import (
 	"slices"
+	"strings"
 
 	"github.com/goccy/go-yaml/ast"
 )
@@ -25,3 +26,26 @@ func getStringNode(node ast.Node) (string, error) {
 		return "", NewParseError("node is not string", node.GetPath(), node.GetToken().Position)
 	}
 }
+
+// sliceMap applies a function to each slice item and return the resulting slice.
+func sliceMap[T any, U []T](ts U, f func(T) T) U {
+	us := make(U, len(ts))
+	for i := range ts {
+		us[i] = f(ts[i])
+	}
+	return us
+}
+
+// stripNumberPunctuationPrefix removes [numberPunctuation] from the string prefix.
+func stripNumberPunctuationPrefix(s string) string {
+	isPrefix := true
+	return strings.Map(func(r rune) rune {
+		if !isPrefix || strings.IndexRune(numberPunctuation, r) < 0 {
+			isPrefix = false
+			return r
+		}
+		return -1
+	}, s)
+}
+
+var numberPunctuation = "0123456789!\"#$%&'()*+,-./:;?@[\\]^_`{|}~"
