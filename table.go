@@ -86,14 +86,16 @@ func (r Row) Clone() Row {
 }
 
 type RowConfig struct {
-	RefID string   `yaml:"refid"`
-	Tags  []string `yaml:"tags"`
+	RefID      string   `yaml:"refid"`
+	Tags       []string `yaml:"tags"`
+	IgnoreTags bool     `yaml:"ignoreTags"` // if true, always include row ignoring any tag filter.
 }
 
 func (r RowConfig) Clone() RowConfig {
 	return RowConfig{
-		RefID: r.RefID,
-		Tags:  slices.Clone(r.Tags),
+		RefID:      r.RefID,
+		Tags:       slices.Clone(r.Tags),
+		IgnoreTags: r.IgnoreTags,
 	}
 }
 

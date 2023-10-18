@@ -132,7 +132,7 @@ func (r *resolver) resolve(f ResolveCallback) error {
 		}
 
 		for rowIdx, row := range table.Rows {
-			isIncluded := r.includeTag(table.ID, row.Config.Tags)
+			isIncluded := row.Config.IgnoreTags || r.includeTag(table.ID, row.Config.Tags)
 
 			if r.rowProgress != nil {
 				r.rowProgress(table.ID, tableName, rowIdx+1, len(table.Rows), isIncluded)

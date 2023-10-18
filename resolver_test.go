@@ -150,6 +150,71 @@ post_tags:
 	assert.DeepEqual(t, []string{"tags", "posts"}, tableOrder)
 }
 
+func TestResolveIgnoreTags(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tags:
+  rows:
+    - tag_id: 2
+      tag_name: "All"
+      _dbfconfig:
+        refid: "all"
+    - tag_id: 5
+      tag_name: "Half"
+      _dbfconfig:
+        refid: "half"
+        ignoreTags: true
+posts:
+  config:
+    depends: ["tags"]
+  rows:
+    - post_id: 1
+      title: "First post"
+      _dbfconfig:
+        refid: "post_1"
+        tags: ["include"]
+    - post_id: 2
+      title: "Second post"
+      _dbfconfig:
+        refid: "post_2"
+post_tags:
+  rows:
+    - post_id: !dbfexpr "refid:posts:post_1:post_id"
+      tag_id: !dbfexpr "refid:tags:all:tag_id"
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	assert.NilError(t, err)
+
+	rowCount := map[string]int{}
+	var tableOrder []string
+
+	_, err = Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+		rowCount[ctx.TableID()]++
+		tableOrder = append(tableOrder, ctx.TableID())
+
+		switch ctx.TableID() {
+		case "tags":
+			assert.Equal(t, "Half", fields["tag_name"])
+		case "posts":
+			assert.Equal(t, "First post", fields["title"])
+		default:
+			t.Fatalf("unexpected table id: %s", ctx.TableID())
+		}
+
+		return ResolveCheckCallback(ctx, fields)
+	}, WithResolveTags([]string{"include"}))
+	assert.NilError(t, err)
+
+	assert.DeepEqual(t, map[string]int{
+		"tags":  1,
+		"posts": 1,
+	}, rowCount)
+	assert.DeepEqual(t, []string{"tags", "posts"}, tableOrder)
+}
+
 func TestResolveUnresolvedRefID(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
