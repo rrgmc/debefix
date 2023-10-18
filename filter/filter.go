@@ -73,14 +73,29 @@ func FilterData[T any](data *debefix.Data, tableID string, f func(row debefix.Ro
 		slices.SortFunc(ret, sortCompare)
 	}
 
+	if optns.offset != nil {
+		if *optns.offset < uint(len(ret)) {
+			ret = ret[*optns.offset:]
+		} else {
+			ret = nil
+		}
+	}
+	if optns.limit != nil {
+		ret = ret[:min(*optns.limit, uint(len(ret)))]
+		if ret != nil && len(ret) == 0 {
+			ret = nil
+		}
+	}
+
 	return ret, nil
 }
 
 type filterDataOptions struct {
-	filterAll    bool
-	filterRefIDs []string
-	filterFields map[string]any
-	filterRow    func(row debefix.Row) (bool, error)
+	filterAll     bool
+	filterRefIDs  []string
+	filterFields  map[string]any
+	filterRow     func(row debefix.Row) (bool, error)
+	offset, limit *uint
 }
 
 type FilterDataOption func(*filterDataOptions)
@@ -115,5 +130,13 @@ func WithFilterFields(fields map[string]any) FilterDataOption {
 func WithFilterRow(filterRow func(row debefix.Row) (bool, error)) FilterDataOption {
 	return func(o *filterDataOptions) {
 		o.filterRow = filterRow
+	}
+}
+
+// WithOffsetLimit filters the returning array from the offset, with limit amount of records.
+func WithOffsetLimit(offset uint, limit uint) FilterDataOption {
+	return func(o *filterDataOptions) {
+		o.offset = &offset
+		o.limit = &limit
 	}
 }

@@ -148,6 +148,46 @@ func TestFilterData(t *testing.T) {
 				return row.Fields["age"].(int) == 91, nil
 			})},
 		},
+		{
+			name: "offset limit",
+			expected: []filterDataTestValue{
+				allTestData[2],
+				allTestData[3],
+			},
+			options: []FilterDataOption{
+				WithFilterAll(true),
+				WithOffsetLimit(2, 2),
+			},
+		},
+		{
+			name:     "offset higher",
+			expected: nil,
+			options: []FilterDataOption{
+				WithFilterAll(true),
+				WithOffsetLimit(10, 2),
+			},
+		},
+		{
+			name: "limit higher",
+			expected: []filterDataTestValue{
+				allTestData[2],
+				allTestData[3],
+				allTestData[4],
+				allTestData[5],
+			},
+			options: []FilterDataOption{
+				WithFilterAll(true),
+				WithOffsetLimit(2, 50),
+			},
+		},
+		{
+			name:     "limit 0",
+			expected: nil,
+			options: []FilterDataOption{
+				WithFilterAll(true),
+				WithOffsetLimit(2, 0),
+			},
+		},
 	}
 
 	for _, test := range tests {
