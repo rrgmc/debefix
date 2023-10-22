@@ -180,13 +180,16 @@ type stringFileProvider struct {
 }
 
 func (s stringFileProvider) Load(callback FileProviderCallback) error {
+	digitSize := fmt.Sprintf("%d", len(s.files))
+	fileFmt := fmt.Sprintf("%%0%dd-file.dbf.yaml", len(digitSize)+1)
+
 	for idx, data := range s.files {
 		var tags []string
 		if idx < len(s.tags) {
 			tags = s.tags[idx]
 		}
 		err := callback(FileInfo{
-			Name: fmt.Sprintf("%04d-file.dbf.yaml", idx),
+			Name: fmt.Sprintf(fileFmt, idx),
 			File: strings.NewReader(data),
 			Tags: tags,
 		})
