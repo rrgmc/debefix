@@ -49,11 +49,20 @@ func WithLoadTaggedValueParser(parser TaggedValueParser) LoadOption {
 	})
 }
 
+// WithLoadRowsSetIgnoreTags sets "IgnoreTags" on all rows loaded.
+// This is mainly used in tests to be sure the rows will be included.
+func WithLoadRowsSetIgnoreTags(rowsSetIgnoreTags bool) LoadOption {
+	return fnLoadOption(func(l *loader) {
+		l.rowsSetIgnoreTags = rowsSetIgnoreTags
+	})
+}
+
 type loader struct {
 	fileProvider      FileProvider
 	data              *Data
 	progress          func(filename string)
 	taggedValueParser []TaggedValueParser
+	rowsSetIgnoreTags bool
 }
 
 func (l *loader) load() error {
@@ -239,6 +248,9 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 				table.AppendDeps(fd.TableDepends())
 			}
 		}
+	}
+	if l.rowsSetIgnoreTags {
+		row.Config.IgnoreTags = true
 	}
 
 	if len(tags) > 0 {
