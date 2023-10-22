@@ -5,6 +5,8 @@ type FSFileProviderOption interface {
 	apply(*fsFileProvider)
 }
 
+type StringFileProviderOption func(*stringFileProvider)
+
 type LoadOption interface {
 	GenerateOption
 	apply(*loader)

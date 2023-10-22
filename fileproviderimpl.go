@@ -157,3 +157,42 @@ func (d fsFileProvider) readDirSorted(currentPath string) ([]os.DirEntry, error)
 
 	return files, err
 }
+
+// NewStringFileProvider creates a [FileProvider] that simulates a file for each string field, in the array order.
+func NewStringFileProvider(files []string, options ...StringFileProviderOption) FileProvider {
+	ret := &stringFileProvider{files: files}
+	for _, opt := range options {
+		opt(ret)
+	}
+	return ret
+}
+
+// WithStringFileProviderTags sets tags using the same array indexes as the files parameter.
+func WithStringFileProviderTags(tags [][]string) StringFileProviderOption {
+	return func(p *stringFileProvider) {
+		p.tags = tags
+	}
+}
+
+type stringFileProvider struct {
+	files []string
+	tags  [][]string
+}
+
+func (s stringFileProvider) Load(callback FileProviderCallback) error {
+	for idx, data := range s.files {
+		var tags []string
+		if idx < len(s.tags) {
+			tags = s.tags[idx]
+		}
+		err := callback(FileInfo{
+			Name: fmt.Sprintf("%04d-file.dbf.yaml", idx),
+			File: strings.NewReader(data),
+			Tags: tags,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

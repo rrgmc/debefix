@@ -495,3 +495,44 @@ func TestLoadTaggedDataParser(t *testing.T) {
 		"name":    "John",
 	}, usersTable.Rows[0].Fields)
 }
+
+func TestLoadStringFileProvider(t *testing.T) {
+	provider := NewStringFileProvider([]string{
+		`users:
+  rows:
+    - user_id: 1
+      name: "John"
+`,
+		`tags:
+  rows:
+    - tag_id: 2
+      tag_name: "All"
+`,
+	}, WithStringFileProviderTags([][]string{
+		{"a", "b"},
+		{"c"},
+	}))
+
+	data, err := Load(provider)
+	assert.NilError(t, err)
+
+	usersTable, ok := data.Tables["users"]
+	assert.Assert(t, ok, "users table not found")
+
+	tagsTable, ok := data.Tables["tags"]
+	assert.Assert(t, ok, "tags table not found")
+
+	assert.Assert(t, is.Len(usersTable.Rows, 1))
+	assert.DeepEqual(t, map[string]any{
+		"user_id": uint64(1),
+		"name":    "John",
+	}, usersTable.Rows[0].Fields)
+	assert.DeepEqual(t, []string{"a", "b"}, usersTable.Rows[0].Config.Tags)
+
+	assert.Assert(t, is.Len(tagsTable.Rows, 1))
+	assert.DeepEqual(t, map[string]any{
+		"tag_id":   uint64(2),
+		"tag_name": "All",
+	}, tagsTable.Rows[0].Fields)
+	assert.DeepEqual(t, []string{"c"}, tagsTable.Rows[0].Config.Tags)
+}
