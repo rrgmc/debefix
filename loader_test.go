@@ -54,6 +54,61 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, "janedoe", usersTable.Rows[1].Config.RefID)
 }
 
+func TestLoadInitialData(t *testing.T) {
+	initialProvider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`users:
+  config:
+    table_name: "public.user"
+  rows:
+    - user_id: 1
+      name: "John Doe"
+      _dbfconfig:
+        refid: "johndoe"
+`),
+		},
+	})
+
+	initialData, err := Load(initialProvider)
+	assert.NilError(t, err)
+
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`users:
+  config:
+    table_name: "public.user"
+  rows:
+    - user_id: 2
+      name: "Jane Doe"
+      _dbfconfig:
+        refid: "janedoe"
+`),
+		},
+	})
+
+	data, err := Load(provider, WithLoadInitialData(initialData))
+	assert.NilError(t, err)
+
+	usersTable, ok := data.Tables["users"]
+	assert.Assert(t, ok, "users table not found")
+
+	assert.Equal(t, "public.user", usersTable.Config.TableName)
+
+	assert.Assert(t, is.Len(usersTable.Rows, 2))
+
+	assert.DeepEqual(t, map[string]any{
+		"user_id": uint64(1),
+		"name":    "John Doe",
+	}, usersTable.Rows[0].Fields)
+	assert.Equal(t, "johndoe", usersTable.Rows[0].Config.RefID)
+
+	assert.DeepEqual(t, map[string]any{
+		"user_id": uint64(2),
+		"name":    "Jane Doe",
+	}, usersTable.Rows[1].Fields)
+	assert.Equal(t, "janedoe", usersTable.Rows[1].Config.RefID)
+}
+
 func TestLoad2TablesSameFile(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{

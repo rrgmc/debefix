@@ -24,7 +24,14 @@ func Load(fileProvider FileProvider, options ...LoadOption) (*Data, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &l.data, nil
+	return l.data, nil
+}
+
+// WithLoadInitialData sets the initial data. Can be used to merge more items into an existing data.
+func WithLoadInitialData(initialData *Data) LoadOption {
+	return fnLoadOption(func(l *loader) {
+		l.data = initialData
+	})
 }
 
 // WithLoadProgress sets a callback to report load progress.
@@ -43,12 +50,15 @@ func WithLoadTaggedValueParser(parser TaggedValueParser) LoadOption {
 
 type loader struct {
 	fileProvider      FileProvider
-	data              Data
+	data              *Data
 	progress          func(filename string)
 	taggedValueParser []TaggedValueParser
 }
 
 func (l *loader) load() error {
+	if l.data == nil {
+		l.data = &Data{}
+	}
 	return l.fileProvider.Load(func(info FileInfo) error {
 		if l.progress != nil {
 			l.progress(info.Name)
