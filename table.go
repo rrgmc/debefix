@@ -13,7 +13,7 @@ type Data struct {
 	Tables map[string]*Table
 }
 
-// Merge merges source into d. A deep copy is done to ensure source is never modified.
+// Merge merges source into the current instance. A deep copy is done to ensure source is never modified.
 func (d *Data) Merge(source *Data) error {
 	if source.Tables == nil {
 		return nil
@@ -36,6 +36,16 @@ func (d *Data) Merge(source *Data) error {
 		}
 	}
 	return nil
+}
+
+// Clone creates a deep-copy of the source. The source [Data] is never modified.
+func (d *Data) Clone(source *Data) (*Data, error) {
+	newd := &Data{}
+	err := newd.Merge(d)
+	if err != nil {
+		return nil, err
+	}
+	return newd, nil
 }
 
 type Table struct {
