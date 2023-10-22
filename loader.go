@@ -28,6 +28,7 @@ func Load(fileProvider FileProvider, options ...LoadOption) (*Data, error) {
 }
 
 // WithLoadInitialData sets the initial data. Can be used to merge more items into an existing data.
+// The instance WILL be modified, call [Data.Clone] if you want to load into a copy.
 func WithLoadInitialData(initialData *Data) LoadOption {
 	return fnLoadOption(func(l *loader) {
 		l.data = initialData

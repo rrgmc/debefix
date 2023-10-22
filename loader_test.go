@@ -86,7 +86,8 @@ func TestLoadInitialData(t *testing.T) {
 		},
 	})
 
-	data, err := Load(provider, WithLoadInitialData(initialData))
+	data, err := Load(provider,
+		WithLoadInitialData(initialData))
 	assert.NilError(t, err)
 
 	usersTable, ok := data.Tables["users"]

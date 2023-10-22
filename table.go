@@ -39,7 +39,7 @@ func (d *Data) Merge(source *Data) error {
 }
 
 // Clone creates a deep-copy of the source. The source [Data] is never modified.
-func (d *Data) Clone(source *Data) (*Data, error) {
+func (d *Data) Clone() (*Data, error) {
 	newd := &Data{}
 	err := newd.Merge(d)
 	if err != nil {
