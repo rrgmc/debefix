@@ -63,6 +63,12 @@ func WithResolveTagsFunc(f ResolveIncludeTagsFunc) ResolveOption {
 	})
 }
 
+func WithResolvedValueParser(f ResolvedValueParser) ResolveOption {
+	return fnResolveOption(func(r *resolver) {
+		r.resolvedValueParsers = append(r.resolvedValueParsers, f)
+	})
+}
+
 // DefaultResolveIncludeTagFunc returns a [ResolveIncludeTagsFunc] check checks if at least one tags is contained.
 func DefaultResolveIncludeTagFunc(tags []string) ResolveIncludeTagsFunc {
 	return func(tableID string, rowTags []string) bool {
@@ -76,11 +82,12 @@ func DefaultResolveIncludeTagFunc(tags []string) ResolveIncludeTagsFunc {
 }
 
 type resolver struct {
-	data            *Data
-	resolvedData    *Data
-	progress        func(tableID, tableName string)
-	rowProgress     func(tableID, tableName string, current, amount int, isIncluded bool)
-	includeTagsFunc ResolveIncludeTagsFunc
+	data                 *Data
+	resolvedData         *Data
+	progress             func(tableID, tableName string)
+	rowProgress          func(tableID, tableName string, current, amount int, isIncluded bool)
+	includeTagsFunc      ResolveIncludeTagsFunc
+	resolvedValueParsers []ResolvedValueParser
 }
 
 func (r *resolver) resolve(f ResolveCallback) error {
@@ -173,6 +180,14 @@ func (r *resolver) resolve(f ResolveCallback) error {
 				// check if all ResolveValue fields were resolved.
 				if _, ok := fieldValue.(ResolveValue); ok {
 					if rv, ok := ctx.resolved[fieldName]; ok {
+						if rgen, ok := fieldValue.(ResolveGenerate); ok {
+							rv, err = r.parseResolvedValue(rgen.Type, rv)
+							if err != nil {
+								return errors.Join(ResolveCallbackError,
+									fmt.Errorf("error parsing resolved value for field %s table %s", fieldName, table.ID))
+							}
+						}
+
 						saveFields[fieldName] = rv
 					} else {
 						return errors.Join(ResolveCallbackError,
@@ -205,7 +220,9 @@ func (r *resolver) resolve(f ResolveCallback) error {
 func (r *resolver) resolveValue(value Value) (any, error) {
 	switch fv := value.(type) {
 	case *ValueGenerated:
-		return &ResolveGenerate{}, nil
+		return &ResolveGenerate{
+			Type: fv.Type,
+		}, nil
 	case *ValueRefID:
 		vrowfield, err := r.resolvedData.WalkTableData(fv.TableID, func(row Row) (bool, any, error) {
 			if row.Config.RefID == fv.RefID {
@@ -248,6 +265,32 @@ func (r *resolver) includeTag(tableID string, rowTags []string) bool {
 	}
 
 	return r.includeTagsFunc(tableID, rowTags)
+}
+
+func (r *resolver) parseResolvedValue(typ string, value any) (any, error) {
+	if typ == "" {
+		return value, nil
+	}
+
+	ok, v, err := DefaultParseResolvedValue(typ, value)
+	if err != nil {
+		return nil, err
+	}
+	if ok {
+		return v, nil
+	}
+
+	for _, parser := range r.resolvedValueParsers {
+		ok, v, err := parser.Parse(typ, value)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			return v, nil
+		}
+	}
+
+	return nil, fmt.Errorf("unknown resolve type '%s'", typ)
 }
 
 // ResolveCheckCallback is the callback for the ResolveCheck function.

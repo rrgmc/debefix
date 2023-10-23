@@ -27,6 +27,7 @@ func (v ValueRefID) TableDepends() string {
 
 // ValueGenerated is a [Value] that will be generated in the future (possibly by a database).
 type ValueGenerated struct {
+	Type string
 }
 
 // ValueInternalID is a [Value] that references a field value in a table using the internal ID.
@@ -72,7 +73,11 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 		}
 		return &ValueInternalID{TableID: parent.TableID(), InternalID: parent.InternalID(), FieldName: fields[1]}, nil
 	case "generated": // generated
-		return &ValueGenerated{}, nil
+		ret := &ValueGenerated{}
+		if len(fields) > 1 {
+			ret.Type = fields[1]
+		}
+		return ret, nil
 	default:
 		return nil, errors.Join(ValueError, fmt.Errorf("unknown !dbfexpr tag type: %s", value))
 	}
