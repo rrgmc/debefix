@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/google/uuid"
 )
@@ -38,6 +37,42 @@ func rowToMap(cols []string, row rowInterface) (map[string]any, error) {
 	return m, nil
 }
 
+func dumpSlice(out io.Writer, s []any) error {
+	var allErr error
+	var err error
+
+	for i, v := range s {
+		prefix := ""
+		if i > 0 {
+			prefix = " "
+		}
+
+		_, err = fmt.Fprintf(out, `%s[%d:"%v"]`, prefix, i, v)
+		allErr = errors.Join(allErr, err)
+	}
+
+	return allErr
+}
+
+func dumpMap(out io.Writer, s map[string]any) error {
+	var allErr error
+	var err error
+
+	first := true
+	for i, v := range s {
+		prefix := ""
+		if !first {
+			prefix = " "
+		}
+		first = false
+
+		_, err = fmt.Fprintf(out, `%s[%s:"%v"]`, prefix, i, v)
+		allErr = errors.Join(allErr, err)
+	}
+
+	return allErr
+}
+
 // QueryInterfaceCheck generates a smulated response for QueryInterface.Query
 func QueryInterfaceCheck(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
 	ret := map[string]any{}
@@ -46,33 +81,4 @@ func QueryInterfaceCheck(query string, returnFieldNames []string, args ...any) (
 		ret[fn] = uuid.New()
 	}
 	return ret, nil
-}
-
-// DebugQueryInterface is a QueryInterface that outputs the generated queries.
-type DebugQueryInterface struct {
-	Out io.Writer
-}
-
-func (m DebugQueryInterface) Query(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
-	out := m.Out
-	if out == nil {
-		out = os.Stdout
-	}
-
-	var retErr error
-
-	_, err := fmt.Fprintln(out, query)
-	retErr = errors.Join(retErr, err)
-
-	_, err = fmt.Fprintf(out, "%+v\n", args)
-	retErr = errors.Join(retErr, err)
-
-	_, err = fmt.Fprintf(out, "===\n")
-	retErr = errors.Join(retErr, err)
-
-	if retErr != nil {
-		return nil, retErr
-	}
-
-	return QueryInterfaceCheck(query, returnFieldNames, args...)
 }

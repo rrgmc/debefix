@@ -81,5 +81,6 @@ func resolvePrint(data *debefix.Data, resolveTags []string) error {
 }
 
 func resolveSQL(data *debefix.Data, resolveTags []string) error {
-	return postgres.Resolve(&sql.DebugQueryInterface{}, data, debefix.WithResolveTags(resolveTags))
+	_, err := postgres.Resolve(sql.NewDebugQueryInterface(nil), data, debefix.WithResolveTags(resolveTags))
+	return err
 }
