@@ -180,7 +180,7 @@ func (r *resolver) resolve(f ResolveCallback) error {
 				// check if all ResolveValue fields were resolved.
 				if _, ok := fieldValue.(ResolveValue); ok {
 					if rv, ok := ctx.resolved[fieldName]; ok {
-						if rgen, ok := fieldValue.(ResolveGenerate); ok {
+						if rgen, ok := fieldValue.(*ResolveGenerate); ok {
 							rv, err = r.parseResolvedValue(rgen.Type, rv)
 							if err != nil {
 								return errors.Join(ResolveCallbackError,

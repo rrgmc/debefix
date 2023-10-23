@@ -5,6 +5,7 @@ import (
 	"testing"
 	"testing/fstest"
 
+	"github.com/google/uuid"
 	"gotest.tools/v3/assert"
 	is "gotest.tools/v3/assert/cmp"
 )
@@ -329,4 +330,72 @@ func TestResolveReturnResolved(t *testing.T) {
 	assert.Assert(t, is.Len(retData.Tables, 1))
 	assert.Assert(t, is.Len(retData.Tables["tags"].Rows, 1))
 	assert.Equal(t, 935, retData.Tables["tags"].Rows[0].Fields["tag_id"])
+}
+
+func TestResolveGeneratedWithType(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tags:
+  rows:
+    - tag_id: !dbfexpr generated:int
+      tag_name: "All"
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	assert.NilError(t, err)
+
+	rowCount := map[string]int{}
+
+	resolved, err := Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+		rowCount[ctx.TableID()]++
+		assert.DeepEqual(t, &ResolveGenerate{Type: "int"}, fields["tag_id"])
+		ctx.ResolveField("tag_id", "45")
+		return nil
+	})
+	assert.NilError(t, err)
+
+	assert.DeepEqual(t, map[string]int{
+		"tags": 1,
+	}, rowCount)
+
+	assert.DeepEqual(t, map[string]any{
+		"tag_id":   int64(45),
+		"tag_name": "All",
+	}, resolved.Tables["tags"].Rows[0].Fields)
+}
+
+func TestResolveGeneratedWithUUIDType(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tags:
+  rows:
+    - tag_id: !dbfexpr generated:uuid
+      tag_name: "All"
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	assert.NilError(t, err)
+
+	rowCount := map[string]int{}
+
+	resolved, err := Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+		rowCount[ctx.TableID()]++
+		assert.DeepEqual(t, &ResolveGenerate{Type: "uuid"}, fields["tag_id"])
+		ctx.ResolveField("tag_id", "305e1f2b-dfea-4939-862a-069abace0a40")
+		return nil
+	}, WithResolvedValueParser(&ResolvedValueParserUUID{}))
+	assert.NilError(t, err)
+
+	assert.DeepEqual(t, map[string]int{
+		"tags": 1,
+	}, rowCount)
+
+	assert.DeepEqual(t, map[string]any{
+		"tag_id":   uuid.MustParse("305e1f2b-dfea-4939-862a-069abace0a40"),
+		"tag_name": "All",
+	}, resolved.Tables["tags"].Rows[0].Fields)
 }
