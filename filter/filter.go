@@ -10,17 +10,43 @@ import (
 	"gotest.tools/v3/assert/opt"
 )
 
+// FilterItem wraps the item returned by [FilterData]
+type FilterItem[T any] struct {
+	Item T
+	Row  debefix.Row
+}
+
 // FilterData returns a filtered set of a single table of [debefix.Data], converting a [debefix.Row] to a
 // concrete type using generics.
 // If sortCompare is not nil, the result is sorted with [slices.SortFunc].
 func FilterData[T any](data *debefix.Data, tableID string, f func(row debefix.Row) (T, error),
 	sortCompare func(T, T) int, options ...FilterDataOption) ([]T, error) {
+	var rowsSortCompare func(FilterItem[T], FilterItem[T]) int
+	if sortCompare != nil {
+		rowsSortCompare = func(a FilterItem[T], b FilterItem[T]) int {
+			return sortCompare(a.Item, b.Item)
+		}
+	}
+
+	items, err := FilterDataRows(data, tableID, f, rowsSortCompare, options...)
+	if err != nil {
+		return nil, err
+	}
+
+	return FilterItemsToData(items), nil
+}
+
+// FilterDataRows returns a filtered set of a single table of [debefix.Data], converting a [debefix.Row] to a
+// concrete type using generics, returning it together with the row.
+// If sortCompare is not nil, the result is sorted with [slices.SortFunc].
+func FilterDataRows[T any](data *debefix.Data, tableID string, f func(row debefix.Row) (T, error),
+	sortCompare func(FilterItem[T], FilterItem[T]) int, options ...FilterDataOption) ([]FilterItem[T], error) {
 	var optns filterDataOptions
 	for _, op := range options {
 		op(&optns)
 	}
 
-	var ret []T
+	var ret []FilterItem[T]
 	_, err := data.
 		ExtractRows(func(table *debefix.Table, row debefix.Row) (bool, error) {
 			if table.ID == tableID {
@@ -60,7 +86,10 @@ func FilterData[T any](data *debefix.Data, tableID string, f func(row debefix.Ro
 					if err != nil {
 						return false, err
 					}
-					ret = append(ret, data)
+					ret = append(ret, FilterItem[T]{
+						Item: data,
+						Row:  row,
+					})
 				}
 			}
 			return true, nil
@@ -88,6 +117,15 @@ func FilterData[T any](data *debefix.Data, tableID string, f func(row debefix.Ro
 	}
 
 	return ret, nil
+}
+
+// FilterItemsToData returns only the data from a [FilterItem].
+func FilterItemsToData[T any](items []FilterItem[T]) []T {
+	var ret []T
+	for _, item := range items {
+		ret = append(ret, item.Item)
+	}
+	return ret
 }
 
 type filterDataOptions struct {
