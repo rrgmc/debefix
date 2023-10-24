@@ -32,8 +32,8 @@ go get github.com/rrgmc/debefix
   declared using a `_dbfconfig: {"refid": <refid>}` special field in the row.
 - `!dbfexpr "parent:<fieldname>"`: reference a field in the parent table. This can only be used inside a `_dbfdeps` 
   block.
-- `!dbfexpr "generated"`: indicates that this is a generated field that must be supplied at resolve time, and can later
-  be used by other references once resolved.
+- `!dbfexpr "generated<:type>"`: indicates that this is a generated field that must be supplied at resolve time, and can later
+  be used by other references once resolved. If type is specified, the value is parsed/cast to this type after db retrieval.
 
 ## Special fields
 
@@ -61,7 +61,7 @@ func main() {
     }
 
     // will send an INSERT SQL for each row to the db, taking table dependency in account for the correct order. 
-    err = postgres.GenerateDirectory("/x/y", dbsql.NewSQLQueryInterface(db))
+    _, err = postgres.GenerateDirectory("/x/y", dbsql.NewSQLQueryInterface(db))
     if err != nil {
         panic(err)
     }
@@ -90,19 +90,19 @@ tags:
   config:
     table_name: "public.tag" # database table name. If not set, will use the table id (tags) as the table name.
   rows:
-    - tag_id: !dbfexpr "generated" # means that this will be generated, for example as a database autoincrement
+    - tag_id: !dbfexpr "generated:int" # means that this will be generated, for example as a database autoincrement
       name: "Go"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
         refid: "go" # refid to be targeted by '!dbfexpr "refid:tags:go:tag_id"'
-    - tag_id: !dbfexpr "generated"
+    - tag_id: !dbfexpr "generated:int"
       name: "JavaScript"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
       _dbfconfig:
         refid: "javascript"
-    - tag_id: !dbfexpr "generated"
+    - tag_id: !dbfexpr "generated:int"
       name: "C++"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
