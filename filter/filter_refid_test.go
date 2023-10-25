@@ -9,12 +9,9 @@ import (
 )
 
 func TestFilterDataRefID(t *testing.T) {
-	expectedDataRefID := map[string]FilterDataRefIDItem[filterDataTestValue]{}
+	expectedDataRefID := map[string]int{}
 	for idx, data := range allTestData {
-		expectedDataRefID[strings.ToLower(data.Name)] = FilterDataRefIDItem[filterDataTestValue]{
-			Index: idx,
-			Data:  data,
-		}
+		expectedDataRefID[strings.ToLower(data.Name)] = idx
 	}
 
 	data, err := FilterDataRefID[filterDataTestValue](&debefix.Data{

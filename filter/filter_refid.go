@@ -9,8 +9,16 @@ type FilterDataRefIDItem[T any] struct {
 
 type FilterDataRefIDResult[T any] struct {
 	Data          []T
-	DataRefID     map[string]FilterDataRefIDItem[T]
+	DataRefID     map[string]int
 	MissingRefIDs []int
+}
+
+func (r FilterDataRefIDResult[T]) RefID(refid string) (bool, T) {
+	if idx, ok := r.DataRefID[refid]; ok {
+		return true, r.Data[idx]
+	}
+	var ret T
+	return false, ret
 }
 
 // FilterDataRefID uses [FilterDataRows] to filter rows and in addition to returning the data, returns a map
@@ -23,15 +31,12 @@ func FilterDataRefID[T any](data *debefix.Data, tableID string, f func(row debef
 	}
 
 	ret := FilterDataRefIDResult[T]{
-		DataRefID: map[string]FilterDataRefIDItem[T]{},
+		DataRefID: map[string]int{},
 	}
 	for idx, item := range items {
 		ret.Data = append(ret.Data, item.Item)
 		if item.Row.Config.RefID != "" {
-			ret.DataRefID[item.Row.Config.RefID] = FilterDataRefIDItem[T]{
-				Index: idx,
-				Data:  item.Item,
-			}
+			ret.DataRefID[item.Row.Config.RefID] = idx
 		} else {
 			ret.MissingRefIDs = append(ret.MissingRefIDs, idx)
 		}
