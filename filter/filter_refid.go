@@ -16,15 +16,8 @@ type FilterDataRefIDResult[T any] struct {
 // FilterDataRefID uses [FilterDataRows] to filter rows and in addition to returning the data, returns a map
 // indexed by RefID of the items.
 func FilterDataRefID[T any](data *debefix.Data, tableID string, f func(row debefix.Row) (T, error),
-	sortCompare func(a, b T) int, options ...FilterDataOption) (FilterDataRefIDResult[T], error) {
-	var rowsSortCompare func(a, b FilterItem[T]) int
-	if sortCompare != nil {
-		rowsSortCompare = func(a, b FilterItem[T]) int {
-			return sortCompare(a.Item, b.Item)
-		}
-	}
-
-	items, err := FilterDataRows[T](data, tableID, f, rowsSortCompare, options...)
+	sortCompare func(FilterItem[T], FilterItem[T]) int, options ...FilterDataOption) (FilterDataRefIDResult[T], error) {
+	items, err := FilterDataRows[T](data, tableID, f, sortCompare, options...)
 	if err != nil {
 		return FilterDataRefIDResult[T]{}, err
 	}
