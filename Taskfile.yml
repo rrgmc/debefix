@@ -27,6 +27,7 @@ tasks:
     cmds:
       - 'git tag {{.VERSION}}'
       - 'git tag filter/{{.VERSION}}'
+      - 'git tag value/{{.VERSION}}'
       - 'git push --tags'
     requires:
       vars: [VERSION]

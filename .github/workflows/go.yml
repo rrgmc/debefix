@@ -32,3 +32,10 @@ jobs:
     - name: Test filter
       working-directory: ./filter
       run: go test -v ./...
+
+    - name: Build value
+      working-directory: ./value
+      run: go build -v ./...
+    - name: Test value
+      working-directory: ./value
+      run: go test -v ./...

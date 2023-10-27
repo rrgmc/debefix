@@ -8,7 +8,7 @@ import (
 	"github.com/rrgmc/debefix"
 )
 
-// ValueParserUUID is a [TaggedValueParser] to parse "!uuid" tags to [uuid.UUID].
+// ValueParserUUID is a [debefix.TaggedValueParser] to parse "!uuid" tags to [uuid.UUID].
 func ValueParserUUID() debefix.TaggedValueParser {
 	return debefix.TaggedValueParserFunc(func(tag *ast.TagNode) (bool, any, error) {
 		if tag.Start.Value != "!uuid" {
@@ -29,7 +29,7 @@ func ValueParserUUID() debefix.TaggedValueParser {
 	})
 }
 
-// ResolvedValueParserUUID is a [ResolvedValueParser] to parse "uuid" type to [uuid.UUID].
+// ResolvedValueParserUUID is a [debefix.ResolvedValueParser] to parse "uuid" type to [uuid.UUID].
 type ResolvedValueParserUUID struct {
 }
 
