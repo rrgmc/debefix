@@ -2,10 +2,11 @@ package debefix
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
 	"testing"
 	"testing/fstest"
 
-	"github.com/google/uuid"
 	"gotest.tools/v3/assert"
 	is "gotest.tools/v3/assert/cmp"
 )
@@ -366,12 +367,12 @@ func TestResolveGeneratedWithType(t *testing.T) {
 	}, resolved.Tables["tags"].Rows[0].Fields)
 }
 
-func TestResolveGeneratedWithUUIDType(t *testing.T) {
+func TestResolveGeneratedWithParserType(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
 			Data: []byte(`tags:
   rows:
-    - tag_id: !dbfexpr generated:uuid
+    - tag_id: !dbfexpr generated:myint32
       tag_name: "All"
 `),
 		},
@@ -384,10 +385,10 @@ func TestResolveGeneratedWithUUIDType(t *testing.T) {
 
 	resolved, err := Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
 		rowCount[ctx.TableID()]++
-		assert.DeepEqual(t, &ResolveGenerate{Type: "uuid"}, fields["tag_id"])
-		ctx.ResolveField("tag_id", "305e1f2b-dfea-4939-862a-069abace0a40")
+		assert.DeepEqual(t, &ResolveGenerate{Type: "myint32"}, fields["tag_id"])
+		ctx.ResolveField("tag_id", "95")
 		return nil
-	}, WithResolvedValueParser(&ResolvedValueParserUUID{}))
+	}, WithResolvedValueParser(&testValueParserInt32{}))
 	assert.NilError(t, err)
 
 	assert.DeepEqual(t, map[string]int{
@@ -395,7 +396,24 @@ func TestResolveGeneratedWithUUIDType(t *testing.T) {
 	}, rowCount)
 
 	assert.DeepEqual(t, map[string]any{
-		"tag_id":   uuid.MustParse("305e1f2b-dfea-4939-862a-069abace0a40"),
+		"tag_id":   int32(95),
 		"tag_name": "All",
 	}, resolved.Tables["tags"].Rows[0].Fields)
+}
+
+type testValueParserInt32 struct {
+}
+
+func (r testValueParserInt32) Parse(typ string, value any) (bool, any, error) {
+	if typ != "myint32" {
+		return false, nil, nil
+	}
+
+	switch vv := value.(type) {
+	case int32:
+		return true, vv, nil
+	default:
+		v, err := strconv.ParseInt(fmt.Sprint(value), 10, 32)
+		return true, int32(v), err
+	}
 }

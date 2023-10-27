@@ -2,12 +2,13 @@ package debefix
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 	"testing"
 	"testing/fstest"
 
+	"github.com/goccy/go-yaml/ast"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/google/uuid"
 	"gotest.tools/v3/assert"
 	is "gotest.tools/v3/assert/cmp"
 )
@@ -475,14 +476,14 @@ func TestLoadTaggedDataParser(t *testing.T) {
 		"users.dbf.yaml": &fstest.MapFile{
 			Data: []byte(`users:
   rows:
-    - user_id: !uuid "e850cd47-6a5d-4fc2-aed3-ca917b51577d"
+    - user_id: !myint32 "95"
       name: !!str "John"
 `),
 		},
 	})
 
 	data, err := Load(provider,
-		WithLoadTaggedValueParser(ValueParserUUID()))
+		WithLoadTaggedValueParser(testParserInt32()))
 	assert.NilError(t, err)
 
 	usersTable, ok := data.Tables["users"]
@@ -491,7 +492,7 @@ func TestLoadTaggedDataParser(t *testing.T) {
 	assert.Assert(t, is.Len(usersTable.Rows, 1))
 
 	assert.DeepEqual(t, map[string]any{
-		"user_id": uuid.MustParse("e850cd47-6a5d-4fc2-aed3-ca917b51577d"),
+		"user_id": int32(95),
 		"name":    "John",
 	}, usersTable.Rows[0].Fields)
 }
@@ -535,4 +536,24 @@ func TestLoadStringFileProvider(t *testing.T) {
 		"tag_name": "All",
 	}, tagsTable.Rows[0].Fields)
 	assert.DeepEqual(t, []string{"c"}, tagsTable.Rows[0].Config.Tags)
+}
+
+func testParserInt32() TaggedValueParser {
+	return TaggedValueParserFunc(func(tag *ast.TagNode) (bool, any, error) {
+		if tag.Start.Value != "!myint32" {
+			return false, nil, nil
+		}
+
+		str, err := getStringNode(tag.Value)
+		if err != nil {
+			return false, nil, err
+		}
+
+		v, err := strconv.ParseInt(str, 10, 32)
+		if err != nil {
+			return false, nil, err
+		}
+
+		return true, int32(v), nil
+	})
 }
