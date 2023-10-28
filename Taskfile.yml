@@ -25,9 +25,10 @@ tasks:
     internal: true
     prompt: "Creating and pushing tag {{.VERSION}}. Are you sure?"
     cmds:
-      - 'git tag {{.VERSION}}'
       - 'git tag filter/{{.VERSION}}'
       - 'git tag value/{{.VERSION}}'
+      - "sleep 2" # wait to make this the "last version"
+      - 'git tag {{.VERSION}}'
       - 'git push --tags'
     requires:
       vars: [VERSION]
