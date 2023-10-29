@@ -198,9 +198,9 @@ comments:
 
 ### Sub-packages
 
-- [filter](filter/): simple methods to find and extract data from parsed or resolved data, and doing transformations
-  to objects like entities. Can be used to get test data from fixtures.
-- [value](value/): value parsers both for "Load" and "Resolve", like UUID.
+- [filter](https://pkg.go.dev/github.com/rrgmc/debefix/filter): simple methods to find and extract data from parsed or 
+  resolved data, and doing transformations to objects, like entities. Can be used to get test data from fixtures.
+- [value](https://pkg.go.dev/github.com/rrgmc/debefix/value): value parsers both for "Load" and "Resolve", like UUID.
 
 # License
 
