@@ -447,6 +447,60 @@ func TestLoadRowSingleField(t *testing.T) {
 	assert.NilError(t, err)
 }
 
+func TestLoadParentLevel(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tags:
+  rows:
+    - tag_id: 2
+      tag_name: "All"
+      _dbfdeps:
+        posts:
+          rows:
+            - post_id: 1
+              title: "First post"
+              _dbfdeps:
+                posts_tags:
+                  rows:
+                    - post_id: !dbfexpr "parent:post_id"
+                      tag_id: !dbfexpr "parent:2:tag_id"
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	assert.NilError(t, err)
+
+	postsTable, ok := data.Tables["posts"]
+	assert.Assert(t, ok, "posts table not found")
+
+	tagsTable, ok := data.Tables["tags"]
+	assert.Assert(t, ok, "tags table not found")
+
+	postTagsTable, ok := data.Tables["posts_tags"]
+	assert.Assert(t, ok, "post_tags table not found")
+
+	assert.Assert(t, is.Len(tagsTable.Rows, 1))
+	assert.DeepEqual(t, map[string]any{
+		"tag_id":   uint64(2),
+		"tag_name": "All",
+	}, tagsTable.Rows[0].Fields)
+
+	assert.Assert(t, is.Len(postsTable.Rows, 1))
+	assert.DeepEqual(t, map[string]any{
+		"post_id": uint64(1),
+		"title":   "First post",
+	}, postsTable.Rows[0].Fields)
+
+	assert.Assert(t, is.Len(postTagsTable.Rows, 1))
+	assert.DeepEqual(t, map[string]any{
+		"post_id": &ValueInternalID{TableID: "posts", InternalID: postsTable.Rows[0].InternalID, FieldName: "post_id"},
+		"tag_id":  &ValueInternalID{TableID: "tags", InternalID: tagsTable.Rows[0].InternalID, FieldName: "tag_id"},
+	}, postTagsTable.Rows[0].Fields)
+
+	assert.DeepEqual(t, []string{"posts", "tags"}, postTagsTable.Config.Depends)
+}
+
 func TestLoadNoParent(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{

@@ -3,6 +3,7 @@ package debefix
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -64,14 +65,24 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 			return nil, errors.Join(ValueError, fmt.Errorf("invalid !dbf tag value: %s", value))
 		}
 		return &ValueRefID{TableID: fields[1], RefID: fields[2], FieldName: fields[3]}, nil
-	case "parent": // parent:<fieldname>
-		if !parent.HasParent() {
-			return nil, errors.Join(ValueError, errors.New("value has no parent"))
-		}
-		if len(fields) != 2 {
+	case "parent": // parent<:level>:<fieldname>
+		parentLevel := 1
+		fieldName := fields[1]
+		if len(fields) == 3 {
+			level, err := strconv.ParseInt(fields[1], 10, 32)
+			if err != nil {
+				return nil, errors.Join(ValueError, fmt.Errorf("invalid level '%s' in parent expression: %w", fields[1], err))
+			}
+			parentLevel = int(level)
+			fieldName = fields[2]
+		} else if len(fields) != 2 {
 			return nil, errors.Join(ValueError, fmt.Errorf("invalid !dbf tag value: %s", value))
 		}
-		return &ValueInternalID{TableID: parent.TableID(), InternalID: parent.InternalID(), FieldName: fields[1]}, nil
+		plevel := parent.ParentLevel(parentLevel)
+		if !plevel.HasParent() {
+			return nil, errors.Join(ValueError, errors.New("value has no parent"))
+		}
+		return &ValueInternalID{TableID: plevel.TableID(), InternalID: plevel.InternalID(), FieldName: fieldName}, nil
 	case "generated": // generated<:type>
 		ret := &ValueGenerated{}
 		if len(fields) > 1 {
@@ -83,8 +94,13 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 	}
 }
 
-// parentRowInfo indicates if a parent exists and its information.
+// parentRowInfo gets parent info from a level number.
 type parentRowInfo interface {
+	ParentLevel(level int) parentRowInfoData
+}
+
+// parentRowInfoData indicates if a parent exists and its information.
+type parentRowInfoData interface {
 	HasParent() bool
 	TableID() string
 	InternalID() uuid.UUID
@@ -94,32 +110,56 @@ type parentRowInfo interface {
 type noParentRowInfo struct {
 }
 
-func (n noParentRowInfo) HasParent() bool {
+func (n noParentRowInfo) ParentLevel(level int) parentRowInfoData {
+	return &noParentRowInfoData{}
+}
+
+// noParentRowInfo indicates that no parent exists in the current context.
+type noParentRowInfoData struct {
+}
+
+func (n noParentRowInfoData) HasParent() bool {
 	return false
 }
 
-func (n noParentRowInfo) TableID() string {
+func (n noParentRowInfoData) TableID() string {
 	return ""
 }
 
-func (n noParentRowInfo) InternalID() uuid.UUID {
+func (n noParentRowInfoData) InternalID() uuid.UUID {
 	return uuid.UUID{}
 }
 
-// defaultParentRowInfo indicates a parent exists in the current context.
+// defaultParentRowInfoData indicates a parent exists in the current context.
 type defaultParentRowInfo struct {
+	parent parentRowInfo
+	data   parentRowInfoData
+}
+
+func (n defaultParentRowInfo) ParentLevel(level int) parentRowInfoData {
+	if level == 1 {
+		return n.data
+	}
+	if level < 1 || n.parent == nil {
+		return noParentRowInfoData{}
+	}
+	return n.parent.ParentLevel(level - 1)
+}
+
+// defaultParentRowInfoData indicates a parent exists in the current context.
+type defaultParentRowInfoData struct {
 	tableID    string
 	internalID uuid.UUID
 }
 
-func (n defaultParentRowInfo) HasParent() bool {
+func (n defaultParentRowInfoData) HasParent() bool {
 	return true
 }
 
-func (n defaultParentRowInfo) TableID() string {
+func (n defaultParentRowInfoData) TableID() string {
 	return n.tableID
 }
 
-func (n defaultParentRowInfo) InternalID() uuid.UUID {
+func (n defaultParentRowInfoData) InternalID() uuid.UUID {
 	return n.internalID
 }

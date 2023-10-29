@@ -227,8 +227,11 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 				}
 			case "_dbfdeps":
 				err := l.loadTables(field.Value, tags, &defaultParentRowInfo{
-					tableID:    table.ID,
-					internalID: row.InternalID,
+					parent: parent,
+					data: &defaultParentRowInfoData{
+						tableID:    table.ID,
+						internalID: row.InternalID,
+					},
 				})
 				if err != nil {
 					return NewParseError(fmt.Sprintf("error reading row deps: %s", err),
