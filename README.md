@@ -186,6 +186,14 @@ comments:
       updated_at: !!timestamp 2023-01-01T12:35:12Z
 ```
 
+# Samples
+
+- [debefix-sample-app](https://github.com/rrgmc/debefix-sample-app): real-world blog microservice using debefix for
+  seeding, test fixtures, and integration tests.
+- [samples simple](https://github.com/rrgmc/debefix-samples/tree/master/simple): simple blog sample,
+- [samples sakila](https://github.com/rrgmc/debefix-samples/tree/master/sakila): fixture sample using the "sakila"
+  sample database.
+
 # License
 
 MIT
