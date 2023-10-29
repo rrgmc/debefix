@@ -34,6 +34,7 @@ go get github.com/rrgmc/debefix
   block.
 - `!dbfexpr "generated<:type>"`: indicates that this is a generated field that must be supplied at resolve time, and can later
   be used by other references once resolved. If type is specified, the value is parsed/cast to this type after db retrieval.
+  The default types are 'int', 'float', 'str' and 'timestamp', using the YAML formats.
 
 ## Special fields
 
@@ -61,10 +62,12 @@ func main() {
     }
 
     // will send an INSERT SQL for each row to the db, taking table dependency in account for the correct order. 
-    _, err = postgres.GenerateDirectory("/x/y", dbsql.NewSQLQueryInterface(db))
+    resolvedValues, err := postgres.GenerateDirectory("/x/y", dbsql.NewSQLQueryInterface(db))
     if err != nil {
         panic(err)
     }
+    
+    // resolvedValues will contain all data that was inserted, including any generated fields like autoincrement.
 }
 ```
 
