@@ -194,6 +194,14 @@ comments:
 - [samples sakila](https://github.com/rrgmc/debefix-samples/tree/master/sakila): fixture sample using the "sakila"
   sample database.
 
+## Extra
+
+### Sub-packages
+
+- [filter](filter/): simple methods to find and extract data from parsed or resolved data, and doing transformations
+  to objects like entities. Can be used to get test data from fixtures.
+- [value](value/): value parsers both for "Load" and "Resolve", like UUID.
+
 # License
 
 MIT
