@@ -5,35 +5,31 @@ import (
 
 	"github.com/goccy/go-yaml/ast"
 	"github.com/google/uuid"
-	"github.com/rrgmc/debefix"
 )
 
-// ValueParserUUID is a [debefix.TaggedValueParser] to parse "!uuid" tags to [uuid.UUID].
-func ValueParserUUID() debefix.TaggedValueParser {
-	return debefix.TaggedValueParserFunc(func(tag *ast.TagNode) (bool, any, error) {
-		if tag.Start.Value != "!uuid" {
-			return false, nil, nil
-		}
+// ValueUUID is a [debefix.ValueParser] to parse "!uuid" tags to [uuid.UUID], and a [debefix.ResolvedValueParser] to
+// to parse "uuid" type to [uuid.UUID].
+type ValueUUID struct{}
 
-		str, err := getStringNode(tag.Value)
-		if err != nil {
-			return false, nil, err
-		}
+func (v ValueUUID) ParseValue(tag *ast.TagNode) (bool, any, error) {
+	if tag.Start.Value != "!uuid" {
+		return false, nil, nil
+	}
 
-		v, err := uuid.Parse(str)
-		if err != nil {
-			return false, nil, err
-		}
+	str, err := getStringNode(tag.Value)
+	if err != nil {
+		return false, nil, err
+	}
 
-		return true, v, nil
-	})
+	u, err := uuid.Parse(str)
+	if err != nil {
+		return false, nil, err
+	}
+
+	return true, u, nil
 }
 
-// ResolvedValueParserUUID is a [debefix.ResolvedValueParser] to parse "uuid" type to [uuid.UUID].
-type ResolvedValueParserUUID struct {
-}
-
-func (r ResolvedValueParserUUID) Parse(typ string, value any) (bool, any, error) {
+func (v ValueUUID) ParseResolvedValue(typ string, value any) (bool, any, error) {
 	if typ != "uuid" {
 		return false, nil, nil
 	}

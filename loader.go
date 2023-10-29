@@ -42,10 +42,10 @@ func WithLoadProgress(progress func(filename string)) LoadOption {
 	})
 }
 
-// WithLoadTaggedValueParser adds a YAML tag value parser.
-func WithLoadTaggedValueParser(parser TaggedValueParser) LoadOption {
+// WithLoadValueParser adds a YAML tag value parser.
+func WithLoadValueParser(parser ValueParser) LoadOption {
 	return fnLoadOption(func(l *loader) {
-		l.taggedValueParser = append(l.taggedValueParser, parser)
+		l.valueParser = append(l.valueParser, parser)
 	})
 }
 
@@ -61,7 +61,7 @@ type loader struct {
 	fileProvider      FileProvider
 	data              *Data
 	progress          func(filename string)
-	taggedValueParser []TaggedValueParser
+	valueParser       []ValueParser
 	rowsSetIgnoreTags bool
 }
 
@@ -279,9 +279,9 @@ func (l *loader) loadFieldValue(node ast.Node, parent parentRowInfo) (any, error
 		}
 
 		if !strings.HasPrefix(n.Start.Value, "!!") { // !! is reserved by YAML.
-			if len(l.taggedValueParser) > 0 {
-				for _, valueParser := range l.taggedValueParser {
-					ok, tvalue, err := valueParser.Parse(n)
+			if len(l.valueParser) > 0 {
+				for _, valueParser := range l.valueParser {
+					ok, tvalue, err := valueParser.ParseValue(n)
 					if err != nil {
 						return nil, err
 					} else if ok {

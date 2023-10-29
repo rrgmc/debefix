@@ -281,7 +281,7 @@ func (r *resolver) parseResolvedValue(typ string, value any) (any, error) {
 	}
 
 	for _, parser := range r.resolvedValueParsers {
-		ok, v, err := parser.Parse(typ, value)
+		ok, v, err := parser.ParseResolvedValue(typ, value)
 		if err != nil {
 			return nil, err
 		}

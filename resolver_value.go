@@ -21,9 +21,16 @@ type ResolveContext interface {
 	ResolveField(fieldName string, value any)
 }
 
-// ResolvedValueParser parses resolved value types.
+// ResolvedValueParser parses resolved value types, like generated fields.
 type ResolvedValueParser interface {
-	Parse(typ string, value any) (bool, any, error)
+	ParseResolvedValue(typ string, value any) (bool, any, error)
+}
+
+// ResolvedValueParserFunc is a func wrapper for [ResolvedValueParser].
+type ResolvedValueParserFunc func(typ string, value any) (bool, any, error)
+
+func (p ResolvedValueParserFunc) ParseResolvedValue(typ string, value any) (bool, any, error) {
+	return p(typ, value)
 }
 
 type defaultResolveContext struct {

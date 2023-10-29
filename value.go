@@ -72,7 +72,7 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 			return nil, errors.Join(ValueError, fmt.Errorf("invalid !dbf tag value: %s", value))
 		}
 		return &ValueInternalID{TableID: parent.TableID(), InternalID: parent.InternalID(), FieldName: fields[1]}, nil
-	case "generated": // generated
+	case "generated": // generated<:type>
 		ret := &ValueGenerated{}
 		if len(fields) > 1 {
 			ret.Type = fields[1]

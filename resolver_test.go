@@ -404,7 +404,7 @@ func TestResolveGeneratedWithParserType(t *testing.T) {
 type testValueParserInt32 struct {
 }
 
-func (r testValueParserInt32) Parse(typ string, value any) (bool, any, error) {
+func (r testValueParserInt32) ParseResolvedValue(typ string, value any) (bool, any, error) {
 	if typ != "myint32" {
 		return false, nil, nil
 	}

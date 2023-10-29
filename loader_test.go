@@ -471,7 +471,7 @@ posts:
 	assert.ErrorIs(t, err, ValueError)
 }
 
-func TestLoadTaggedDataParser(t *testing.T) {
+func TestLoadValueParser(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
 			Data: []byte(`users:
@@ -483,7 +483,7 @@ func TestLoadTaggedDataParser(t *testing.T) {
 	})
 
 	data, err := Load(provider,
-		WithLoadTaggedValueParser(testParserInt32()))
+		WithLoadValueParser(testParserInt32()))
 	assert.NilError(t, err)
 
 	usersTable, ok := data.Tables["users"]
@@ -538,8 +538,8 @@ func TestLoadStringFileProvider(t *testing.T) {
 	assert.DeepEqual(t, []string{"c"}, tagsTable.Rows[0].Config.Tags)
 }
 
-func testParserInt32() TaggedValueParser {
-	return TaggedValueParserFunc(func(tag *ast.TagNode) (bool, any, error) {
+func testParserInt32() ValueParser {
+	return ValueParserFunc(func(tag *ast.TagNode) (bool, any, error) {
 		if tag.Start.Value != "!myint32" {
 			return false, nil, nil
 		}
