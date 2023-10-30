@@ -15,9 +15,11 @@ func TestGenerate(t *testing.T) {
   rows:
     - tag_id: 2
       tag_name: "All"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "all"
-      _dbfdeps:
+      deps:
+        !dbfdeps
         posts:
           rows:
             - post_id: 1
@@ -63,11 +65,13 @@ func TestGenerateOptions(t *testing.T) {
   rows:
     - user_id: 1
       name: "John Doe"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "johndoe"
     - user_id: 2
       name: "Jane Doe"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "janedoe"
 `),
 		},

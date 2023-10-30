@@ -18,11 +18,13 @@ func TestGenerate(t *testing.T) {
   rows:
     - tag_id: 2
       tag_name: "All"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "all"
     - tag_id: 5
       tag_name: "Half"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "half"
 `),
 		},

@@ -18,9 +18,11 @@ func TestResolve(t *testing.T) {
   rows:
     - tag_id: 2
       tag_name: "All"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "all"
-      _dbfdeps:
+      deps:
+        !dbfdeps
         posts:
           rows:
             - post_id: 1
@@ -96,7 +98,8 @@ func TestResolveTags(t *testing.T) {
   rows:
     - tag_id: 2
       tag_name: "All"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "all"
         tags: ["include"]
     - tag_id: 5
@@ -107,12 +110,14 @@ posts:
   rows:
     - post_id: 1
       title: "First post"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "post_1"
         tags: ["include"]
     - post_id: 2
       title: "Second post"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "post_2"
 post_tags:
   rows:
@@ -159,11 +164,13 @@ func TestResolveIgnoreTags(t *testing.T) {
   rows:
     - tag_id: 2
       tag_name: "All"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "all"
     - tag_id: 5
       tag_name: "Half"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "half"
         ignoreTags: true
 posts:
@@ -172,12 +179,14 @@ posts:
   rows:
     - post_id: 1
       title: "First post"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "post_1"
         tags: ["include"]
     - post_id: 2
       title: "Second post"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "post_2"
 post_tags:
   rows:
@@ -224,7 +233,8 @@ func TestResolveUnresolvedRefID(t *testing.T) {
   rows:
     - tag_id: 2
       tag_name: "All"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "all"
     - tag_id: 5
       tag_name: "Half"
@@ -251,7 +261,8 @@ func TestResolveInvalidDependency(t *testing.T) {
   rows:
     - tag_id: 2
       tag_name: "All"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "all"
 posts:
   config:

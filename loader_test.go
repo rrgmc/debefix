@@ -22,11 +22,13 @@ func TestLoad(t *testing.T) {
   rows:
     - user_id: 1
       name: "John Doe"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "johndoe"
     - user_id: 2
       name: "Jane Doe"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "janedoe"
 `),
 		},
@@ -64,7 +66,8 @@ func TestLoadInitialData(t *testing.T) {
   rows:
     - user_id: 1
       name: "John Doe"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "johndoe"
 `),
 		},
@@ -81,7 +84,8 @@ func TestLoadInitialData(t *testing.T) {
   rows:
     - user_id: 2
       name: "Jane Doe"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "janedoe"
 `),
 		},
@@ -261,7 +265,8 @@ func TestLoadDeps(t *testing.T) {
   rows:
     - tag_id: 2
       tag_name: "All"
-      _dbfdeps:
+      deps:
+        !dbfdeps
         posts:
           rows:
             - post_id: 1
@@ -361,11 +366,13 @@ func TestLoadTags(t *testing.T) {
   rows:
     - user_id: 1
       name: "John Doe"
-      _dbfconfig:
+      config:
+        !dbfconfig
         tags: ["first", "all"]
     - user_id: 2
       name: "Jane Doe"
-      _dbfconfig:
+      config:
+        !dbfconfig
         tags: ["second"]
 `),
 		},
@@ -454,12 +461,14 @@ func TestLoadParentLevel(t *testing.T) {
   rows:
     - tag_id: 2
       tag_name: "All"
-      _dbfdeps:
+      deps:
+        !dbfdeps
         posts:
           rows:
             - post_id: 1
               title: "First post"
-              _dbfdeps:
+              deps:
+                !dbfdeps
                 posts_tags:
                   rows:
                     - post_id: !dbfexpr "parent:post_id"
@@ -508,7 +517,8 @@ func TestLoadNoParent(t *testing.T) {
   rows:
     - tag_id: 2
       tag_name: "All"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "all"
     - tag_id: 5
       tag_name: "Half"

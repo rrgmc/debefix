@@ -16,14 +16,16 @@ var testFS = fstest.MapFS{
       email: "john@example.com"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "johndoe"
     - user_id: 2
       name: "Jane Doe"
       email: "jane@example.com"
       created_at: !!timestamp 2023-01-04T12:30:12Z
       updated_at: !!timestamp 2023-01-04T12:30:12Z
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "janedoe"
         tags:
           - onlyone
@@ -39,19 +41,22 @@ var testFS = fstest.MapFS{
       name: "Go"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "go"
     - tag_id: !dbfexpr "generated"
       name: "JavaScript"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "javascript"
     - tag_id: !dbfexpr "generated"
       name: "C++"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "cpp"
 `),
 		ModTime: time.Now(),
@@ -67,12 +72,14 @@ var testFS = fstest.MapFS{
       user_id: !dbfexpr "refid:users:johndoe:user_id"
       created_at: !!timestamp 2023-01-01T12:30:12Z
       updated_at: !!timestamp 2023-01-01T12:30:12Z
-      _dbfdeps:
+      deps:
+        !dbfdeps
         posts_tags:
           rows:
             - post_id: !dbfexpr "parent:post_id"
               tag_id: !dbfexpr "refid:tags:go:tag_id"
-      _dbfconfig:
+      config:
+        !dbfconfig
         refid: "post_1"
         tags: ["initial"]
     - post_id: 2
@@ -82,7 +89,8 @@ var testFS = fstest.MapFS{
       user_id: !dbfexpr "refid:users:johndoe:user_id"
       created_at: !!timestamp 2023-01-02T12:30:12Z
       updated_at: !!timestamp 2023-01-02T12:30:12Z
-      _dbfdeps:
+      deps:
+        !dbfdeps
         posts_tags:
           rows:
             - post_id: !dbfexpr "parent:post_id"
@@ -133,7 +141,8 @@ var testFS = fstest.MapFS{
       user_id: !dbfexpr "refid:users:janedoe:user_id"
       created_at: !!timestamp 2023-01-05T12:30:12Z
       updated_at: !!timestamp 2023-01-05T12:30:12Z
-      _dbfdeps:
+      deps:
+        !dbfdeps
         posts_tags:
           rows:
             - post_id: !dbfexpr "parent:post_id"
@@ -150,7 +159,8 @@ var testFS = fstest.MapFS{
       user_id: !dbfexpr "refid:users:janedoe:user_id"
       created_at: !!timestamp 2023-01-05T12:30:12Z
       updated_at: !!timestamp 2023-01-05T12:30:12Z
-      _dbfdeps:
+      deps:
+        !dbfdeps
         posts_tags:
           rows:
             - post_id: !dbfexpr "parent:post_id"
