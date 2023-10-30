@@ -245,31 +245,7 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 		if err != nil {
 			return err
 		}
-		// if strings.HasPrefix(key, "_dbf") {
-		// 	switch key {
-		// 	case "_dbfconfig":
-		// 		err := yaml.NodeToValue(field.Value, &row.Config)
-		// 		if err != nil {
-		// 			return NewParseError(fmt.Sprintf("error reading row config: %s", err),
-		// 				field.GetPath(), field.GetToken().Position)
-		// 		}
-		// 	case "_dbfdeps":
-		// 		err := l.loadTables(field.Value, tags, &defaultParentRowInfo{
-		// 			parent: parent,
-		// 			data: &defaultParentRowInfoData{
-		// 				tableID:    table.ID,
-		// 				internalID: row.InternalID,
-		// 			},
-		// 		})
-		// 		if err != nil {
-		// 			return NewParseError(fmt.Sprintf("error reading row deps: %s", err),
-		// 				field.GetPath(), field.GetToken().Position)
-		// 		}
-		// 	default:
-		// 		return NewParseError(fmt.Sprintf("invalid table row field: %s", key),
-		// 			field.GetPath(), field.GetToken().Position)
-		// 	}
-		// } else {
+
 		fieldValue, err := l.loadFieldValue(field.Value, parent)
 		if err != nil {
 			return err
@@ -278,7 +254,6 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 		if fd, ok := fieldValue.(valueTableDepends); ok {
 			table.AppendDeps(fd.TableDepends())
 		}
-		// }
 	}
 	if l.rowsSetIgnoreTags {
 		row.Config.IgnoreTags = true
