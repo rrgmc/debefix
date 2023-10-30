@@ -29,7 +29,7 @@ go get github.com/rrgmc/debefix
 ## Field value expressions
 
 - `!dbfexpr "refid:<table>:<refid>:<fieldname>"`: reference a **refid** field value in a table. This id is 
-  declared using a `config: !dbfconfig: {"refid": <refid>}` special field in the row.
+  declared using a `config: !dbfconfig {"refid": <refid>}` special tagged field in the row.
 - `!dbfexpr "parent<:level>:<fieldname>"`: reference a field in the parent table. This can only be used inside a `!dbfdeps` 
   block. Level is the number of parent levels, if not specified the default value is 1.
 - `!dbfexpr "generated<:type>"`: indicates that this is a generated field that must be supplied at resolve time, and can later
@@ -38,10 +38,10 @@ go get github.com/rrgmc/debefix
 
 ## Special fields
 
-All field with tags starting with `!dbf` are special fields.
+All field with tags starting with `!dbf` are special fields. The name of the field is ignored.
 
-- `!dbfconfig`: `{"refid": "", "tags": ["", ""]}`
-- `!dbfdeps`: `{<tableID>: {...table config...}}`
+- `config: !dbfconfig {"refid": "", "tags": ["", ""]}`
+- `deps: !dbfdeps {<tableID>: {...table config...}}`
 
 ## Generating SQL
 
