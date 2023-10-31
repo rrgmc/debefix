@@ -1,6 +1,7 @@
 package sql
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -22,13 +23,13 @@ func NewSQLQueryInterface(db *sql.DB) QueryInterface {
 	return &sqlQueryInterface{db}
 }
 
-func (q sqlQueryInterface) Query(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+func (q sqlQueryInterface) Query(ctx context.Context, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
 	if len(returnFieldNames) == 0 {
 		_, err := q.DB.Exec(query, args...)
 		return nil, err
 	}
 
-	rows, err := q.DB.Query(query, args...)
+	rows, err := q.DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -120,9 +121,9 @@ func NewMultiQueryInterface(itfs []QueryInterface) QueryInterface {
 	return &multiQueryInterface{itfs}
 }
 
-func (m multiQueryInterface) Query(query string, returnFieldNames []string, args ...any) (ret map[string]any, err error) {
+func (m multiQueryInterface) Query(ctx context.Context, query string, returnFieldNames []string, args ...any) (ret map[string]any, err error) {
 	for _, i := range m.itfs {
-		ret, err = i.Query(query, returnFieldNames, args...)
+		ret, err = i.Query(ctx, query, returnFieldNames, args...)
 		if err != nil {
 			return nil, err
 		}
@@ -140,7 +141,7 @@ func NewDebugQueryInterface(out io.Writer) QueryInterface {
 	return &debugQueryInterface{out}
 }
 
-func (m debugQueryInterface) Query(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+func (m debugQueryInterface) Query(ctx context.Context, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
 	out := m.out
 	if out == nil {
 		out = os.Stdout
@@ -164,7 +165,7 @@ func (m debugQueryInterface) Query(query string, returnFieldNames []string, args
 		return nil, retErr
 	}
 
-	return QueryInterfaceCheck(query, returnFieldNames, args...)
+	return QueryInterfaceCheck(ctx, query, returnFieldNames, args...)
 }
 
 type debugResultQueryInterface struct {
@@ -178,7 +179,7 @@ func NewDebugResultQueryInterface(qi QueryInterface, out io.Writer) QueryInterfa
 	return &debugResultQueryInterface{qi, out}
 }
 
-func (m debugResultQueryInterface) Query(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+func (m debugResultQueryInterface) Query(ctx context.Context, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
 	out := m.out
 	if out == nil {
 		out = os.Stdout
@@ -188,7 +189,7 @@ func (m debugResultQueryInterface) Query(query string, returnFieldNames []string
 	_ = dumpSlice(out, args)
 	_, _ = fmt.Fprintf(out, "\n")
 
-	result, err := m.qi.Query(query, returnFieldNames, args...)
+	result, err := m.qi.Query(ctx, query, returnFieldNames, args...)
 	if err == nil {
 		if len(result) > 0 {
 			_, _ = fmt.Fprintf(out, "result: ")

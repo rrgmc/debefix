@@ -1,6 +1,7 @@
 package sql
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"slices"
@@ -10,7 +11,7 @@ import (
 
 // ResolverDBCallback is a db.ResolverDBCallback to generate SQL-based database records.
 // The parameter "fields" and "returnFieldNames" are always sorted to be deterministic.
-func ResolverDBCallback(db QueryInterface, sqlBuilder QueryBuilder) db.ResolverDBCallback {
+func ResolverDBCallback(ctx context.Context, db QueryInterface, sqlBuilder QueryBuilder) db.ResolverDBCallback {
 	return func(tableName string, fields map[string]any, returnFieldNames []string) (map[string]any, error) {
 		// build INSERT query
 		var fieldNames []string
@@ -39,7 +40,7 @@ func ResolverDBCallback(db QueryInterface, sqlBuilder QueryBuilder) db.ResolverD
 
 		query := sqlBuilder.BuildInsertSQL(tableName, fieldNames, fieldPlaceholders, returnFieldNames)
 
-		ret, err := db.Query(query, returnFieldNames, args...)
+		ret, err := db.Query(ctx, query, returnFieldNames, args...)
 		if err != nil {
 			return nil, fmt.Errorf("error executing query `%s`: %w", query, err)
 		}
@@ -51,14 +52,14 @@ func ResolverDBCallback(db QueryInterface, sqlBuilder QueryBuilder) db.ResolverD
 // QueryInterface abstracts executing a query on a database. The return map should contain values for all fields
 // specified in returnFieldNames.
 type QueryInterface interface {
-	Query(query string, returnFieldNames []string, args ...any) (map[string]any, error)
+	Query(ctx context.Context, query string, returnFieldNames []string, args ...any) (map[string]any, error)
 }
 
 // QueryInterfaceFunc is a func adapter for QueryInterface
-type QueryInterfaceFunc func(query string, returnFieldNames []string, args ...any) (map[string]any, error)
+type QueryInterfaceFunc func(ctx context.Context, query string, returnFieldNames []string, args ...any) (map[string]any, error)
 
-func (f QueryInterfaceFunc) Query(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
-	return f(query, returnFieldNames, args...)
+func (f QueryInterfaceFunc) Query(ctx context.Context, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+	return f(ctx, query, returnFieldNames, args...)
 }
 
 // PlaceholderProvider generates database-specific placeholders, like ? for MySQL, $1 for postgres, or :param1 for MSSQL.

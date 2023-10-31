@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"testing"
 	"testing/fstest"
 
@@ -48,13 +49,14 @@ func TestGenerate(t *testing.T) {
 
 	var queryList []sqlQuery
 
-	_, err := Generate(debefix.NewFSFileProvider(providerData), sql.QueryInterfaceFunc(func(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
-		queryList = append(queryList, sqlQuery{
-			SQL:  query,
-			Args: args,
-		})
-		return nil, nil
-	}))
+	_, err := Generate(context.Background(), debefix.NewFSFileProvider(providerData),
+		sql.QueryInterfaceFunc(func(ctx context.Context, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+			queryList = append(queryList, sqlQuery{
+				SQL:  query,
+				Args: args,
+			})
+			return nil, nil
+		}))
 	assert.NilError(t, err)
 
 	assert.DeepEqual(t, expectedQueryList, queryList)
@@ -63,13 +65,14 @@ func TestGenerate(t *testing.T) {
 
 	queryList = nil
 
-	_, err = GenerateFS(providerData, sql.QueryInterfaceFunc(func(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
-		queryList = append(queryList, sqlQuery{
-			SQL:  query,
-			Args: args,
-		})
-		return nil, nil
-	}))
+	_, err = GenerateFS(context.Background(), providerData,
+		sql.QueryInterfaceFunc(func(ctx context.Context, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+			queryList = append(queryList, sqlQuery{
+				SQL:  query,
+				Args: args,
+			})
+			return nil, nil
+		}))
 	assert.NilError(t, err)
 
 	assert.DeepEqual(t, expectedQueryList, queryList)

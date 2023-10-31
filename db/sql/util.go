@@ -1,6 +1,7 @@
 package sql
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -74,7 +75,7 @@ func dumpMap(out io.Writer, s map[string]any) error {
 }
 
 // QueryInterfaceCheck generates a smulated response for QueryInterface.Query
-func QueryInterfaceCheck(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+func QueryInterfaceCheck(ctx context.Context, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
 	ret := map[string]any{}
 	for _, fn := range returnFieldNames {
 		// simulate fields being generated

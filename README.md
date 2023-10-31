@@ -62,7 +62,7 @@ func main() {
     }
 
     // will send an INSERT SQL for each row to the db, taking table dependency in account for the correct order. 
-    resolvedValues, err := postgres.GenerateDirectory("/x/y", dbsql.NewSQLQueryInterface(db))
+    resolvedValues, err := postgres.GenerateDirectory(context.Background(), "/x/y", dbsql.NewSQLQueryInterface(db))
     if err != nil {
         panic(err)
     }

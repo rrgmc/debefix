@@ -1,6 +1,7 @@
 package sql
 
 import (
+	"context"
 	"testing"
 	"testing/fstest"
 
@@ -90,13 +91,14 @@ post_tags:
 
 	var queryList []sqlQuery
 
-	_, err = debefix.Resolve(data, db.ResolverFunc(ResolverDBCallback(QueryInterfaceFunc(func(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
-		queryList = append(queryList, sqlQuery{
-			SQL:  query,
-			Args: args,
-		})
-		return nil, nil
-	}), DefaultSQLBuilder{})))
+	_, err = debefix.Resolve(data, db.ResolverFunc(ResolverDBCallback(context.Background(),
+		QueryInterfaceFunc(func(ctx context.Context, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+			queryList = append(queryList, sqlQuery{
+				SQL:  query,
+				Args: args,
+			})
+			return nil, nil
+		}), DefaultSQLBuilder{})))
 	assert.NilError(t, err)
 
 	assert.DeepEqual(t, expectedQueryList, queryList)
@@ -185,22 +187,23 @@ post_tags:
 
 	retTagID := uint64(115)
 
-	_, err = debefix.Resolve(data, db.ResolverFunc(ResolverDBCallback(QueryInterfaceFunc(func(query string, returnFieldNames []string, args ...any) (map[string]any, error) {
-		queryList = append(queryList, sqlQuery{
-			SQL:  query,
-			Args: args,
-		})
+	_, err = debefix.Resolve(data, db.ResolverFunc(ResolverDBCallback(context.Background(),
+		QueryInterfaceFunc(func(ctx context.Context, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+			queryList = append(queryList, sqlQuery{
+				SQL:  query,
+				Args: args,
+			})
 
-		ret := map[string]any{}
-		for _, rf := range returnFieldNames {
-			if rf == "tag_id" {
-				retTagID++
-				ret["tag_id"] = retTagID
+			ret := map[string]any{}
+			for _, rf := range returnFieldNames {
+				if rf == "tag_id" {
+					retTagID++
+					ret["tag_id"] = retTagID
+				}
 			}
-		}
 
-		return ret, nil
-	}), DefaultSQLBuilder{})))
+			return ret, nil
+		}), DefaultSQLBuilder{})))
 	assert.NilError(t, err)
 
 	assert.DeepEqual(t, expectedQueryList, queryList)
