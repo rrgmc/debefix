@@ -201,6 +201,7 @@ comments:
 - [samples simple](https://github.com/rrgmc/debefix-samples/tree/master/simple): simple blog sample,
 - [samples sakila](https://github.com/rrgmc/debefix-samples/tree/master/sakila): fixture sample using the "sakila"
   sample database.
+- [samples mongodb](https://github.com/rrgmc/debefix-samples/tree/master/mongodb): MongoDB fixture sample.
 
 ## Extra
 
@@ -209,6 +210,10 @@ comments:
 - [filter](https://pkg.go.dev/github.com/rrgmc/debefix/filter): simple methods to find and extract data from parsed or 
   resolved data, and doing transformations to objects, like entities. Can be used to get test data from fixtures.
 - [value](https://pkg.go.dev/github.com/rrgmc/debefix/value): value parsers both for "Load" and "Resolve", like UUID.
+
+### External
+
+- [debefix-mongodb](https://github.com/rrgmc/debefix-mongodb): MongoDB fixture resolver.
 
 # License
 
