@@ -151,16 +151,18 @@ func (r *resolver) resolve(f ResolveCallback) error {
 
 			// build the fields to send to the callback
 			callFields := map[string]any{}
-			for fieldName, fieldValue := range row.Fields {
-				// Value fields must be resolved by a ResolveValue.
-				if fvalue, ok := fieldValue.(Value); ok {
-					var err error
-					fieldValue, err = r.resolveValue(fvalue)
-					if err != nil {
-						return fmt.Errorf("error resolving Value for table %s: %w", table.ID, err)
+			for _, fieldSource := range []map[string]any{table.Config.DefaultValues, row.Fields} {
+				for fieldName, fieldValue := range fieldSource {
+					// Value fields must be resolved by a ResolveValue.
+					if fvalue, ok := fieldValue.(Value); ok {
+						var err error
+						fieldValue, err = r.resolveValue(fvalue)
+						if err != nil {
+							return fmt.Errorf("error resolving Value for table %s: %w", table.ID, err)
+						}
 					}
+					callFields[fieldName] = fieldValue
 				}
-				callFields[fieldName] = fieldValue
 			}
 
 			ctx := &defaultResolveContext{

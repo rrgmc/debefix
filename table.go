@@ -76,8 +76,9 @@ func (t *Table) Merge(source *Table) error {
 }
 
 type TableConfig struct {
-	TableName string   `yaml:"table_name"`
-	Depends   []string `yaml:"depends"`
+	TableName     string         `yaml:"table_name"`
+	Depends       []string       `yaml:"depends"`
+	DefaultValues map[string]any `yaml:"default_values"`
 }
 
 type Row struct {
@@ -127,6 +128,13 @@ func (c *TableConfig) Merge(other *TableConfig) error {
 
 	if len(other.Depends) > 0 {
 		c.Depends = appendStringNoRepeat(c.Depends, other.Depends)
+	}
+	if len(other.DefaultValues) > 0 {
+		if c.DefaultValues == nil {
+			c.DefaultValues = maps.Clone(other.DefaultValues)
+		} else {
+			maps.Copy(c.DefaultValues, other.DefaultValues)
+		}
 	}
 
 	return nil

@@ -344,6 +344,159 @@ func TestResolveReturnResolved(t *testing.T) {
 	assert.Equal(t, 935, retData.Tables["tags"].Rows[0].Fields["tag_id"])
 }
 
+func TestResolveDefaultValues(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tags:
+  config:
+    default_values:
+      tag_id: !dbfexpr generated
+  rows:
+    - tag_name: "Tag 1"
+    - tag_name: "Tag 2"
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	assert.NilError(t, err)
+
+	rowCount := map[string]int{}
+
+	idct := 935
+
+	retData, err := Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+		rowCount[ctx.TableID()]++
+		assert.DeepEqual(t, &ResolveGenerate{}, fields["tag_id"])
+		ctx.ResolveField("tag_id", idct)
+		idct++
+		return nil
+	})
+	assert.NilError(t, err)
+
+	assert.DeepEqual(t, map[string]int{
+		"tags": 2,
+	}, rowCount)
+
+	assert.Assert(t, is.Len(retData.Tables, 1))
+	assert.Assert(t, is.Len(retData.Tables["tags"].Rows, 2))
+	assert.Equal(t, 935, retData.Tables["tags"].Rows[0].Fields["tag_id"])
+	assert.Equal(t, 936, retData.Tables["tags"].Rows[1].Fields["tag_id"])
+}
+
+func TestResolveDefaultValuesGenerated(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tags:
+  config:
+    default_values:
+      tag_id: !dbfexpr generated
+  rows:
+    - tag_name: "All"
+      config:
+        !dbfconfig
+        refid: "all"
+      deps:
+        !dbfdeps
+        posts:
+          rows:
+            - post_id: 1
+              tag_id: !dbfexpr "parent:tag_id"
+              title: "First post"
+post_tags:
+  config:
+    depends:
+      - posts
+  rows:
+    - post_id: 1
+      tag_id: !dbfexpr "refid:tags:all:tag_id"
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	assert.NilError(t, err)
+
+	retData, err := Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+		if ctx.TableID() == "tags" {
+			assert.DeepEqual(t, &ResolveGenerate{}, fields["tag_id"])
+			ctx.ResolveField("tag_id", 99)
+		}
+		return nil
+	})
+	assert.NilError(t, err)
+
+	assert.Assert(t, is.Len(retData.Tables["tags"].Rows, 1))
+	assert.Assert(t, is.Len(retData.Tables["posts"].Rows, 1))
+	assert.Assert(t, is.Len(retData.Tables["post_tags"].Rows, 1))
+	assert.Equal(t, 99, retData.Tables["tags"].Rows[0].Fields["tag_id"])
+	assert.Equal(t, 99, retData.Tables["posts"].Rows[0].Fields["tag_id"])
+	assert.Equal(t, 99, retData.Tables["post_tags"].Rows[0].Fields["tag_id"])
+}
+
+func TestResolveDefaultValuesParentNotSupported(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tags:
+  rows:
+    - tag_id: 12
+      tag_name: "All"
+      deps:
+        !dbfdeps
+        posts:
+          config:
+            default_values:
+              tag_id: !dbfexpr "parent:tag_id"
+          rows:
+            - post_id: 1
+              title: "First post"
+            - post_id: 2
+              title: "Second post"
+`),
+		},
+	})
+
+	_, err := Load(provider)
+	assert.ErrorContains(t, err, "parents not supported")
+}
+
+func TestResolveDefaultValuesRefID(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tags:
+  rows:
+    - tag_id: 19
+      tag_name: "All"
+      config:
+        !dbfconfig
+        refid: "all"
+posts:
+  config:
+    depends:
+      - posts
+    default_values:
+      tag_id: !dbfexpr "refid:tags:all:tag_id"
+  rows:
+    - post_id: 1
+    - post_id: 2
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	assert.NilError(t, err)
+
+	retData, err := Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+		return nil
+	})
+	assert.NilError(t, err)
+
+	assert.Assert(t, is.Len(retData.Tables["tags"].Rows, 1))
+	assert.Assert(t, is.Len(retData.Tables["posts"].Rows, 2))
+	assert.Equal(t, uint64(19), retData.Tables["posts"].Rows[0].Fields["tag_id"])
+	assert.Equal(t, uint64(19), retData.Tables["posts"].Rows[1].Fields["tag_id"])
+}
+
 func TestResolveGeneratedWithType(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{

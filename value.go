@@ -79,6 +79,9 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 			return nil, errors.Join(ValueError, fmt.Errorf("invalid !dbf tag value: %s", value))
 		}
 		plevel := parent.ParentLevel(parentLevel)
+		if !plevel.ParentSupported() {
+			return nil, errors.Join(ValueError, errors.New("parents not supported in current context"))
+		}
 		if !plevel.HasParent() {
 			return nil, errors.Join(ValueError, errors.New("value has no parent"))
 		}
@@ -101,6 +104,7 @@ type parentRowInfo interface {
 
 // parentRowInfoData indicates if a parent exists and its information.
 type parentRowInfoData interface {
+	ParentSupported() bool
 	HasParent() bool
 	TableID() string
 	InternalID() uuid.UUID
@@ -116,6 +120,10 @@ func (n noParentRowInfo) ParentLevel(level int) parentRowInfoData {
 
 // noParentRowInfo indicates that no parent exists in the current context.
 type noParentRowInfoData struct {
+}
+
+func (n noParentRowInfoData) ParentSupported() bool {
+	return true
 }
 
 func (n noParentRowInfoData) HasParent() bool {
@@ -152,6 +160,10 @@ type defaultParentRowInfoData struct {
 	internalID uuid.UUID
 }
 
+func (n defaultParentRowInfoData) ParentSupported() bool {
+	return true
+}
+
 func (n defaultParentRowInfoData) HasParent() bool {
 	return true
 }
@@ -162,4 +174,32 @@ func (n defaultParentRowInfoData) TableID() string {
 
 func (n defaultParentRowInfoData) InternalID() uuid.UUID {
 	return n.internalID
+}
+
+// unsupportedParentRowInfo indicates parents are not supported in the current context.
+type unsupportedParentRowInfo struct {
+}
+
+func (n unsupportedParentRowInfo) ParentLevel(level int) parentRowInfoData {
+	return &unsupportedParentRowInfoData{}
+}
+
+// unsupportedParentRowInfo indicates parents are not supported in the current context.
+type unsupportedParentRowInfoData struct {
+}
+
+func (n unsupportedParentRowInfoData) ParentSupported() bool {
+	return false
+}
+
+func (n unsupportedParentRowInfoData) HasParent() bool {
+	return false
+}
+
+func (n unsupportedParentRowInfoData) TableID() string {
+	return ""
+}
+
+func (n unsupportedParentRowInfoData) InternalID() uuid.UUID {
+	return uuid.UUID{}
 }

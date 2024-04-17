@@ -156,11 +156,11 @@ func (l *loader) loadTable(tableID string, node ast.Node, tags []string, parent 
 		}
 		switch key {
 		case "config":
+			// load in a separate struct, so we can merge fields later
 			var cfg TableConfig
-			err := yaml.NodeToValue(value.Value, &cfg)
+			err = l.loadTableConfig(value.Value, table, &cfg)
 			if err != nil {
-				return NewParseError(fmt.Sprintf("error reading table config for '%s': %s", tableID, err),
-					value.GetPath(), value.GetToken().Position)
+				return err
 			}
 			err = table.Config.Merge(&cfg)
 			if err != nil {
@@ -177,6 +177,90 @@ func (l *loader) loadTable(tableID string, node ast.Node, tags []string, parent 
 				value.GetPath(), value.GetToken().Position)
 		}
 	}
+	return nil
+}
+
+func (l *loader) loadTableConfig(node ast.Node, table *Table, cfg *TableConfig) error {
+	var values []*ast.MappingValueNode
+	switch n := node.(type) {
+	case *ast.MappingNode:
+		values = n.Values
+	case *ast.MappingValueNode:
+		values = []*ast.MappingValueNode{n}
+	default:
+		return NewParseError(fmt.Sprintf("unknown table config node type '%s' (expected Mapping)", node.Type().String()),
+			node.GetPath(), node.GetToken().Position)
+	}
+
+	for _, field := range values {
+		key, err := getStringNode(field.Key)
+		if err != nil {
+			return err
+		}
+
+		switch key {
+		case "table_name":
+			err := yaml.NodeToValue(field.Value, &cfg.TableName)
+			if err != nil {
+				return NewParseError(fmt.Sprintf("error reading table config: %s", err),
+					field.Value.GetPath(), field.Value.GetToken().Position)
+			}
+		case "depends":
+			err := yaml.NodeToValue(field.Value, &cfg.Depends)
+			if err != nil {
+				return NewParseError(fmt.Sprintf("error reading table config: %s", err),
+					field.Value.GetPath(), field.Value.GetToken().Position)
+			}
+		case "default_values":
+			err := l.loadTableConfigDefaultValues(field.Value, table, cfg)
+			if err != nil {
+				return err
+			}
+		default:
+			return NewParseError(fmt.Sprintf("unknown table config field: %s", key),
+				field.Value.GetPath(), field.Value.GetToken().Position)
+		}
+	}
+
+	return nil
+}
+
+func (l *loader) loadTableConfigDefaultValues(node ast.Node, table *Table, cfg *TableConfig) error {
+	var values []*ast.MappingValueNode
+	switch n := node.(type) {
+	case *ast.MappingNode:
+		values = n.Values
+	case *ast.MappingValueNode:
+		values = []*ast.MappingValueNode{n}
+	default:
+		return NewParseError(fmt.Sprintf("unknown table config default value node type '%s' (expected Mapping)", node.Type().String()),
+			node.GetPath(), node.GetToken().Position)
+	}
+
+	if len(values) == 0 {
+		return nil
+	}
+
+	if cfg.DefaultValues == nil {
+		cfg.DefaultValues = map[string]any{}
+	}
+
+	for _, field := range values {
+		key, err := getStringNode(field.Key)
+		if err != nil {
+			return err
+		}
+
+		fieldValue, err := l.loadFieldValue(field.Value, unsupportedParentRowInfo{})
+		if err != nil {
+			return err
+		}
+		cfg.DefaultValues[key] = fieldValue
+		if fd, ok := fieldValue.(valueTableDepends); ok {
+			table.AppendDeps(fd.TableDepends())
+		}
+	}
+
 	return nil
 }
 
