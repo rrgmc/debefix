@@ -8,6 +8,11 @@ import (
 	"github.com/google/uuid"
 )
 
+// FileConfig stores configs that are specific to a yaml file.
+type FileConfig struct {
+	Tags []string `yaml:"tags"`
+}
+
 // Data stores the entire collection of parsed Table information.
 type Data struct {
 	Tables map[string]*Table

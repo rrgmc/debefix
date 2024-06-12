@@ -3,6 +3,7 @@ package debefix
 import (
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/goccy/go-yaml"
@@ -110,6 +111,7 @@ func (l *loader) loadRoot(node ast.Node, tags []string, parent parentRowInfo) er
 			node.GetPath(), node.GetToken().Position)
 	}
 
+	// load config first
 	for _, field := range values {
 		key, err := getStringNode(field.Key)
 		if err != nil {
@@ -117,6 +119,27 @@ func (l *loader) loadRoot(node ast.Node, tags []string, parent parentRowInfo) er
 		}
 
 		switch key {
+		case "config":
+			var fc FileConfig
+			err := yaml.NodeToValue(field.Value, &fc)
+			if err != nil {
+				return NewParseError(fmt.Sprintf("error reading file config: %s", err),
+					field.Value.GetPath(), field.Value.GetToken().Position)
+			}
+			tags = slices.Concat(tags, fc.Tags)
+		}
+	}
+
+	// load tables
+	for _, field := range values {
+		key, err := getStringNode(field.Key)
+		if err != nil {
+			return err
+		}
+
+		switch key {
+		case "config":
+			// already loaded
 		case "tables":
 			err := l.loadTables(field.Value, tags, parent)
 			if err != nil {
