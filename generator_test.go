@@ -11,29 +11,30 @@ import (
 func TestGenerate(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: 2
-      tag_name: "All"
-      config:
-        !dbfconfig
-        refid: "all"
-      deps:
-        !dbfdeps
-        posts:
-          rows:
-            - post_id: 1
-              tag_id: !dbfexpr "parent:tag_id"
-              title: "First post"
-    - tag_id: 5
-      tag_name: "Half"
-post_tags:
-  config:
-    depends:
-      - posts
-  rows:
-    - post_id: 1
-      tag_id: !dbfexpr "refid:tags:all:tag_id"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: 2
+        tag_name: "All"
+        config:
+          !dbfconfig
+          refid: "all"
+        deps:
+          !dbfdeps
+          posts:
+            rows:
+              - post_id: 1
+                tag_id: !dbfexpr "parent:tag_id"
+                title: "First post"
+      - tag_id: 5
+        tag_name: "Half"
+  post_tags:
+    config:
+      depends:
+        - posts
+    rows:
+      - post_id: 1
+        tag_id: !dbfexpr "refid:tags:all:tag_id"
 `),
 		},
 	})
@@ -59,20 +60,21 @@ post_tags:
 func TestGenerateOptions(t *testing.T) {
 	providerData := fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  config:
-    table_name: "public.user"
-  rows:
-    - user_id: 1
-      name: "John Doe"
-      config:
-        !dbfconfig
-        refid: "johndoe"
-    - user_id: 2
-      name: "Jane Doe"
-      config:
-        !dbfconfig
-        refid: "janedoe"
+			Data: []byte(`tables:
+  users:
+    config:
+      table_name: "public.user"
+    rows:
+      - user_id: 1
+        name: "John Doe"
+        config:
+          !dbfconfig
+          refid: "johndoe"
+      - user_id: 2
+        name: "Jane Doe"
+        config:
+          !dbfconfig
+          refid: "janedoe"
 `),
 		},
 	}

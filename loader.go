@@ -89,9 +89,42 @@ func (l *loader) loadFile(file io.Reader, tags []string) error {
 	}
 
 	for _, doc := range fileParser.Docs {
-		err := l.loadTables(doc.Body, tags, &noParentRowInfo{})
+		err := l.loadRoot(doc.Body, tags, &noParentRowInfo{})
 		if err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+func (l *loader) loadRoot(node ast.Node, tags []string, parent parentRowInfo) error {
+	var values []*ast.MappingValueNode
+	switch n := node.(type) {
+	case *ast.MappingNode:
+		values = n.Values
+	case *ast.MappingValueNode:
+		values = []*ast.MappingValueNode{n}
+	default:
+		return NewParseError(fmt.Sprintf("unknown root node type '%s' (expected Mapping)", node.Type().String()),
+			node.GetPath(), node.GetToken().Position)
+	}
+
+	for _, field := range values {
+		key, err := getStringNode(field.Key)
+		if err != nil {
+			return err
+		}
+
+		switch key {
+		case "tables":
+			err := l.loadTables(field.Value, tags, parent)
+			if err != nil {
+				return err
+			}
+		default:
+			return NewParseError(fmt.Sprintf("unknown root field: %s", key),
+				field.Value.GetPath(), field.Value.GetToken().Position)
 		}
 	}
 

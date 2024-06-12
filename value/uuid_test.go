@@ -13,10 +13,11 @@ import (
 func TestUUIDValue(t *testing.T) {
 	provider := debefix.NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  rows:
-    - user_id: !uuid "97d5a50d-d8ac-47b1-bbe1-daaa192f98ea"
-      name: !!str "John"
+			Data: []byte(`tables:
+  users:
+    rows:
+      - user_id: !uuid "97d5a50d-d8ac-47b1-bbe1-daaa192f98ea"
+        name: !!str "John"
 `),
 		},
 	})
@@ -39,10 +40,11 @@ func TestUUIDValue(t *testing.T) {
 func TestUUIDValueResolved(t *testing.T) {
 	provider := debefix.NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: !dbfexpr generated:uuid
-      tag_name: "All"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: !dbfexpr generated:uuid
+        tag_name: "All"
 `),
 		},
 	})
@@ -73,10 +75,11 @@ func TestUUIDValueResolved(t *testing.T) {
 func TestUUIDValueResolvedConcreteType(t *testing.T) {
 	provider := debefix.NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: !dbfexpr generated:uuid
-      tag_name: "All"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: !dbfexpr generated:uuid
+        tag_name: "All"
 `),
 		},
 	})

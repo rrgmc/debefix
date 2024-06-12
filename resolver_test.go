@@ -14,29 +14,30 @@ import (
 func TestResolve(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: 2
-      tag_name: "All"
-      config:
-        !dbfconfig
-        refid: "all"
-      deps:
-        !dbfdeps
-        posts:
-          rows:
-            - post_id: 1
-              tag_id: !dbfexpr "parent:tag_id"
-              title: "First post"
-    - tag_id: 5
-      tag_name: "Half"
-post_tags:
-  config:
-    depends:
-      - posts
-  rows:
-    - post_id: 1
-      tag_id: !dbfexpr "refid:tags:all:tag_id"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: 2
+        tag_name: "All"
+        config:
+          !dbfconfig
+          refid: "all"
+        deps:
+          !dbfdeps
+          posts:
+            rows:
+              - post_id: 1
+                tag_id: !dbfexpr "parent:tag_id"
+                title: "First post"
+      - tag_id: 5
+        tag_name: "Half"
+  post_tags:
+    config:
+      depends:
+        - posts
+    rows:
+      - post_id: 1
+        tag_id: !dbfexpr "refid:tags:all:tag_id"
 `),
 		},
 	})
@@ -65,10 +66,11 @@ post_tags:
 func TestResolveGenerated(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: !dbfexpr generated
-      tag_name: "All"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: !dbfexpr generated
+        tag_name: "All"
 `),
 		},
 	})
@@ -94,35 +96,36 @@ func TestResolveGenerated(t *testing.T) {
 func TestResolveTags(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: 2
-      tag_name: "All"
-      config:
-        !dbfconfig
-        refid: "all"
-        tags: ["include"]
-    - tag_id: 5
-      tag_name: "Half"
-posts:
-  config:
-    depends: ["tags"]
-  rows:
-    - post_id: 1
-      title: "First post"
-      config:
-        !dbfconfig
-        refid: "post_1"
-        tags: ["include"]
-    - post_id: 2
-      title: "Second post"
-      config:
-        !dbfconfig
-        refid: "post_2"
-post_tags:
-  rows:
-    - post_id: !dbfexpr "refid:posts:post_1:post_id"
-      tag_id: !dbfexpr "refid:tags:all:tag_id"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: 2
+        tag_name: "All"
+        config:
+          !dbfconfig
+          refid: "all"
+          tags: ["include"]
+      - tag_id: 5
+        tag_name: "Half"
+  posts:
+    config:
+      depends: ["tags"]
+    rows:
+      - post_id: 1
+        title: "First post"
+        config:
+          !dbfconfig
+          refid: "post_1"
+          tags: ["include"]
+      - post_id: 2
+        title: "Second post"
+        config:
+          !dbfconfig
+          refid: "post_2"
+  post_tags:
+    rows:
+      - post_id: !dbfexpr "refid:posts:post_1:post_id"
+        tag_id: !dbfexpr "refid:tags:all:tag_id"
 `),
 		},
 	})
@@ -160,38 +163,39 @@ post_tags:
 func TestResolveIgnoreTags(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: 2
-      tag_name: "All"
-      config:
-        !dbfconfig
-        refid: "all"
-    - tag_id: 5
-      tag_name: "Half"
-      config:
-        !dbfconfig
-        refid: "half"
-        ignoreTags: true
-posts:
-  config:
-    depends: ["tags"]
-  rows:
-    - post_id: 1
-      title: "First post"
-      config:
-        !dbfconfig
-        refid: "post_1"
-        tags: ["include"]
-    - post_id: 2
-      title: "Second post"
-      config:
-        !dbfconfig
-        refid: "post_2"
-post_tags:
-  rows:
-    - post_id: !dbfexpr "refid:posts:post_1:post_id"
-      tag_id: !dbfexpr "refid:tags:all:tag_id"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: 2
+        tag_name: "All"
+        config:
+          !dbfconfig
+          refid: "all"
+      - tag_id: 5
+        tag_name: "Half"
+        config:
+          !dbfconfig
+          refid: "half"
+          ignoreTags: true
+  posts:
+    config:
+      depends: ["tags"]
+    rows:
+      - post_id: 1
+        title: "First post"
+        config:
+          !dbfconfig
+          refid: "post_1"
+          tags: ["include"]
+      - post_id: 2
+        title: "Second post"
+        config:
+          !dbfconfig
+          refid: "post_2"
+  post_tags:
+    rows:
+      - post_id: !dbfexpr "refid:posts:post_1:post_id"
+        tag_id: !dbfexpr "refid:tags:all:tag_id"
 `),
 		},
 	})
@@ -229,20 +233,21 @@ post_tags:
 func TestResolveUnresolvedRefID(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: 2
-      tag_name: "All"
-      config:
-        !dbfconfig
-        refid: "all"
-    - tag_id: 5
-      tag_name: "Half"
-posts:
-  rows:
-    - post_id: 1
-      title: "First post"
-      tag_id: !dbfexpr "refid:tags:half:tag_id"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: 2
+        tag_name: "All"
+        config:
+          !dbfconfig
+          refid: "all"
+      - tag_id: 5
+        tag_name: "Half"
+  posts:
+    rows:
+      - post_id: 1
+        title: "First post"
+        tag_id: !dbfexpr "refid:tags:half:tag_id"
 `),
 		},
 	})
@@ -257,20 +262,21 @@ posts:
 func TestResolveInvalidDependency(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: 2
-      tag_name: "All"
-      config:
-        !dbfconfig
-        refid: "all"
-posts:
-  config:
-    depends: ["nothing"]
-  rows:
-    - post_id: 1
-      title: "First post"
-      tag_id: !dbfexpr "refid:tags:half:tag_id"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: 2
+        tag_name: "All"
+        config:
+          !dbfconfig
+          refid: "all"
+  posts:
+    config:
+      depends: ["nothing"]
+    rows:
+      - post_id: 1
+        title: "First post"
+        tag_id: !dbfexpr "refid:tags:half:tag_id"
 `),
 		},
 	})
@@ -285,10 +291,11 @@ posts:
 func TestResolveCallbackError(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: !dbfexpr generated
-      tag_name: "All"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: !dbfexpr generated
+        tag_name: "All"
 `),
 		},
 	})
@@ -314,10 +321,11 @@ func TestResolveCallbackError(t *testing.T) {
 func TestResolveReturnResolved(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: !dbfexpr generated
-      tag_name: "All"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: !dbfexpr generated
+        tag_name: "All"
 `),
 		},
 	})
@@ -347,13 +355,14 @@ func TestResolveReturnResolved(t *testing.T) {
 func TestResolveDefaultValues(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  config:
-    default_values:
-      tag_id: !dbfexpr generated
-  rows:
-    - tag_name: "Tag 1"
-    - tag_name: "Tag 2"
+			Data: []byte(`tables:
+  tags:
+    config:
+      default_values:
+        tag_id: !dbfexpr generated
+    rows:
+      - tag_name: "Tag 1"
+      - tag_name: "Tag 2"
 `),
 		},
 	})
@@ -387,29 +396,30 @@ func TestResolveDefaultValues(t *testing.T) {
 func TestResolveDefaultValuesGenerated(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  config:
-    default_values:
-      tag_id: !dbfexpr generated
-  rows:
-    - tag_name: "All"
-      config:
-        !dbfconfig
-        refid: "all"
-      deps:
-        !dbfdeps
-        posts:
-          rows:
-            - post_id: 1
-              tag_id: !dbfexpr "parent:tag_id"
-              title: "First post"
-post_tags:
-  config:
-    depends:
-      - posts
-  rows:
-    - post_id: 1
-      tag_id: !dbfexpr "refid:tags:all:tag_id"
+			Data: []byte(`tables:
+  tags:
+    config:
+      default_values:
+        tag_id: !dbfexpr generated
+    rows:
+      - tag_name: "All"
+        config:
+          !dbfconfig
+          refid: "all"
+        deps:
+          !dbfdeps
+          posts:
+            rows:
+              - post_id: 1
+                tag_id: !dbfexpr "parent:tag_id"
+                title: "First post"
+  post_tags:
+    config:
+      depends:
+        - posts
+    rows:
+      - post_id: 1
+        tag_id: !dbfexpr "refid:tags:all:tag_id"
 `),
 		},
 	})
@@ -437,21 +447,22 @@ post_tags:
 func TestResolveDefaultValuesParentNotSupported(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: 12
-      tag_name: "All"
-      deps:
-        !dbfdeps
-        posts:
-          config:
-            default_values:
-              tag_id: !dbfexpr "parent:tag_id"
-          rows:
-            - post_id: 1
-              title: "First post"
-            - post_id: 2
-              title: "Second post"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: 12
+        tag_name: "All"
+        deps:
+          !dbfdeps
+          posts:
+            config:
+              default_values:
+                tag_id: !dbfexpr "parent:tag_id"
+            rows:
+              - post_id: 1
+                title: "First post"
+              - post_id: 2
+                title: "Second post"
 `),
 		},
 	})
@@ -463,22 +474,23 @@ func TestResolveDefaultValuesParentNotSupported(t *testing.T) {
 func TestResolveDefaultValuesRefID(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: 19
-      tag_name: "All"
-      config:
-        !dbfconfig
-        refid: "all"
-posts:
-  config:
-    depends:
-      - posts
-    default_values:
-      tag_id: !dbfexpr "refid:tags:all:tag_id"
-  rows:
-    - post_id: 1
-    - post_id: 2
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: 19
+        tag_name: "All"
+        config:
+          !dbfconfig
+          refid: "all"
+  posts:
+    config:
+      depends:
+        - posts
+      default_values:
+        tag_id: !dbfexpr "refid:tags:all:tag_id"
+    rows:
+      - post_id: 1
+      - post_id: 2
 `),
 		},
 	})
@@ -500,10 +512,11 @@ posts:
 func TestResolveGeneratedWithType(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: !dbfexpr generated:int
-      tag_name: "All"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: !dbfexpr generated:int
+        tag_name: "All"
 `),
 		},
 	})
@@ -534,10 +547,11 @@ func TestResolveGeneratedWithType(t *testing.T) {
 func TestResolveGeneratedWithParserType(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: !dbfexpr generated:myint32
-      tag_name: "All"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: !dbfexpr generated:myint32
+        tag_name: "All"
 `),
 		},
 	})

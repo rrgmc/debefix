@@ -16,20 +16,21 @@ import (
 func TestLoad(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  config:
-    table_name: "public.user"
-  rows:
-    - user_id: 1
-      name: "John Doe"
-      config:
-        !dbfconfig
-        refid: "johndoe"
-    - user_id: 2
-      name: "Jane Doe"
-      config:
-        !dbfconfig
-        refid: "janedoe"
+			Data: []byte(`tables:
+  users:
+    config:
+      table_name: "public.user"
+    rows:
+      - user_id: 1
+        name: "John Doe"
+        config:
+          !dbfconfig
+          refid: "johndoe"
+      - user_id: 2
+        name: "Jane Doe"
+        config:
+          !dbfconfig
+          refid: "janedoe"
 `),
 		},
 	})
@@ -60,15 +61,16 @@ func TestLoad(t *testing.T) {
 func TestLoadInitialData(t *testing.T) {
 	initialProvider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  config:
-    table_name: "public.user"
-  rows:
-    - user_id: 1
-      name: "John Doe"
-      config:
-        !dbfconfig
-        refid: "johndoe"
+			Data: []byte(`tables:
+  users:
+    config:
+      table_name: "public.user"
+    rows:
+      - user_id: 1
+        name: "John Doe"
+        config:
+          !dbfconfig
+          refid: "johndoe"
 `),
 		},
 	})
@@ -78,15 +80,16 @@ func TestLoadInitialData(t *testing.T) {
 
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  config:
-    table_name: "public.user"
-  rows:
-    - user_id: 2
-      name: "Jane Doe"
-      config:
-        !dbfconfig
-        refid: "janedoe"
+			Data: []byte(`tables:
+  users:
+    config:
+      table_name: "public.user"
+    rows:
+      - user_id: 2
+        name: "Jane Doe"
+        config:
+          !dbfconfig
+          refid: "janedoe"
 `),
 		},
 	})
@@ -118,14 +121,15 @@ func TestLoadInitialData(t *testing.T) {
 func TestLoad2TablesSameFile(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  rows:
-    - user_id: 1
-      name: "John"
-tags:
-  rows:
-    - tag_id: 2
-      tag_name: "All"
+			Data: []byte(`tables:
+  users:
+    rows:
+      - user_id: 1
+        name: "John"
+  tags:
+    rows:
+      - tag_id: 2
+        tag_name: "All"
 `),
 		},
 	})
@@ -155,17 +159,19 @@ tags:
 func TestLoad2TablesSeparateFiles(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  rows:
-    - user_id: 1
-      name: "John"
+			Data: []byte(`tables:
+  users:
+    rows:
+      - user_id: 1
+        name: "John"
 `),
 		},
 		"tags.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: 2
-      tag_name: "All"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: 2
+        tag_name: "All"
 `),
 		},
 	})
@@ -195,20 +201,21 @@ func TestLoad2TablesSeparateFiles(t *testing.T) {
 func TestLoadExtValueTypes(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  rows:
-    - user_id: 1
-      name: "John Doe"
-      attributes:
-        gender: "male"
-        age: "old"
-      tags: ["carpenter", "office"]
-    - user_id: 2
-      name: "Jane Doe"
-      attributes:
-        gender: "female"
-        age: "mid"
-      tags: ["firefighter", "outdoors"]
+			Data: []byte(`tables:
+  users:
+    rows:
+      - user_id: 1
+        name: "John Doe"
+        attributes:
+          gender: "male"
+          age: "old"
+        tags: ["carpenter", "office"]
+      - user_id: 2
+        name: "Jane Doe"
+        attributes:
+          gender: "female"
+          age: "mid"
+        tags: ["firefighter", "outdoors"]
 `),
 		},
 	})
@@ -237,11 +244,12 @@ func TestLoadExtValueTypes(t *testing.T) {
 func TestLoadExprRefID(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"posts.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`posts:
-  rows:
-    - post_id: 1
-      tag_id: !dbfexpr "refid:tags:all:tag_id"
-      name: "John"
+			Data: []byte(`tables:
+  posts:
+    rows:
+      - post_id: 1
+        tag_id: !dbfexpr "refid:tags:all:tag_id"
+        name: "John"
 `),
 		},
 	})
@@ -261,21 +269,22 @@ func TestLoadExprRefID(t *testing.T) {
 func TestLoadDeps(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: 2
-      tag_name: "All"
-      deps:
-        !dbfdeps
-        posts:
-          rows:
-            - post_id: 1
-              tag_id: !dbfexpr "parent:tag_id"
-              title: "First post"
-post_tags:
-  config:
-    depends:
-      - tags
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: 2
+        tag_name: "All"
+        deps:
+          !dbfdeps
+          posts:
+            rows:
+              - post_id: 1
+                tag_id: !dbfexpr "parent:tag_id"
+                title: "First post"
+  post_tags:
+    config:
+      depends:
+        - tags
 `),
 		},
 	})
@@ -313,24 +322,27 @@ post_tags:
 func TestLoadFileOrder(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"05-users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  rows:
-    - user_id: 1
-      name: "John"
+			Data: []byte(`tables:
+  users:
+    rows:
+      - user_id: 1
+        name: "John"
 `),
 		},
 		"04-users/10-users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  rows:
-    - user_id: 10
-      name: "Mary"
+			Data: []byte(`tables:
+  users:
+    rows:
+      - user_id: 10
+        name: "Mary"
 `),
 		},
 		"03-users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  rows:
-    - user_id: 5
-      name: "Jane"
+			Data: []byte(`tables:
+  users:
+    rows:
+      - user_id: 5
+        name: "Jane"
 `),
 		},
 	})
@@ -362,18 +374,19 @@ func TestLoadFileOrder(t *testing.T) {
 func TestLoadTags(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"base/users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  rows:
-    - user_id: 1
-      name: "John Doe"
-      config:
-        !dbfconfig
-        tags: ["first", "all"]
-    - user_id: 2
-      name: "Jane Doe"
-      config:
-        !dbfconfig
-        tags: ["second"]
+			Data: []byte(`tables:
+  users:
+    rows:
+      - user_id: 1
+        name: "John Doe"
+        config:
+          !dbfconfig
+          tags: ["first", "all"]
+      - user_id: 2
+        name: "Jane Doe"
+        config:
+          !dbfconfig
+          tags: ["second"]
 `),
 		},
 	}, WithDirectoryAsTag())
@@ -400,9 +413,10 @@ func TestLoadTags(t *testing.T) {
 func TestLoadInvalid(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  invalid:
-    data: 2
+			Data: []byte(`tables:
+  users:
+    invalid:
+      data: 2
 `),
 		},
 	})
@@ -415,9 +429,10 @@ func TestLoadInvalid(t *testing.T) {
 func TestLoadInvalidRowType(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  rows:
-    data: 2
+			Data: []byte(`tables:
+  users:
+    rows:
+      data: 2
 `),
 		},
 	})
@@ -429,9 +444,10 @@ func TestLoadInvalidRowType(t *testing.T) {
 func TestLoadInvalidKeyType(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  rows:
-    - 5: 10
+			Data: []byte(`tables:
+  users:
+    rows:
+      - 5: 10
 `),
 		},
 	})
@@ -443,9 +459,10 @@ func TestLoadInvalidKeyType(t *testing.T) {
 func TestLoadRowSingleField(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  rows:
-    - user_id: 10
+			Data: []byte(`tables:
+  users:
+    rows:
+      - user_id: 10
 `),
 		},
 	})
@@ -457,22 +474,23 @@ func TestLoadRowSingleField(t *testing.T) {
 func TestLoadParentLevel(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: 2
-      tag_name: "All"
-      deps:
-        !dbfdeps
-        posts:
-          rows:
-            - post_id: 1
-              title: "First post"
-              deps:
-                !dbfdeps
-                posts_tags:
-                  rows:
-                    - post_id: !dbfexpr "parent:post_id"
-                      tag_id: !dbfexpr "parent:2:tag_id"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: 2
+        tag_name: "All"
+        deps:
+          !dbfdeps
+          posts:
+            rows:
+              - post_id: 1
+                title: "First post"
+                deps:
+                  !dbfdeps
+                  posts_tags:
+                    rows:
+                      - post_id: !dbfexpr "parent:post_id"
+                        tag_id: !dbfexpr "parent:2:tag_id"
 `),
 		},
 	})
@@ -513,20 +531,21 @@ func TestLoadParentLevel(t *testing.T) {
 func TestLoadNoParent(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`tags:
-  rows:
-    - tag_id: 2
-      tag_name: "All"
-      config:
-        !dbfconfig
-        refid: "all"
-    - tag_id: 5
-      tag_name: "Half"
-posts:
-  rows:
-    - post_id: 1
-      title: "First post"
-      tag_id: !dbfexpr "parent:tag_id"
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: 2
+        tag_name: "All"
+        config:
+          !dbfconfig
+          refid: "all"
+      - tag_id: 5
+        tag_name: "Half"
+  posts:
+    rows:
+      - post_id: 1
+        title: "First post"
+        tag_id: !dbfexpr "parent:tag_id"
 `),
 		},
 	})
@@ -538,10 +557,11 @@ posts:
 func TestLoadValueParser(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
-			Data: []byte(`users:
-  rows:
-    - user_id: !myint32 "95"
-      name: !!str "John"
+			Data: []byte(`tables:
+  users:
+    rows:
+      - user_id: !myint32 "95"
+        name: !!str "John"
 `),
 		},
 	})
@@ -563,15 +583,17 @@ func TestLoadValueParser(t *testing.T) {
 
 func TestLoadStringFileProvider(t *testing.T) {
 	provider := NewStringFileProvider([]string{
-		`users:
-  rows:
-    - user_id: 1
-      name: "John"
+		`tables:
+  users:
+    rows:
+      - user_id: 1
+        name: "John"
 `,
-		`tags:
-  rows:
-    - tag_id: 2
-      tag_name: "All"
+		`tables:
+  tags:
+    rows:
+      - tag_id: 2
+        tag_name: "All"
 `,
 	}, WithStringFileProviderTags([][]string{
 		{"a", "b"},
