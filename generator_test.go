@@ -95,7 +95,7 @@ func TestGenerateOptions(t *testing.T) {
 		WithLoadProgress(func(filename string) {
 			called["load_option"] = true
 		}),
-		WithResolveProgress(func(tableID, tableName string) {
+		WithResolveProgress(func(tableID, databaseName, tableName string) {
 			called["resolve_option"] = true
 
 		}),

@@ -76,6 +76,7 @@ func (t *Table) Merge(source *Table) error {
 }
 
 type TableConfig struct {
+	DatabaseName  string         `yaml:"database_name"`
 	TableName     string         `yaml:"table_name"`
 	Depends       []string       `yaml:"depends"`
 	DefaultValues map[string]any `yaml:"default_values"`
@@ -119,10 +120,21 @@ func (t *Table) AppendDeps(deps ...string) {
 
 // Merge checks if merging is allowed before merging.
 func (c *TableConfig) Merge(other *TableConfig) error {
+	if other.DatabaseName != "" {
+		if c.DatabaseName != "" && other.DatabaseName != "" && c.DatabaseName != other.DatabaseName {
+			return fmt.Errorf("database name value cannot be changed (current: %s, new: %s)", c.DatabaseName, other.DatabaseName)
+		}
+	}
 	if other.TableName != "" {
 		if c.TableName != "" && other.TableName != "" && c.TableName != other.TableName {
 			return fmt.Errorf("table name value cannot be changed (current: %s, new: %s)", c.TableName, other.TableName)
 		}
+	}
+
+	if other.DatabaseName != "" {
+		c.DatabaseName = other.DatabaseName
+	}
+	if other.TableName != "" {
 		c.TableName = other.TableName
 	}
 

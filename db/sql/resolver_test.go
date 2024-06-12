@@ -92,7 +92,7 @@ post_tags:
 	var queryList []sqlQuery
 
 	_, err = debefix.Resolve(data, db.ResolverFunc(ResolverDBCallback(context.Background(),
-		QueryInterfaceFunc(func(ctx context.Context, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+		QueryInterfaceFunc(func(ctx context.Context, databaseName, tableName string, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
 			queryList = append(queryList, sqlQuery{
 				SQL:  query,
 				Args: args,
@@ -188,7 +188,7 @@ post_tags:
 	retTagID := uint64(115)
 
 	_, err = debefix.Resolve(data, db.ResolverFunc(ResolverDBCallback(context.Background(),
-		QueryInterfaceFunc(func(ctx context.Context, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+		QueryInterfaceFunc(func(ctx context.Context, databaseName, tableName string, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
 			queryList = append(queryList, sqlQuery{
 				SQL:  query,
 				Args: args,

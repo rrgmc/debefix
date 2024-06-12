@@ -17,6 +17,7 @@ func (r ResolveGenerate) isResolveValue() {}
 // ResolveContext is the context used to resolve values.
 type ResolveContext interface {
 	TableID() string
+	DatabaseName() string
 	TableName() string
 	ResolveField(fieldName string, value any)
 }
@@ -34,8 +35,8 @@ func (p ResolvedValueParserFunc) ParseResolvedValue(typ string, value any) (bool
 }
 
 type defaultResolveContext struct {
-	tableID, tableName string
-	resolved           map[string]any
+	tableID, databaseName, tableName string
+	resolved                         map[string]any
 }
 
 func (d *defaultResolveContext) TableID() string {
@@ -44,6 +45,10 @@ func (d *defaultResolveContext) TableID() string {
 
 func (d *defaultResolveContext) TableName() string {
 	return d.tableName
+}
+
+func (d *defaultResolveContext) DatabaseName() string {
+	return d.databaseName
 }
 
 func (d *defaultResolveContext) ResolveField(fieldName string, value any) {

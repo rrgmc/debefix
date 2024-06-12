@@ -43,14 +43,14 @@ func WithResolveTags(tags []string) ResolveOption {
 type ResolveIncludeTagsFunc func(tableID string, rowTags []string) bool
 
 // WithResolveProgress sets a function to receive resolve progress.
-func WithResolveProgress(progress func(tableID, tableName string)) ResolveOption {
+func WithResolveProgress(progress func(tableID, databaseName, tableName string)) ResolveOption {
 	return fnResolveOption(func(r *resolver) {
 		r.progress = progress
 	})
 }
 
 // WithResolveRowProgress sets a function to receive resolve row progress.
-func WithResolveRowProgress(rowProgress func(tableID, tableName string, current, amount int, isIncluded bool)) ResolveOption {
+func WithResolveRowProgress(rowProgress func(tableID, databaseName, tableName string, current, amount int, isIncluded bool)) ResolveOption {
 	return fnResolveOption(func(r *resolver) {
 		r.rowProgress = rowProgress
 	})
@@ -84,8 +84,8 @@ func DefaultResolveIncludeTagFunc(tags []string) ResolveIncludeTagsFunc {
 type resolver struct {
 	data                 *Data
 	resolvedData         *Data
-	progress             func(tableID, tableName string)
-	rowProgress          func(tableID, tableName string, current, amount int, isIncluded bool)
+	progress             func(tableID, databaseName, tableName string)
+	rowProgress          func(tableID, databaseName, tableName string, current, amount int, isIncluded bool)
 	includeTagsFunc      ResolveIncludeTagsFunc
 	resolvedValueParsers []ResolvedValueParser
 }
@@ -129,20 +129,21 @@ func (r *resolver) resolve(f ResolveCallback) error {
 		if !ok {
 			return errors.Join(ResolveError, fmt.Errorf("tableID not found: %s", tableID))
 		}
+		databaseName := table.Config.DatabaseName
 		tableName := table.Config.TableName
 		if tableName == "" {
 			tableName = tableID
 		}
 
 		if r.progress != nil {
-			r.progress(table.ID, tableName)
+			r.progress(table.ID, databaseName, tableName)
 		}
 
 		for rowIdx, row := range table.Rows {
 			isIncluded := row.Config.IgnoreTags || r.includeTag(table.ID, row.Config.Tags)
 
 			if r.rowProgress != nil {
-				r.rowProgress(table.ID, tableName, rowIdx+1, len(table.Rows), isIncluded)
+				r.rowProgress(table.ID, databaseName, tableName, rowIdx+1, len(table.Rows), isIncluded)
 			}
 
 			if !isIncluded {
@@ -166,8 +167,9 @@ func (r *resolver) resolve(f ResolveCallback) error {
 			}
 
 			ctx := &defaultResolveContext{
-				tableID:   table.ID,
-				tableName: tableName,
+				tableID:      table.ID,
+				databaseName: databaseName,
+				tableName:    tableName,
 			}
 
 			err := f(ctx, callFields)

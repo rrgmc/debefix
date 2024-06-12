@@ -21,7 +21,7 @@ func ResolverFunc(callback ResolverDBCallback) debefix.ResolveCallback {
 			}
 		}
 
-		resolved, err := callback(ctx.TableName(), insertFields, returnFieldNames)
+		resolved, err := callback(ctx.DatabaseName(), ctx.TableName(), insertFields, returnFieldNames)
 		if err != nil {
 			return err
 		}
@@ -37,5 +37,5 @@ func ResolverFunc(callback ResolverDBCallback) debefix.ResolveCallback {
 // ResolverDBCallback will be called for each table row to be inserted.
 // fields are the fields to be inserted.
 // returnedFieldNames are the fields whose values are expected to be returned in the return map.
-type ResolverDBCallback func(tableName string, fields map[string]any,
+type ResolverDBCallback func(databaseName, tableName string, fields map[string]any,
 	returnFieldNames []string) (returnValues map[string]any, err error)

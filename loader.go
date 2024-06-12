@@ -205,6 +205,12 @@ func (l *loader) loadTableConfig(node ast.Node, table *Table, cfg *TableConfig) 
 				return NewParseError(fmt.Sprintf("error reading table config: %s", err),
 					field.Value.GetPath(), field.Value.GetToken().Position)
 			}
+		case "database_name":
+			err := yaml.NodeToValue(field.Value, &cfg.DatabaseName)
+			if err != nil {
+				return NewParseError(fmt.Sprintf("error reading table config: %s", err),
+					field.Value.GetPath(), field.Value.GetToken().Position)
+			}
 		case "depends":
 			err := yaml.NodeToValue(field.Value, &cfg.Depends)
 			if err != nil {

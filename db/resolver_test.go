@@ -59,7 +59,7 @@ post_tags:
 	tables := map[string][]map[string]any{}
 	var tableOrder []string
 
-	_, err = debefix.Resolve(data, ResolverFunc(func(tableName string, fields map[string]any, returnFieldNames []string) (returnValues map[string]any, err error) {
+	_, err = debefix.Resolve(data, ResolverFunc(func(databaseName, tableName string, fields map[string]any, returnFieldNames []string) (returnValues map[string]any, err error) {
 		tableOrder = append(tableOrder, tableName)
 		tables[tableName] = append(tables[tableName], fields)
 		return nil, nil
@@ -121,7 +121,7 @@ func TestResolverGenerated(t *testing.T) {
 
 	var tableOrder []string
 
-	_, err = debefix.Resolve(data, ResolverFunc(func(tableName string, fields map[string]any, returnFieldNames []string) (returnValues map[string]any, err error) {
+	_, err = debefix.Resolve(data, ResolverFunc(func(databaseName, tableName string, fields map[string]any, returnFieldNames []string) (returnValues map[string]any, err error) {
 		tableOrder = append(tableOrder, tableName)
 		assert.Equal(t, tableName, "public.tags")
 		assert.DeepEqual(t, returnFieldNames, []string{"tag_id"})
