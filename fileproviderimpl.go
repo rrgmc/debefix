@@ -9,12 +9,27 @@ import (
 	"path"
 	"slices"
 	"strings"
+
+	"github.com/goccy/go-yaml"
 )
 
+const (
+	dirConfigFilename = "dbfconfig.yaml"
+)
+
+type DirConfig struct {
+	Config DirConfigConfig `yaml:"config"`
+}
+
+type DirConfigConfig struct {
+	Tags []string `yaml:"tags"`
+}
+
 type fsFileProvider struct {
-	fs      fs.FS
-	include func(path string, entry os.DirEntry) bool
-	tagFunc func(dirs []string) []string
+	fs                fs.FS
+	include           func(path string, entry os.DirEntry) bool
+	tagFunc           func(dirs []string) []string
+	skipDirConfigFile bool
 }
 
 // NewDirectoryFileProvider creates a [FileProvider] that list files from a directory, sorted by name.
@@ -66,6 +81,13 @@ func WithDirectoryTagFunc(tagFunc func(dirs []string) []string) FSFileProviderOp
 	})
 }
 
+// WithSkipDirConfigFile skips loading a "dbfconfig.yaml" per folder.
+func WithSkipDirConfigFile() FSFileProviderOption {
+	return fnFSFileProviderOption(func(provider *fsFileProvider) {
+		provider.skipDirConfigFile = true
+	})
+}
+
 // DefaultDirectoryTagFunc joins directories using a dot (.).
 func DefaultDirectoryTagFunc(dirs []string) []string {
 	return []string{strings.Join(dirs, ".")}
@@ -96,6 +118,38 @@ func (d fsFileProvider) loadFiles(currentPath string, tags []string, f FileProvi
 	}
 
 	var dirs []string
+	var dirTags []string
+
+	// load dir config file if available
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		if file.Name() == dirConfigFilename {
+			fullPath := path.Join(currentPath, file.Name())
+
+			var dc DirConfig
+			dcFile, err := d.fs.Open(fullPath)
+			if err != nil {
+				return fmt.Errorf("error opening dir config file '%s': %w", fullPath, err)
+			}
+
+			err = yaml.NewDecoder(dcFile, yaml.Strict()).Decode(&dc)
+
+			fileErr := dcFile.Close()
+			if fileErr != nil {
+				return errors.Join(fmt.Errorf("error closing dir config file '%s': %w", fullPath, fileErr), err)
+			}
+
+			if err != nil {
+				return fmt.Errorf("error processing file '%s': %w", fullPath, err)
+			}
+
+			dirTags = dc.Config.Tags
+			break
+		}
+	}
 
 	for _, file := range files {
 		if !d.include(currentPath, file) {
@@ -118,7 +172,7 @@ func (d fsFileProvider) loadFiles(currentPath string, tags []string, f FileProvi
 			err = f(FileInfo{
 				Name: fullPath,
 				File: localFile,
-				Tags: d.tagFunc(tags),
+				Tags: slices.Concat(dirTags, d.tagFunc(tags)),
 			})
 
 			fileErr := localFile.Close()
