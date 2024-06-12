@@ -26,61 +26,9 @@ go get github.com/rrgmc/debefix
 - YAML files are to be manually edited, so they must be easy to read and write.
 - Input can be files or memory, to allow creating simple tests.  
 
-## Field value expressions
-
-- `!dbfexpr "refid:<table>:<refid>:<fieldname>"`: reference a **refid** field value in a table. This id is 
-  declared using a `config: !dbfconfig {"refid": <refid>}` special tagged field in the row.
-- `!dbfexpr "parent<:level>:<fieldname>"`: reference a field in the parent table. This can only be used inside a `!dbfdeps` 
-  block. Level is the number of parent levels, if not specified the default value is 1.
-- `!dbfexpr "generated<:type>"`: indicates that this is a generated field that must be supplied at resolve time, and can later
-  be used by other references once resolved. If type is specified, the value is parsed/cast to this type after db retrieval.
-  The default types are 'int', 'float', 'str' and 'timestamp', using the YAML formats.
-
-## Special fields
-
-All field with tags starting with `!dbf` are special fields. The name of the field is ignored.
-
-- `config: !dbfconfig {"refid": "", "tags": ["", ""]}`
-- `deps: !dbfdeps {<tableID>: {...table config...}}`
-
-## Generating SQL
-
-SQL can be generated using `github.com/rrgmc/debefix/db/sql/<dbtype>`.
-
-```go
-import (
-    "sql"
-
-    dbsql "github.com/rrgmc/debefix/db/sql"
-    "github.com/rrgmc/debefix/db/sql/postgres"
-)
-
-func main() {
-    db, err := sql.Open("postgres", "dsn://postgres")
-    if err != nil {
-        panic(err)
-    }
-
-    // will send an INSERT SQL for each row to the db, taking table dependency in account for the correct order. 
-    resolvedValues, err := postgres.GenerateDirectory(context.Background(), "/x/y", dbsql.NewSQLQueryInterface(db))
-    if err != nil {
-        panic(err)
-    }
-    
-    // resolvedValues will contain all data that was inserted, including any generated fields like autoincrement.
-}
-```
-
-## Generating Non-SQL
-
-The import `github.com/rrgmc/debefix/db` contains a `ResolverFunc` that is not directly tied to SQL, it can be
-used to insert data in any database that has the concepts of "tables" with a list of field/values.
-
-As inner maps/arrays are supported by YAML, data with more complex structure should work without any problems.
-
 ## Sample input
 
-The configuration can be in a single or multiple files, the file itself doesn't matter. The file names/directories are 
+The configuration can be in a single or multiple files, the file itself doesn't matter. The file names/directories are
 sorted alphabetically, so the order can be deterministic.
 
 The same table can also be present in multiple files, given that the `config` section is equal (or only set in one of them).
@@ -194,6 +142,58 @@ tables:
         created_at: !!timestamp 2023-01-01T12:35:12Z
         updated_at: !!timestamp 2023-01-01T12:35:12Z
 ```
+
+## Field value expressions
+
+- `!dbfexpr "refid:<table>:<refid>:<fieldname>"`: reference a **refid** field value in a table. This id is 
+  declared using a `config: !dbfconfig {"refid": <refid>}` special tagged field in the row.
+- `!dbfexpr "parent<:level>:<fieldname>"`: reference a field in the parent table. This can only be used inside a `!dbfdeps` 
+  block. Level is the number of parent levels, if not specified the default value is 1.
+- `!dbfexpr "generated<:type>"`: indicates that this is a generated field that must be supplied at resolve time, and can later
+  be used by other references once resolved. If type is specified, the value is parsed/cast to this type after db retrieval.
+  The default types are 'int', 'float', 'str' and 'timestamp', using the YAML formats.
+
+## Special fields
+
+All field with tags starting with `!dbf` are special fields. The name of the field is ignored.
+
+- `config: !dbfconfig {"refid": "", "tags": ["", ""]}`
+- `deps: !dbfdeps {<tableID>: {...table config...}}`
+
+## Generating SQL
+
+SQL can be generated using `github.com/rrgmc/debefix/db/sql/<dbtype>`.
+
+```go
+import (
+    "sql"
+
+    dbsql "github.com/rrgmc/debefix/db/sql"
+    "github.com/rrgmc/debefix/db/sql/postgres"
+)
+
+func main() {
+    db, err := sql.Open("postgres", "dsn://postgres")
+    if err != nil {
+        panic(err)
+    }
+
+    // will send an INSERT SQL for each row to the db, taking table dependency in account for the correct order. 
+    resolvedValues, err := postgres.GenerateDirectory(context.Background(), "/x/y", dbsql.NewSQLQueryInterface(db))
+    if err != nil {
+        panic(err)
+    }
+    
+    // resolvedValues will contain all data that was inserted, including any generated fields like autoincrement.
+}
+```
+
+## Generating Non-SQL
+
+The import `github.com/rrgmc/debefix/db` contains a `ResolverFunc` that is not directly tied to SQL, it can be
+used to insert data in any database that has the concepts of "tables" with a list of field/values.
+
+As inner maps/arrays are supported by YAML, data with more complex structure should work without any problems.
 
 # Samples
 
