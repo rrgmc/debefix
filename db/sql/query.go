@@ -11,25 +11,45 @@ import (
 	"strings"
 )
 
+type SQLDB interface {
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+}
+
+// SQLQueryInterfaceDBCallback is the callback to return a *sql.DB for each query.
+type SQLQueryInterfaceDBCallback func(ctx context.Context, databaseName, tableName string) (SQLDB, error)
+
 // sqlQueryInterface is a QueryInterface wrapper for *sql.DB.
 type sqlQueryInterface struct {
-	DB *sql.DB
+	callback SQLQueryInterfaceDBCallback
 }
 
 var _ QueryInterface = (*sqlQueryInterface)(nil)
 
 // NewSQLQueryInterface wraps a *sql.DB on the QueryInterface interface.
-func NewSQLQueryInterface(db *sql.DB) QueryInterface {
-	return &sqlQueryInterface{db}
+func NewSQLQueryInterface(db SQLDB) QueryInterface {
+	return &sqlQueryInterface{callback: func(ctx context.Context, databaseName, tableName string) (SQLDB, error) {
+		return db, nil
+	}}
+}
+
+// NewSQLQueryInterfaceFunc sets a callback to return a *sql.DB for each query.
+func NewSQLQueryInterfaceFunc(callback SQLQueryInterfaceDBCallback) QueryInterface {
+	return &sqlQueryInterface{callback: callback}
 }
 
 func (q sqlQueryInterface) Query(ctx context.Context, databaseName, tableName string, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
-	if len(returnFieldNames) == 0 {
-		_, err := q.DB.Exec(query, args...)
+	db, err := q.callback(ctx, databaseName, tableName)
+	if err != nil {
 		return nil, err
 	}
 
-	rows, err := q.DB.QueryContext(ctx, query, args...)
+	if len(returnFieldNames) == 0 {
+		_, err := db.ExecContext(ctx, query, args...)
+		return nil, err
+	}
+
+	rows, err := db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
