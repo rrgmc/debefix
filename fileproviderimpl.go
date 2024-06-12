@@ -22,7 +22,8 @@ type DirConfig struct {
 }
 
 type DirConfigConfig struct {
-	Tags []string `yaml:"tags"`
+	Tags      []string `yaml:"tags"`       // tags to apply recursively
+	LocalTags []string `yaml:"local_tags"` // tags to apply only to the current folder
 }
 
 type fsFileProvider struct {
@@ -35,12 +36,14 @@ type fsFileProvider struct {
 // NewDirectoryFileProvider creates a [FileProvider] that list files from a directory, sorted by name.
 // Only files with the ".dbf.yaml" extension are returned.
 // Returned file names are relative to the rootDir.
+// If a folder has a "dbfconfig.yaml" file, its settings will be applied to the entire folder.
 func NewDirectoryFileProvider(rootDir string, options ...FSFileProviderOption) FileProvider {
 	return NewFSFileProvider(os.DirFS(rootDir), options...)
 }
 
 // NewFSFileProvider creates a [FileProvider] that list files from a [fs.FS], sorted by name.
 // Only files with the ".dbf.yaml" extension are returned.
+// If a folder has a "dbfconfig.yaml" file, its settings will be applied to the entire folder.
 func NewFSFileProvider(fs fs.FS, options ...FSFileProviderOption) FileProvider {
 	ret := &fsFileProvider{
 		fs: fs,
@@ -108,46 +111,49 @@ func noDirectoryTagFunc(dirs []string) []string {
 }
 
 func (d fsFileProvider) Load(f FileProviderCallback) error {
-	return d.loadFiles(".", nil, f)
+	return d.loadFiles(".", nil, nil, f)
 }
 
-func (d fsFileProvider) loadFiles(currentPath string, tags []string, f FileProviderCallback) error {
+func (d fsFileProvider) loadFiles(currentPath string, dirs []string, tags []string, f FileProviderCallback) error {
 	files, err := d.readDirSorted(currentPath)
 	if err != nil {
 		return fmt.Errorf("error reading directory '%s': %w", currentPath, err)
 	}
 
-	var dirs []string
-	var dirTags []string
+	var childDirst []string
+	var currentDirTags []string
 
 	// load dir config file if available
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
-
-		if file.Name() == dirConfigFilename {
-			fullPath := path.Join(currentPath, file.Name())
-
-			var dc DirConfig
-			dcFile, err := d.fs.Open(fullPath)
-			if err != nil {
-				return fmt.Errorf("error opening dir config file '%s': %w", fullPath, err)
+	if !d.skipDirConfigFile {
+		for _, file := range files {
+			if file.IsDir() {
+				continue
 			}
 
-			err = yaml.NewDecoder(dcFile, yaml.Strict()).Decode(&dc)
+			if file.Name() == dirConfigFilename {
+				fullPath := path.Join(currentPath, file.Name())
 
-			fileErr := dcFile.Close()
-			if fileErr != nil {
-				return errors.Join(fmt.Errorf("error closing dir config file '%s': %w", fullPath, fileErr), err)
+				var dc DirConfig
+				dcFile, err := d.fs.Open(fullPath)
+				if err != nil {
+					return fmt.Errorf("error opening dir config file '%s': %w", fullPath, err)
+				}
+
+				err = yaml.NewDecoder(dcFile, yaml.Strict()).Decode(&dc)
+
+				fileErr := dcFile.Close()
+				if fileErr != nil {
+					return errors.Join(fmt.Errorf("error closing dir config file '%s': %w", fullPath, fileErr), err)
+				}
+
+				if err != nil {
+					return fmt.Errorf("error processing file '%s': %w", fullPath, err)
+				}
+
+				currentDirTags = dc.Config.LocalTags
+				tags = slices.Concat(tags, dc.Config.Tags)
+				break
 			}
-
-			if err != nil {
-				return fmt.Errorf("error processing file '%s': %w", fullPath, err)
-			}
-
-			dirTags = dc.Config.Tags
-			break
 		}
 	}
 
@@ -159,7 +165,7 @@ func (d fsFileProvider) loadFiles(currentPath string, tags []string, f FileProvi
 		fullPath := path.Join(currentPath, file.Name())
 
 		if file.IsDir() {
-			dirs = append(dirs, file.Name())
+			childDirst = append(childDirst, file.Name())
 			continue
 		}
 
@@ -172,7 +178,7 @@ func (d fsFileProvider) loadFiles(currentPath string, tags []string, f FileProvi
 			err = f(FileInfo{
 				Name: fullPath,
 				File: localFile,
-				Tags: slices.Concat(dirTags, d.tagFunc(tags)),
+				Tags: slices.Concat(tags, currentDirTags, d.tagFunc(dirs)),
 			})
 
 			fileErr := localFile.Close()
@@ -186,11 +192,11 @@ func (d fsFileProvider) loadFiles(currentPath string, tags []string, f FileProvi
 		}
 	}
 
-	for _, dir := range dirs {
+	for _, dir := range childDirst {
 		fullPath := path.Join(currentPath, dir)
 
 		// each directory may become a tag
-		err := d.loadFiles(fullPath, append(slices.Clone(tags), dir), f)
+		err := d.loadFiles(fullPath, append(slices.Clone(dirs), dir), tags, f)
 		if err != nil {
 			return err
 		}
