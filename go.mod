@@ -1,6 +1,6 @@
 module github.com/rrgmc/debefix
 
-go 1.21
+go 1.22
 
 require (
 	github.com/goccy/go-yaml v1.11.2

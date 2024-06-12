@@ -1,6 +1,6 @@
 module github.com/rrgmc/debefix/value
 
-go 1.21
+go 1.22
 
 replace github.com/rrgmc/debefix => ../
 
