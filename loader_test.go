@@ -643,3 +643,64 @@ func testParserInt32() ValueParser {
 		return true, int32(v), nil
 	})
 }
+
+func TestLoadFileTags(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"05-users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tables:
+  users:
+    rows:
+      - user_id: 1
+        name: "John"
+config:
+  tags: ["u1", "u2"]
+`),
+		},
+		"04-users/10-users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tables:
+  users:
+    rows:
+      - user_id: 10
+        name: "Mary"
+config:
+  tags: ["u3"]
+`),
+		},
+		"03-users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tables:
+  users:
+    rows:
+      - user_id: 5
+        name: "Jane"
+config:
+  tags: ["u4", "u5", "u6"]
+`),
+		},
+	})
+
+	data, err := Load(provider)
+	assert.NilError(t, err)
+
+	usersTable, ok := data.Tables["users"]
+	assert.Assert(t, ok, "users table not found")
+
+	assert.Assert(t, is.Len(usersTable.Rows, 3))
+
+	assert.DeepEqual(t, map[string]any{
+		"user_id": uint64(5),
+		"name":    "Jane",
+	}, usersTable.Rows[0].Fields)
+	assert.DeepEqual(t, []string{"u4", "u5", "u6"}, usersTable.Rows[0].Config.Tags)
+
+	assert.DeepEqual(t, map[string]any{
+		"user_id": uint64(1),
+		"name":    "John",
+	}, usersTable.Rows[1].Fields)
+	assert.DeepEqual(t, []string{"u1", "u2"}, usersTable.Rows[1].Config.Tags)
+
+	assert.DeepEqual(t, map[string]any{
+		"user_id": uint64(10),
+		"name":    "Mary",
+	}, usersTable.Rows[2].Fields)
+	assert.DeepEqual(t, []string{"u3"}, usersTable.Rows[2].Config.Tags)
+}
