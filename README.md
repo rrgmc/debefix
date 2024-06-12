@@ -89,109 +89,110 @@ Only files that have the extension `.dbf.yaml` are loaded by the directory loade
 
 ```yaml
 # all_data.dbf.yaml
-tags:
-  config:
-    table_name: "public.tag" # database table name. If not set, will use the table id (tags) as the table name.
-  rows:
-    - tag_id: !dbfexpr "generated:int" # means that this will be generated, for example as a database autoincrement
-      name: "Go"
-      created_at: !!timestamp 2023-01-01T12:30:12Z
-      updated_at: !!timestamp 2023-01-01T12:30:12Z
-      config:
-        !dbfconfig
-        refid: "go" # refid to be targeted by '!dbfexpr "refid:tags:go:tag_id"'
-    - tag_id: !dbfexpr "generated:int"
-      name: "JavaScript"
-      created_at: !!timestamp 2023-01-01T12:30:12Z
-      updated_at: !!timestamp 2023-01-01T12:30:12Z
-      config:
-        !dbfconfig
-        refid: "javascript"
-    - tag_id: !dbfexpr "generated:int"
-      name: "C++"
-      created_at: !!timestamp 2023-01-01T12:30:12Z
-      updated_at: !!timestamp 2023-01-01T12:30:12Z
-      config:
-        !dbfconfig
-        refid: "cpp"
-users:
-  config:
-    table_name: "public.user"
-  rows:
-    - user_id: 1
-      name: "John Doe"
-      email: "john@example.com"
-      created_at: !!timestamp 2023-01-01T12:30:12Z
-      updated_at: !!timestamp 2023-01-01T12:30:12Z
-      config:
-        !dbfconfig
-        refid: "johndoe" # refid to be targeted by '!dbfexpr "refid:users:johndoe:user_id"'
-    - user_id: 2
-      name: "Jane Doe"
-      email: "jane@example.com"
-      created_at: !!timestamp 2023-01-04T12:30:12Z
-      updated_at: !!timestamp 2023-01-04T12:30:12Z
-      config:
-        !dbfconfig
-        refid: "janedoe"
-posts:
-  config:
-    table_name: "public.post"
-  rows:
-    - post_id: 1
-      title: "Post 1"
-      text: "This is the text of the first post"
-      user_id: !dbfexpr "refid:users:johndoe:user_id"
-      created_at: !!timestamp 2023-01-01T12:30:12Z
-      updated_at: !!timestamp 2023-01-01T12:30:12Z
-      deps:
-        !dbfdeps
-        posts_tags: # declaring tables in !dbfdeps is exactly the same as declaring top-level, but allows using "parent" expression to get parent info
-          rows:
-            - post_id: !dbfexpr "parent:post_id"
-              tag_id: !dbfexpr "refid:tags:go:tag_id"
-      config:
-        !dbfconfig
-        refid: "post_1"
-    - post_id: 2
-      parent_post_id: !dbfexpr "refid:posts:post_1:post_id" # order matters, so self-referential fields must be set in order
-      title: "Post 2"
-      text: "This is the text of the seco d post"
-      user_id: !dbfexpr "refid:users:johndoe:user_id"
-      created_at: !!timestamp 2023-01-02T12:30:12Z
-      updated_at: !!timestamp 2023-01-02T12:30:12Z
-      deps:
-        !dbfdeps
-        posts_tags:
-          rows:
-            - post_id: !dbfexpr "parent:post_id"
-              tag_id: !dbfexpr "refid:tags:javascript:tag_id" # tag_id is generated so the value will be resolved before being set here 
-        comments:
-          rows:
-            - comment_id: 3
-              post_id: !dbfexpr "parent:post_id"
-              user_id: !dbfexpr "refid:users:janedoe:user_id"
-              text: "I liked this post!"
-posts_tags:
-  config:
-    table_name: "public.post_tag"
-comments:
-  config:
-    depends:
-      - posts # add a manual dependency if there is no refid linking the tables
-  rows:
-    - comment_id: 1
-      post_id: 1
-      user_id: !dbfexpr "refid:users:janedoe:user_id"
-      text: "Good post!"
-      created_at: !!timestamp 2023-01-01T12:31:12Z
-      updated_at: !!timestamp 2023-01-01T12:31:12Z
-    - comment_id: 2
-      post_id: 1
-      user_id: !dbfexpr "refid:users:johndoe:user_id"
-      text: "Thanks!"
-      created_at: !!timestamp 2023-01-01T12:35:12Z
-      updated_at: !!timestamp 2023-01-01T12:35:12Z
+tables:
+  tags:
+    config:
+      table_name: "public.tag" # database table name. If not set, will use the table id (tags) as the table name.
+    rows:
+      - tag_id: !dbfexpr "generated:int" # means that this will be generated, for example as a database autoincrement
+        name: "Go"
+        created_at: !!timestamp 2023-01-01T12:30:12Z
+        updated_at: !!timestamp 2023-01-01T12:30:12Z
+        config:
+          !dbfconfig
+          refid: "go" # refid to be targeted by '!dbfexpr "refid:tags:go:tag_id"'
+      - tag_id: !dbfexpr "generated:int"
+        name: "JavaScript"
+        created_at: !!timestamp 2023-01-01T12:30:12Z
+        updated_at: !!timestamp 2023-01-01T12:30:12Z
+        config:
+          !dbfconfig
+          refid: "javascript"
+      - tag_id: !dbfexpr "generated:int"
+        name: "C++"
+        created_at: !!timestamp 2023-01-01T12:30:12Z
+        updated_at: !!timestamp 2023-01-01T12:30:12Z
+        config:
+          !dbfconfig
+          refid: "cpp"
+  users:
+    config:
+      table_name: "public.user"
+    rows:
+      - user_id: 1
+        name: "John Doe"
+        email: "john@example.com"
+        created_at: !!timestamp 2023-01-01T12:30:12Z
+        updated_at: !!timestamp 2023-01-01T12:30:12Z
+        config:
+          !dbfconfig
+          refid: "johndoe" # refid to be targeted by '!dbfexpr "refid:users:johndoe:user_id"'
+      - user_id: 2
+        name: "Jane Doe"
+        email: "jane@example.com"
+        created_at: !!timestamp 2023-01-04T12:30:12Z
+        updated_at: !!timestamp 2023-01-04T12:30:12Z
+        config:
+          !dbfconfig
+          refid: "janedoe"
+  posts:
+    config:
+      table_name: "public.post"
+    rows:
+      - post_id: 1
+        title: "Post 1"
+        text: "This is the text of the first post"
+        user_id: !dbfexpr "refid:users:johndoe:user_id"
+        created_at: !!timestamp 2023-01-01T12:30:12Z
+        updated_at: !!timestamp 2023-01-01T12:30:12Z
+        deps:
+          !dbfdeps
+          posts_tags: # declaring tables in !dbfdeps is exactly the same as declaring top-level, but allows using "parent" expression to get parent info
+            rows:
+              - post_id: !dbfexpr "parent:post_id"
+                tag_id: !dbfexpr "refid:tags:go:tag_id"
+        config:
+          !dbfconfig
+          refid: "post_1"
+      - post_id: 2
+        parent_post_id: !dbfexpr "refid:posts:post_1:post_id" # order matters, so self-referential fields must be set in order
+        title: "Post 2"
+        text: "This is the text of the seco d post"
+        user_id: !dbfexpr "refid:users:johndoe:user_id"
+        created_at: !!timestamp 2023-01-02T12:30:12Z
+        updated_at: !!timestamp 2023-01-02T12:30:12Z
+        deps:
+          !dbfdeps
+          posts_tags:
+            rows:
+              - post_id: !dbfexpr "parent:post_id"
+                tag_id: !dbfexpr "refid:tags:javascript:tag_id" # tag_id is generated so the value will be resolved before being set here 
+          comments:
+            rows:
+              - comment_id: 3
+                post_id: !dbfexpr "parent:post_id"
+                user_id: !dbfexpr "refid:users:janedoe:user_id"
+                text: "I liked this post!"
+  posts_tags:
+    config:
+      table_name: "public.post_tag"
+  comments:
+    config:
+      depends:
+        - posts # add a manual dependency if there is no refid linking the tables
+    rows:
+      - comment_id: 1
+        post_id: 1
+        user_id: !dbfexpr "refid:users:janedoe:user_id"
+        text: "Good post!"
+        created_at: !!timestamp 2023-01-01T12:31:12Z
+        updated_at: !!timestamp 2023-01-01T12:31:12Z
+      - comment_id: 2
+        post_id: 1
+        user_id: !dbfexpr "refid:users:johndoe:user_id"
+        text: "Thanks!"
+        created_at: !!timestamp 2023-01-01T12:35:12Z
+        updated_at: !!timestamp 2023-01-01T12:35:12Z
 ```
 
 # Samples
