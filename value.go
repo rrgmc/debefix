@@ -43,9 +43,14 @@ func (v ValueInternalID) TableDepends() string {
 	return v.TableID
 }
 
+// ValueCallback sets a callback to return the value.
+// This can only be set in code.
+type ValueCallback func(table *Table, row Row, fieldName string, data *Data, resolvedData *Data) (any, error)
+
 func (v ValueRefID) isValue()      {}
 func (v ValueGenerated) isValue()  {}
 func (v ValueInternalID) isValue() {}
+func (v ValueCallback) isValue()   {}
 
 // valueTableDepends is an interface to indicate that a [Value] adds a dependency on another table.
 type valueTableDepends interface {
