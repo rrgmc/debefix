@@ -43,51 +43,42 @@ tables:
       table_name: "public.tag" # database table name. If not set, will use the table id (tags) as the table name.
     rows:
       - tag_id: !expr "generated:int" # means that this will be generated, for example as a database autoincrement
+        _refid: !refid "go" # refid to be targeted by '!expr "refid:tags:go:tag_id"'. Field name is ignored.
         name: "Go"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
-        config:
-          !config
-          refid: "go" # refid to be targeted by '!expr "refid:tags:go:tag_id"'
       - tag_id: !expr "generated:int"
+        _refid: !refid "javascript"
         name: "JavaScript"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
-        config:
-          !config
-          refid: "javascript"
       - tag_id: !expr "generated:int"
+        _refid: !refid "cpp"
         name: "C++"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
-        config:
-          !config
-          refid: "cpp"
   users:
     config:
       table_name: "public.user"
     rows:
       - user_id: 1
+        _refid: !refid "johndoe" # refid to be targeted by '!expr "refid:users:johndoe:user_id"'. Field name is ignored.
         name: "John Doe"
         email: "john@example.com"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
-        config:
-          !config
-          refid: "johndoe" # refid to be targeted by '!expr "refid:users:johndoe:user_id"'
       - user_id: 2
+        _refid: !refid "janedoe"
         name: "Jane Doe"
         email: "jane@example.com"
         created_at: !!timestamp 2023-01-04T12:30:12Z
         updated_at: !!timestamp 2023-01-04T12:30:12Z
-        config:
-          !config
-          refid: "janedoe"
   posts:
     config:
       table_name: "public.post"
     rows:
       - post_id: 1
+        _refid: !refid "post_1"
         title: "Post 1"
         text: "This is the text of the first post"
         user_id: !expr "refid:users:johndoe:user_id"
@@ -99,9 +90,6 @@ tables:
             rows:
               - post_id: !expr "parent:post_id"
                 tag_id: !expr "refid:tags:go:tag_id"
-        config:
-          !config
-          refid: "post_1"
       - post_id: 2
         parent_post_id: !expr "refid:posts:post_1:post_id" # order matters, so self-referential fields must be set in order
         title: "Post 2"
@@ -146,7 +134,7 @@ tables:
 ## Field value expressions
 
 - `!expr "refid:<table>:<refid>:<fieldname>"`: reference a **refid** field value in a table. This id is 
-  declared using a `config: !config {"refid": <refid>}` special tagged field in the row.
+  declared using a `_refid: !refid "<refid>"` special tagged field in the row.
 - `!expr "parent<:level>:<fieldname>"`: reference a field in the parent table. This can only be used inside a `!deps` 
   block. Level is the number of parent levels, if not specified the default value is 1.
 - `!expr "generated<:type>"`: indicates that this is a generated field that must be supplied at resolve time, and can later
@@ -155,10 +143,11 @@ tables:
 
 ## Special fields
 
-All field with tags starting with `!` are special fields. The name of the field is ignored.
+Some field tags are handled in a special way. The name of the field is ignored.
 
-- `config: !config {"refid": "", "tags": ["", ""]}`
-- `deps: !deps {<tableID>: {...table config...}}`
+- `_refid: !refid "<refID>"`: sets the refID of a table row
+- `_tags: !tags ["tag1", "tag2"]`: add tags to the table row
+- `deps: !deps {<tableID>: {...table config...}}`: add dependencies to the table row
 
 ## Generating SQL
 
