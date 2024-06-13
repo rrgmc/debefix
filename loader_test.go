@@ -23,10 +23,10 @@ func TestLoad(t *testing.T) {
       table_name: "public.user"
     rows:
       - user_id: 1
-        _refid: !dbfrefid "johndoe"
+        _refid: !refid "johndoe"
         name: "John Doe"
       - user_id: 2
-        _refid: !dbfrefid "janedoe"
+        _refid: !refid "janedoe"
         name: "Jane Doe"
 `),
 		},
@@ -64,7 +64,7 @@ func TestLoadInitialData(t *testing.T) {
       table_name: "public.user"
     rows:
       - user_id: 1
-        _refid: !dbfrefid "johndoe"
+        _refid: !refid "johndoe"
         name: "John Doe"
 `),
 		},
@@ -81,7 +81,7 @@ func TestLoadInitialData(t *testing.T) {
       table_name: "public.user"
     rows:
       - user_id: 2
-        _refid: !dbfrefid "janedoe"
+        _refid: !refid "janedoe"
         name: "Jane Doe"
 `),
 		},
@@ -241,7 +241,7 @@ func TestLoadExprRefID(t *testing.T) {
   posts:
     rows:
       - post_id: 1
-        tag_id: !dbfexpr "refid:tags:all:tag_id"
+        tag_id: !expr "refid:tags:all:tag_id"
         name: "John"
 `),
 		},
@@ -268,11 +268,11 @@ func TestLoadDeps(t *testing.T) {
       - tag_id: 2
         tag_name: "All"
         deps:
-          !dbfdeps
+          !deps
           posts:
             rows:
               - post_id: 1
-                tag_id: !dbfexpr "parent:tag_id"
+                tag_id: !expr "parent:tag_id"
                 title: "First post"
   post_tags:
     config:
@@ -371,10 +371,10 @@ func TestLoadTags(t *testing.T) {
   users:
     rows:
       - user_id: 1
-        _tags: !dbftags ["first", "all"]
+        _tags: !tags ["first", "all"]
         name: "John Doe"
       - user_id: 2
-        _tags: !dbftags ["second"]
+        _tags: !tags ["second"]
         name: "Jane Doe"
 `),
 		},
@@ -469,17 +469,17 @@ func TestLoadParentLevel(t *testing.T) {
       - tag_id: 2
         tag_name: "All"
         deps:
-          !dbfdeps
+          !deps
           posts:
             rows:
               - post_id: 1
                 title: "First post"
                 deps:
-                  !dbfdeps
+                  !deps
                   posts_tags:
                     rows:
-                      - post_id: !dbfexpr "parent:post_id"
-                        tag_id: !dbfexpr "parent:2:tag_id"
+                      - post_id: !expr "parent:post_id"
+                        tag_id: !expr "parent:2:tag_id"
 `),
 		},
 	})
@@ -524,7 +524,7 @@ func TestLoadNoParent(t *testing.T) {
   tags:
     rows:
       - tag_id: 2
-        _refid: !dbfrefid "all"
+        _refid: !refid "all"
         tag_name: "All"
       - tag_id: 5
         tag_name: "Half"
@@ -532,7 +532,7 @@ func TestLoadNoParent(t *testing.T) {
     rows:
       - post_id: 1
         title: "First post"
-        tag_id: !dbfexpr "parent:tag_id"
+        tag_id: !expr "parent:tag_id"
 `),
 		},
 	})

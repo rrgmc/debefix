@@ -18,14 +18,14 @@ func TestResolve(t *testing.T) {
   tags:
     rows:
       - tag_id: 2
-        _refid: !dbfrefid "all"
+        _refid: !refid "all"
         tag_name: "All"
         deps:
-          !dbfdeps
+          !deps
           posts:
             rows:
               - post_id: 1
-                tag_id: !dbfexpr "parent:tag_id"
+                tag_id: !expr "parent:tag_id"
                 title: "First post"
       - tag_id: 5
         tag_name: "Half"
@@ -35,7 +35,7 @@ func TestResolve(t *testing.T) {
         - posts
     rows:
       - post_id: 1
-        tag_id: !dbfexpr "refid:tags:all:tag_id"
+        tag_id: !expr "refid:tags:all:tag_id"
 `),
 		},
 	})
@@ -67,7 +67,7 @@ func TestResolveGenerated(t *testing.T) {
 			Data: []byte(`tables:
   tags:
     rows:
-      - tag_id: !dbfexpr generated
+      - tag_id: !expr generated
         tag_name: "All"
 `),
 		},
@@ -98,8 +98,8 @@ func TestResolveTags(t *testing.T) {
   tags:
     rows:
       - tag_id: 2
-        _refid: !dbfrefid "all"
-        _tags: !dbftags ["include"]
+        _refid: !refid "all"
+        _tags: !tags ["include"]
         tag_name: "All"
       - tag_id: 5
         tag_name: "Half"
@@ -108,16 +108,16 @@ func TestResolveTags(t *testing.T) {
       depends: ["tags"]
     rows:
       - post_id: 1
-        _refid: !dbfrefid "post_1"
-        _tags: !dbftags ["include"]
+        _refid: !refid "post_1"
+        _tags: !tags ["include"]
         title: "First post"
       - post_id: 2
-        _refid: !dbfrefid "post_2"
+        _refid: !refid "post_2"
         title: "Second post"
   post_tags:
     rows:
-      - post_id: !dbfexpr "refid:posts:post_1:post_id"
-        tag_id: !dbfexpr "refid:tags:all:tag_id"
+      - post_id: !expr "refid:posts:post_1:post_id"
+        tag_id: !expr "refid:tags:all:tag_id"
 `),
 		},
 	})
@@ -159,7 +159,7 @@ func TestResolveUnresolvedRefID(t *testing.T) {
   tags:
     rows:
       - tag_id: 2
-        _refid: !dbfrefid "all"
+        _refid: !refid "all"
         tag_name: "All"
       - tag_id: 5
         tag_name: "Half"
@@ -167,7 +167,7 @@ func TestResolveUnresolvedRefID(t *testing.T) {
     rows:
       - post_id: 1
         title: "First post"
-        tag_id: !dbfexpr "refid:tags:half:tag_id"
+        tag_id: !expr "refid:tags:half:tag_id"
 `),
 		},
 	})
@@ -186,7 +186,7 @@ func TestResolveInvalidDependency(t *testing.T) {
   tags:
     rows:
       - tag_id: 2
-        _refid: !dbfrefid "all"
+        _refid: !refid "all"
         tag_name: "All"
   posts:
     config:
@@ -194,7 +194,7 @@ func TestResolveInvalidDependency(t *testing.T) {
     rows:
       - post_id: 1
         title: "First post"
-        tag_id: !dbfexpr "refid:tags:half:tag_id"
+        tag_id: !expr "refid:tags:half:tag_id"
 `),
 		},
 	})
@@ -212,7 +212,7 @@ func TestResolveCallbackError(t *testing.T) {
 			Data: []byte(`tables:
   tags:
     rows:
-      - tag_id: !dbfexpr generated
+      - tag_id: !expr generated
         tag_name: "All"
 `),
 		},
@@ -242,7 +242,7 @@ func TestResolveReturnResolved(t *testing.T) {
 			Data: []byte(`tables:
   tags:
     rows:
-      - tag_id: !dbfexpr generated
+      - tag_id: !expr generated
         tag_name: "All"
 `),
 		},
@@ -277,7 +277,7 @@ func TestResolveDefaultValues(t *testing.T) {
   tags:
     config:
       default_values:
-        tag_id: !dbfexpr generated
+        tag_id: !expr generated
     rows:
       - tag_name: "Tag 1"
       - tag_name: "Tag 2"
@@ -318,16 +318,16 @@ func TestResolveDefaultValuesGenerated(t *testing.T) {
   tags:
     config:
       default_values:
-        tag_id: !dbfexpr generated
+        tag_id: !expr generated
     rows:
       - tag_name: "All"
-        _refid: !dbfrefid "all"
+        _refid: !refid "all"
         deps:
-          !dbfdeps
+          !deps
           posts:
             rows:
               - post_id: 1
-                tag_id: !dbfexpr "parent:tag_id"
+                tag_id: !expr "parent:tag_id"
                 title: "First post"
   post_tags:
     config:
@@ -335,7 +335,7 @@ func TestResolveDefaultValuesGenerated(t *testing.T) {
         - posts
     rows:
       - post_id: 1
-        tag_id: !dbfexpr "refid:tags:all:tag_id"
+        tag_id: !expr "refid:tags:all:tag_id"
 `),
 		},
 	})
@@ -369,11 +369,11 @@ func TestResolveDefaultValuesParentNotSupported(t *testing.T) {
       - tag_id: 12
         tag_name: "All"
         deps:
-          !dbfdeps
+          !deps
           posts:
             config:
               default_values:
-                tag_id: !dbfexpr "parent:tag_id"
+                tag_id: !expr "parent:tag_id"
             rows:
               - post_id: 1
                 title: "First post"
@@ -394,14 +394,14 @@ func TestResolveDefaultValuesRefID(t *testing.T) {
   tags:
     rows:
       - tag_id: 19
-        _refid: !dbfrefid "all"
+        _refid: !refid "all"
         tag_name: "All"
   posts:
     config:
       depends:
         - posts
       default_values:
-        tag_id: !dbfexpr "refid:tags:all:tag_id"
+        tag_id: !expr "refid:tags:all:tag_id"
     rows:
       - post_id: 1
       - post_id: 2
@@ -429,7 +429,7 @@ func TestResolveGeneratedWithType(t *testing.T) {
 			Data: []byte(`tables:
   tags:
     rows:
-      - tag_id: !dbfexpr generated:int
+      - tag_id: !expr generated:int
         tag_name: "All"
 `),
 		},
@@ -464,7 +464,7 @@ func TestResolveGeneratedWithParserType(t *testing.T) {
 			Data: []byte(`tables:
   tags:
     rows:
-      - tag_id: !dbfexpr generated:myint32
+      - tag_id: !expr generated:myint32
         tag_name: "All"
 `),
 		},

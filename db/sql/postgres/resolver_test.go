@@ -19,10 +19,10 @@ func TestResolve(t *testing.T) {
       table_name: "public.tags"
     rows:
       - tag_id: 2
-        _refid: !dbfrefid "all"
+        _refid: !refid "all"
         tag_name: "All"
       - tag_id: 5
-        _refid: !dbfrefid "half"
+        _refid: !refid "half"
         tag_name: "Half"
   posts:
     config:
@@ -30,19 +30,19 @@ func TestResolve(t *testing.T) {
       depends: ["tags"]
     rows:
       - post_id: 1
-        _refid: !dbfrefid "post_1"
+        _refid: !refid "post_1"
         title: "First post"
       - post_id: 2
-        _refid: !dbfrefid "post_2"
+        _refid: !refid "post_2"
         title: "Second post"
   post_tags:
     config:
       table_name: "public.post_tags"
     rows:
-      - post_id: !dbfexpr "refid:posts:post_1:post_id"
-        tag_id: !dbfexpr "refid:tags:all:tag_id"
-      - post_id: !dbfexpr "refid:posts:post_2:post_id"
-        tag_id: !dbfexpr "refid:tags:half:tag_id"
+      - post_id: !expr "refid:posts:post_1:post_id"
+        tag_id: !expr "refid:tags:all:tag_id"
+      - post_id: !expr "refid:posts:post_2:post_id"
+        tag_id: !expr "refid:tags:half:tag_id"
 `),
 		},
 	})
@@ -105,11 +105,11 @@ func TestResolveGenerated(t *testing.T) {
     config:
       table_name: "public.tags"
     rows:
-      - tag_id: !dbfexpr "generated"
-        _refid: !dbfrefid "all"
+      - tag_id: !expr "generated"
+        _refid: !refid "all"
         tag_name: "All"
-      - tag_id: !dbfexpr "generated"
-        _refid: !dbfrefid "half"
+      - tag_id: !expr "generated"
+        _refid: !refid "half"
         tag_name: "Half"
   posts:
     config:
@@ -117,19 +117,19 @@ func TestResolveGenerated(t *testing.T) {
       depends: ["tags"]
     rows:
       - post_id: 1
-        _refid: !dbfrefid "post_1"
+        _refid: !refid "post_1"
         title: "First post"
       - post_id: 2
-        _refid: !dbfrefid "post_2"
+        _refid: !refid "post_2"
         title: "Second post"
   post_tags:
     config:
       table_name: "public.post_tags"
     rows:
-      - post_id: !dbfexpr "refid:posts:post_1:post_id"
-        tag_id: !dbfexpr "refid:tags:all:tag_id"
-      - post_id: !dbfexpr "refid:posts:post_2:post_id"
-        tag_id: !dbfexpr "refid:tags:half:tag_id"
+      - post_id: !expr "refid:posts:post_1:post_id"
+        tag_id: !expr "refid:tags:all:tag_id"
+      - post_id: !expr "refid:posts:post_2:post_id"
+        tag_id: !expr "refid:tags:half:tag_id"
 `),
 		},
 	})

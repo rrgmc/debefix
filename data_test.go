@@ -13,14 +13,14 @@ var testFS = fstest.MapFS{
       table_name: "public.user"
     rows:
       - user_id: 1
-        _refid: !dbfrefid "johndoe"
+        _refid: !refid "johndoe"
         name: "John Doe"
         email: "john@example.com"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
       - user_id: 2
-        _refid: !dbfrefid "janedoe"
-        _tags: !dbftags ["onlyone"]
+        _refid: !refid "janedoe"
+        _tags: !tags ["onlyone"]
         name: "Jane Doe"
         email: "jane@example.com"
         created_at: !!timestamp 2023-01-04T12:30:12Z
@@ -34,18 +34,18 @@ var testFS = fstest.MapFS{
     config:
       table_name: "tag"
     rows:
-      - tag_id: !dbfexpr "generated"
-        _refid: !dbfrefid "go"
+      - tag_id: !expr "generated"
+        _refid: !refid "go"
         name: "Go"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
-      - tag_id: !dbfexpr "generated"
-        _refid: !dbfrefid "javascript"
+      - tag_id: !expr "generated"
+        _refid: !refid "javascript"
         name: "JavaScript"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
-      - tag_id: !dbfexpr "generated"
-        _refid: !dbfrefid "cpp"
+      - tag_id: !expr "generated"
+        _refid: !refid "cpp"
         name: "C++"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
@@ -59,37 +59,37 @@ var testFS = fstest.MapFS{
       table_name: "public.post"
     rows:
       - post_id: 1
-        _refid: !dbfrefid "post_1"
-        _tags: !dbftags ["initial"]
+        _refid: !refid "post_1"
+        _tags: !tags ["initial"]
         title: "Post 1"
         text: "This is the text of the first post"
-        user_id: !dbfexpr "refid:users:johndoe:user_id"
+        user_id: !expr "refid:users:johndoe:user_id"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
         deps:
-          !dbfdeps
+          !deps
           posts_tags:
             rows:
-              - post_id: !dbfexpr "parent:post_id"
-                tag_id: !dbfexpr "refid:tags:go:tag_id"
+              - post_id: !expr "parent:post_id"
+                tag_id: !expr "refid:tags:go:tag_id"
       - post_id: 2
-        parent_post_id: !dbfexpr "refid:posts:post_1:post_id"
+        parent_post_id: !expr "refid:posts:post_1:post_id"
         title: "Post 2"
         text: "This is the text of the seco d post"
-        user_id: !dbfexpr "refid:users:johndoe:user_id"
+        user_id: !expr "refid:users:johndoe:user_id"
         created_at: !!timestamp 2023-01-02T12:30:12Z
         updated_at: !!timestamp 2023-01-02T12:30:12Z
         deps:
-          !dbfdeps
+          !deps
           posts_tags:
             rows:
-              - post_id: !dbfexpr "parent:post_id"
-                tag_id: !dbfexpr "refid:tags:javascript:tag_id"
+              - post_id: !expr "parent:post_id"
+                tag_id: !expr "refid:tags:javascript:tag_id"
           comments:
             rows:
               - comment_id: 3
-                post_id: !dbfexpr "parent:post_id"
-                user_id: !dbfexpr "refid:users:janedoe:user_id"
+                post_id: !expr "parent:post_id"
+                user_id: !expr "refid:users:janedoe:user_id"
                 text: "I liked this post!"
 `),
 		ModTime: time.Now(),
@@ -111,13 +111,13 @@ var testFS = fstest.MapFS{
     rows:
       - comment_id: 1
         post_id: 1
-        user_id: !dbfexpr "refid:users:janedoe:user_id"
+        user_id: !expr "refid:users:janedoe:user_id"
         text: "Good post!"
         created_at: !!timestamp 2023-01-01T12:31:12Z
         updated_at: !!timestamp 2023-01-01T12:31:12Z
       - comment_id: 2
         post_id: 1
-        user_id: !dbfexpr "refid:users:johndoe:user_id"
+        user_id: !expr "refid:users:johndoe:user_id"
         text: "Thanks!"
         created_at: !!timestamp 2023-01-01T12:35:12Z
         updated_at: !!timestamp 2023-01-01T12:35:12Z
@@ -131,15 +131,15 @@ var testFS = fstest.MapFS{
       - post_id: 5
         title: "Post 5"
         text: "This is the text of the fifth post"
-        user_id: !dbfexpr "refid:users:janedoe:user_id"
+        user_id: !expr "refid:users:janedoe:user_id"
         created_at: !!timestamp 2023-01-05T12:30:12Z
         updated_at: !!timestamp 2023-01-05T12:30:12Z
         deps:
-          !dbfdeps
+          !deps
           posts_tags:
             rows:
-              - post_id: !dbfexpr "parent:post_id"
-                tag_id: !dbfexpr "refid:tags:javascript:tag_id"
+              - post_id: !expr "parent:post_id"
+                tag_id: !expr "refid:tags:javascript:tag_id"
 `),
 		ModTime: time.Now(),
 	},
@@ -150,15 +150,15 @@ var testFS = fstest.MapFS{
       - post_id: 6
         title: "Post 6"
         text: "This is the text of the sixth post"
-        user_id: !dbfexpr "refid:users:janedoe:user_id"
+        user_id: !expr "refid:users:janedoe:user_id"
         created_at: !!timestamp 2023-01-05T12:30:12Z
         updated_at: !!timestamp 2023-01-05T12:30:12Z
         deps:
-          !dbfdeps
+          !deps
           posts_tags:
             rows:
-              - post_id: !dbfexpr "parent:post_id"
-                tag_id: !dbfexpr "refid:tags:go:tag_id"
+              - post_id: !expr "parent:post_id"
+                tag_id: !expr "refid:tags:go:tag_id"
 `),
 		ModTime: time.Now(),
 	},

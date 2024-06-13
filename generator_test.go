@@ -15,14 +15,14 @@ func TestGenerate(t *testing.T) {
   tags:
     rows:
       - tag_id: 2
-        _refid: !dbfrefid "all"
+        _refid: !refid "all"
         tag_name: "All"
         deps:
-          !dbfdeps
+          !deps
           posts:
             rows:
               - post_id: 1
-                tag_id: !dbfexpr "parent:tag_id"
+                tag_id: !expr "parent:tag_id"
                 title: "First post"
       - tag_id: 5
         tag_name: "Half"
@@ -32,7 +32,7 @@ func TestGenerate(t *testing.T) {
         - posts
     rows:
       - post_id: 1
-        tag_id: !dbfexpr "refid:tags:all:tag_id"
+        tag_id: !expr "refid:tags:all:tag_id"
 `),
 		},
 	})
@@ -64,10 +64,10 @@ func TestGenerateOptions(t *testing.T) {
       table_name: "public.user"
     rows:
       - user_id: 1
-        _refid: !dbfrefid "johndoe"
+        _refid: !refid "johndoe"
         name: "John Doe"
       - user_id: 2
-        _refid: !dbfrefid "janedoe"
+        _refid: !refid "janedoe"
         name: "Jane Doe"
 `),
 		},

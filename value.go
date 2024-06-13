@@ -52,17 +52,17 @@ type valueTableDepends interface {
 	TableDepends() string
 }
 
-// parseValue parses !dbfexpr expressions.
+// parseValue parses !expr expressions.
 func parseValue(value string, parent parentRowInfo) (Value, error) {
 	fields := strings.Split(value, ":")
 	if len(fields) == 0 {
-		return nil, errors.Join(ValueError, fmt.Errorf("invalid !dbf tag: %s", value))
+		return nil, errors.Join(ValueError, fmt.Errorf("invalid tag: %s", value))
 	}
 
 	switch fields[0] {
 	case "refid": // refid:<table>:<refid>:<fieldname>
 		if len(fields) != 4 {
-			return nil, errors.Join(ValueError, fmt.Errorf("invalid !dbf tag value: %s", value))
+			return nil, errors.Join(ValueError, fmt.Errorf("invalid tag value: %s", value))
 		}
 		return &ValueRefID{TableID: fields[1], RefID: fields[2], FieldName: fields[3]}, nil
 	case "parent": // parent<:level>:<fieldname>
@@ -76,7 +76,7 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 			parentLevel = int(level)
 			fieldName = fields[2]
 		} else if len(fields) != 2 {
-			return nil, errors.Join(ValueError, fmt.Errorf("invalid !dbf tag value: %s", value))
+			return nil, errors.Join(ValueError, fmt.Errorf("invalid tag value: %s", value))
 		}
 		plevel := parent.ParentLevel(parentLevel)
 		if !plevel.ParentSupported() {
@@ -93,7 +93,7 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 		}
 		return ret, nil
 	default:
-		return nil, errors.Join(ValueError, fmt.Errorf("unknown !dbfexpr tag type: %s", value))
+		return nil, errors.Join(ValueError, fmt.Errorf("unknown !expr tag type: %s", value))
 	}
 }
 

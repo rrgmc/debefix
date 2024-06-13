@@ -12,6 +12,10 @@ import (
 	"github.com/google/uuid"
 )
 
+var (
+	reservedTags = []string{"!expr", "!refid", "!tags", "!deps"}
+)
+
 // Load loads the files from the fileProvider and returns the list of loaded tables.
 // Rows dependencies are not resolved, use [ResolveCheck] to check for them.
 func Load(fileProvider FileProvider, options ...LoadOption) (*Data, error) {
@@ -361,38 +365,36 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 	for _, field := range values {
 		switch n := field.Value.(type) {
 		case *ast.TagNode:
-			if strings.HasPrefix(n.Start.Value, "!dbf") {
-				switch n.Start.Value {
-				case "!dbfrefid":
-					refid, err := getStringNode(n.Value)
-					if err != nil {
-						return NewParseError(fmt.Sprintf("error reading row refid: %s", err),
-							field.GetPath(), field.GetToken().Position)
-					}
-					row.Config.RefID = refid
-					continue
-				case "!dbftags":
-					rowTags, err := getStringListNode(n.Value)
-					if err != nil {
-						return NewParseError(fmt.Sprintf("error reading row refid: %s", err),
-							field.GetPath(), field.GetToken().Position)
-					}
-					row.Config.Tags = rowTags
-					continue
-				case "!dbfdeps":
-					err := l.loadTables(n.Value, tags, &defaultParentRowInfo{
-						parent: parent,
-						data: &defaultParentRowInfoData{
-							tableID:    table.ID,
-							internalID: row.InternalID,
-						},
-					})
-					if err != nil {
-						return NewParseError(fmt.Sprintf("error reading row deps: %s", err),
-							field.GetPath(), field.GetToken().Position)
-					}
-					continue
+			switch n.Start.Value {
+			case "!refid":
+				refid, err := getStringNode(n.Value)
+				if err != nil {
+					return NewParseError(fmt.Sprintf("error reading row refid: %s", err),
+						field.GetPath(), field.GetToken().Position)
 				}
+				row.Config.RefID = refid
+				continue
+			case "!tags":
+				rowTags, err := getStringListNode(n.Value)
+				if err != nil {
+					return NewParseError(fmt.Sprintf("error reading row refid: %s", err),
+						field.GetPath(), field.GetToken().Position)
+				}
+				row.Config.Tags = rowTags
+				continue
+			case "!deps":
+				err := l.loadTables(n.Value, tags, &defaultParentRowInfo{
+					parent: parent,
+					data: &defaultParentRowInfoData{
+						tableID:    table.ID,
+						internalID: row.InternalID,
+					},
+				})
+				if err != nil {
+					return NewParseError(fmt.Sprintf("error reading row deps: %s", err),
+						field.GetPath(), field.GetToken().Position)
+				}
+				continue
 			}
 		}
 
@@ -425,18 +427,19 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 func (l *loader) loadFieldValue(node ast.Node, parent parentRowInfo) (any, error) {
 	switch n := node.(type) {
 	case *ast.TagNode:
-		if strings.HasPrefix(n.Start.Value, "!dbf") {
-			switch n.Start.Value {
-			case "!dbfexpr":
-				tvalue, err := getStringNode(n.Value)
-				if err != nil {
-					return nil, err
-				}
-				return parseValue(tvalue, parent)
-			default:
-				return nil, NewParseError(fmt.Sprintf("unknown value tag: %s", n.Start.Value),
-					n.GetPath(), n.GetToken().Position)
+		switch n.Start.Value {
+		case "!expr":
+			tvalue, err := getStringNode(n.Value)
+			if err != nil {
+				return nil, err
 			}
+			return parseValue(tvalue, parent)
+		}
+
+		if slices.Contains(reservedTags, n.Start.Value) {
+			return nil, NewParseError(fmt.Sprintf("reserved tag cannot be used as a value: %s [reserved: %s]",
+				n.Start.Value, strings.Join(reservedTags, ", ")),
+				n.GetPath(), n.GetToken().Position)
 		}
 
 		if !strings.HasPrefix(n.Start.Value, "!!") { // !! is reserved by YAML.

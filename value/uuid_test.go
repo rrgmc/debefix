@@ -43,7 +43,7 @@ func TestUUIDValueResolved(t *testing.T) {
 			Data: []byte(`tables:
   tags:
     rows:
-      - tag_id: !dbfexpr generated:uuid
+      - tag_id: !expr generated:uuid
         tag_name: "All"
 `),
 		},
@@ -78,7 +78,7 @@ func TestUUIDValueResolvedConcreteType(t *testing.T) {
 			Data: []byte(`tables:
   tags:
     rows:
-      - tag_id: !dbfexpr generated:uuid
+      - tag_id: !expr generated:uuid
         tag_name: "All"
 `),
 		},

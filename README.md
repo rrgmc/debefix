@@ -9,9 +9,9 @@ generated UUID) are supported and can be resolved and used by other table's refe
 Dependencies between tables can be detected automatically by reference ids, or manually. This is used to generate a
 dependency graph and output the insert statements in the correct order.
 
-Using the yaml tag `!dbfexpr` it is possible to define expressions on field values.
+Using the yaml tag `!expr` it is possible to define expressions on field values.
 
-Tables with rows can be declared at the top-level on inside a parent row using a special `!dbfdeps` tag. In this case,
+Tables with rows can be declared at the top-level on inside a parent row using a special `!deps` tag. In this case,
 values from the parent row can be used, using the `parent:<fieldname>` expression.
 
 ## Install
@@ -42,26 +42,26 @@ tables:
     config:
       table_name: "public.tag" # database table name. If not set, will use the table id (tags) as the table name.
     rows:
-      - tag_id: !dbfexpr "generated:int" # means that this will be generated, for example as a database autoincrement
+      - tag_id: !expr "generated:int" # means that this will be generated, for example as a database autoincrement
         name: "Go"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
         config:
-          !dbfconfig
-          refid: "go" # refid to be targeted by '!dbfexpr "refid:tags:go:tag_id"'
-      - tag_id: !dbfexpr "generated:int"
+          !config
+          refid: "go" # refid to be targeted by '!expr "refid:tags:go:tag_id"'
+      - tag_id: !expr "generated:int"
         name: "JavaScript"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
         config:
-          !dbfconfig
+          !config
           refid: "javascript"
-      - tag_id: !dbfexpr "generated:int"
+      - tag_id: !expr "generated:int"
         name: "C++"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
         config:
-          !dbfconfig
+          !config
           refid: "cpp"
   users:
     config:
@@ -73,15 +73,15 @@ tables:
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
         config:
-          !dbfconfig
-          refid: "johndoe" # refid to be targeted by '!dbfexpr "refid:users:johndoe:user_id"'
+          !config
+          refid: "johndoe" # refid to be targeted by '!expr "refid:users:johndoe:user_id"'
       - user_id: 2
         name: "Jane Doe"
         email: "jane@example.com"
         created_at: !!timestamp 2023-01-04T12:30:12Z
         updated_at: !!timestamp 2023-01-04T12:30:12Z
         config:
-          !dbfconfig
+          !config
           refid: "janedoe"
   posts:
     config:
@@ -90,36 +90,36 @@ tables:
       - post_id: 1
         title: "Post 1"
         text: "This is the text of the first post"
-        user_id: !dbfexpr "refid:users:johndoe:user_id"
+        user_id: !expr "refid:users:johndoe:user_id"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
         deps:
-          !dbfdeps
-          posts_tags: # declaring tables in !dbfdeps is exactly the same as declaring top-level, but allows using "parent" expression to get parent info
+          !deps
+          posts_tags: # declaring tables in !deps is exactly the same as declaring top-level, but allows using "parent" expression to get parent info
             rows:
-              - post_id: !dbfexpr "parent:post_id"
-                tag_id: !dbfexpr "refid:tags:go:tag_id"
+              - post_id: !expr "parent:post_id"
+                tag_id: !expr "refid:tags:go:tag_id"
         config:
-          !dbfconfig
+          !config
           refid: "post_1"
       - post_id: 2
-        parent_post_id: !dbfexpr "refid:posts:post_1:post_id" # order matters, so self-referential fields must be set in order
+        parent_post_id: !expr "refid:posts:post_1:post_id" # order matters, so self-referential fields must be set in order
         title: "Post 2"
         text: "This is the text of the seco d post"
-        user_id: !dbfexpr "refid:users:johndoe:user_id"
+        user_id: !expr "refid:users:johndoe:user_id"
         created_at: !!timestamp 2023-01-02T12:30:12Z
         updated_at: !!timestamp 2023-01-02T12:30:12Z
         deps:
-          !dbfdeps
+          !deps
           posts_tags:
             rows:
-              - post_id: !dbfexpr "parent:post_id"
-                tag_id: !dbfexpr "refid:tags:javascript:tag_id" # tag_id is generated so the value will be resolved before being set here 
+              - post_id: !expr "parent:post_id"
+                tag_id: !expr "refid:tags:javascript:tag_id" # tag_id is generated so the value will be resolved before being set here 
           comments:
             rows:
               - comment_id: 3
-                post_id: !dbfexpr "parent:post_id"
-                user_id: !dbfexpr "refid:users:janedoe:user_id"
+                post_id: !expr "parent:post_id"
+                user_id: !expr "refid:users:janedoe:user_id"
                 text: "I liked this post!"
   posts_tags:
     config:
@@ -131,13 +131,13 @@ tables:
     rows:
       - comment_id: 1
         post_id: 1
-        user_id: !dbfexpr "refid:users:janedoe:user_id"
+        user_id: !expr "refid:users:janedoe:user_id"
         text: "Good post!"
         created_at: !!timestamp 2023-01-01T12:31:12Z
         updated_at: !!timestamp 2023-01-01T12:31:12Z
       - comment_id: 2
         post_id: 1
-        user_id: !dbfexpr "refid:users:johndoe:user_id"
+        user_id: !expr "refid:users:johndoe:user_id"
         text: "Thanks!"
         created_at: !!timestamp 2023-01-01T12:35:12Z
         updated_at: !!timestamp 2023-01-01T12:35:12Z
@@ -145,20 +145,20 @@ tables:
 
 ## Field value expressions
 
-- `!dbfexpr "refid:<table>:<refid>:<fieldname>"`: reference a **refid** field value in a table. This id is 
-  declared using a `config: !dbfconfig {"refid": <refid>}` special tagged field in the row.
-- `!dbfexpr "parent<:level>:<fieldname>"`: reference a field in the parent table. This can only be used inside a `!dbfdeps` 
+- `!expr "refid:<table>:<refid>:<fieldname>"`: reference a **refid** field value in a table. This id is 
+  declared using a `config: !config {"refid": <refid>}` special tagged field in the row.
+- `!expr "parent<:level>:<fieldname>"`: reference a field in the parent table. This can only be used inside a `!deps` 
   block. Level is the number of parent levels, if not specified the default value is 1.
-- `!dbfexpr "generated<:type>"`: indicates that this is a generated field that must be supplied at resolve time, and can later
+- `!expr "generated<:type>"`: indicates that this is a generated field that must be supplied at resolve time, and can later
   be used by other references once resolved. If type is specified, the value is parsed/cast to this type after db retrieval.
   The default types are 'int', 'float', 'str' and 'timestamp', using the YAML formats.
 
 ## Special fields
 
-All field with tags starting with `!dbf` are special fields. The name of the field is ignored.
+All field with tags starting with `!` are special fields. The name of the field is ignored.
 
-- `config: !dbfconfig {"refid": "", "tags": ["", ""]}`
-- `deps: !dbfdeps {<tableID>: {...table config...}}`
+- `config: !config {"refid": "", "tags": ["", ""]}`
+- `deps: !deps {<tableID>: {...table config...}}`
 
 ## Generating SQL
 
