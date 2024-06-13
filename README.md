@@ -1,15 +1,15 @@
 # debefix - Database seeding and fixtures
 [![GoDoc](https://godoc.org/github.com/rrgmc/debefix?status.png)](https://godoc.org/github.com/rrgmc/debefix)
 
-debefix is a Go library (and a cli in the future) to seed database data and/or create fixtures for DB tests.
+debefix is a Go library to seed database data and/or create fixtures for DB tests.
 
-Tables can reference each other using string ids (called "refid"), generated fields (like database auto increment or
+Tables can reference each other using string ids (called `refid`), and generated fields (like database auto increment or
 generated UUID) are supported and can be resolved and used by other table's references.
 
 Dependencies between tables can be detected automatically by reference ids, or manually. This is used to generate a
 dependency graph and output the insert statements in the correct order.
 
-Using the yaml tag `!expr` it is possible to define expressions on field values.
+Using the YAML tag `!expr` it is possible to define expressions on field values.
 
 Tables with rows can be declared at the top-level on inside a parent row using a special `!deps` tag. In this case,
 values from the parent row can be used, using the `parent:<fieldname>` expression.
@@ -143,11 +143,11 @@ tables:
 
 ## Special fields
 
-Some field tags are handled in a special way. The name of the field is ignored.
+Some field tags are handled in a special way. **The name of the field is ignored**.
 
 - `_refid: !refid "<refID>"`: sets the refID of a table row
 - `_tags: !tags ["tag1", "tag2"]`: add tags to the table row
-- `deps: !deps {<tableID>: {...table config...}}`: add dependencies to the table row
+- `_deps: !deps {<tableID>: {...table config...}}`: add dependencies to the table row
 
 ## Generating SQL
 
@@ -188,9 +188,8 @@ As inner maps/arrays are supported by YAML, data with more complex structure sho
 
 - [debefix-sample-app](https://github.com/rrgmc/debefix-sample-app): real-world blog microservice using debefix for
   seeding, test fixtures, and integration tests.
-- [samples simple](https://github.com/rrgmc/debefix-samples/tree/master/simple): simple blog sample,
-- [samples sakila](https://github.com/rrgmc/debefix-samples/tree/master/sakila): fixture sample using the "sakila"
-  sample database.
+- [samples simple](https://github.com/rrgmc/debefix-samples/tree/master/simple): simple blog sample.
+- [samples sakila](https://github.com/rrgmc/debefix-samples/tree/master/sakila): fixture sample using the "sakila" sample database.
 - [samples mongodb](https://github.com/rrgmc/debefix-samples/tree/master/mongodb): MongoDB fixture sample.
 
 ## Extra
