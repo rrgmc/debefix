@@ -19,15 +19,11 @@ func TestGenerate(t *testing.T) {
       table_name: "public.tags"
     rows:
       - tag_id: 2
+        _refid: !dbfrefid "all"
         tag_name: "All"
-        config:
-          !dbfconfig
-          refid: "all"
       - tag_id: 5
+        _refid: !dbfrefid "half"
         tag_name: "Half"
-        config:
-          !dbfconfig
-          refid: "half"
 `),
 		},
 	}

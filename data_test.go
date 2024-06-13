@@ -13,23 +13,18 @@ var testFS = fstest.MapFS{
       table_name: "public.user"
     rows:
       - user_id: 1
+        _refid: !dbfrefid "johndoe"
         name: "John Doe"
         email: "john@example.com"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
-        config:
-          !dbfconfig
-          refid: "johndoe"
       - user_id: 2
+        _refid: !dbfrefid "janedoe"
+        _tags: !dbftags ["onlyone"]
         name: "Jane Doe"
         email: "jane@example.com"
         created_at: !!timestamp 2023-01-04T12:30:12Z
         updated_at: !!timestamp 2023-01-04T12:30:12Z
-        config:
-          !dbfconfig
-          refid: "janedoe"
-          tags:
-            - onlyone
 `),
 		ModTime: time.Now(),
 	},
@@ -40,26 +35,20 @@ var testFS = fstest.MapFS{
       table_name: "tag"
     rows:
       - tag_id: !dbfexpr "generated"
+        _refid: !dbfrefid "go"
         name: "Go"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
-        config:
-          !dbfconfig
-          refid: "go"
       - tag_id: !dbfexpr "generated"
+        _refid: !dbfrefid "javascript"
         name: "JavaScript"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
-        config:
-          !dbfconfig
-          refid: "javascript"
       - tag_id: !dbfexpr "generated"
+        _refid: !dbfrefid "cpp"
         name: "C++"
         created_at: !!timestamp 2023-01-01T12:30:12Z
         updated_at: !!timestamp 2023-01-01T12:30:12Z
-        config:
-          !dbfconfig
-          refid: "cpp"
 `),
 		ModTime: time.Now(),
 	},
@@ -70,6 +59,8 @@ var testFS = fstest.MapFS{
       table_name: "public.post"
     rows:
       - post_id: 1
+        _refid: !dbfrefid "post_1"
+        _tags: !dbftags ["initial"]
         title: "Post 1"
         text: "This is the text of the first post"
         user_id: !dbfexpr "refid:users:johndoe:user_id"
@@ -81,10 +72,6 @@ var testFS = fstest.MapFS{
             rows:
               - post_id: !dbfexpr "parent:post_id"
                 tag_id: !dbfexpr "refid:tags:go:tag_id"
-        config:
-          !dbfconfig
-          refid: "post_1"
-          tags: ["initial"]
       - post_id: 2
         parent_post_id: !dbfexpr "refid:posts:post_1:post_id"
         title: "Post 2"

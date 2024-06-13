@@ -30,6 +30,24 @@ func getStringNode(node ast.Node) (string, error) {
 	}
 }
 
+// getStringListNode gets the list of strings of an array node, or an error if not a string list node.
+func getStringListNode(node ast.Node) ([]string, error) {
+	var ret []string
+	switch n := node.(type) {
+	case *ast.SequenceNode:
+		for _, row := range n.Values {
+			value, err := getStringNode(row)
+			if err != nil {
+				return nil, NewParseError("string list node item is not string", node.GetPath(), node.GetToken().Position)
+			}
+			ret = append(ret, value)
+		}
+		return ret, nil
+	default:
+		return nil, NewParseError("node is not array", node.GetPath(), node.GetToken().Position)
+	}
+}
+
 // sliceMap applies a function to each slice item and return the resulting slice.
 func sliceMap[T any, U []T](ts U, f func(T) T) U {
 	us := make(U, len(ts))

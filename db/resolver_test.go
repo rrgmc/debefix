@@ -18,30 +18,22 @@ func TestResolver(t *testing.T) {
       table_name: "public.tags"
     rows:
       - tag_id: 2
+        _refid: !dbfrefid "all"
         tag_name: "All"
-        config:
-          !dbfconfig
-          refid: "all"
       - tag_id: 5
+        _refid: !dbfrefid "half"
         tag_name: "Half"
-        config:
-          !dbfconfig
-          refid: "half"
   posts:
     config:
       table_name: "public.posts"
       depends: ["tags"]
     rows:
       - post_id: 1
+        _refid: !dbfrefid "post_1"
         title: "First post"
-        config:
-          !dbfconfig
-          refid: "post_1"
       - post_id: 2
+        _refid: !dbfrefid "post_2"
         title: "Second post"
-        config:
-          !dbfconfig
-          refid: "post_2"
   post_tags:
     config:
       table_name: "public.post_tags"

@@ -15,10 +15,8 @@ func TestGenerate(t *testing.T) {
   tags:
     rows:
       - tag_id: 2
+        _refid: !dbfrefid "all"
         tag_name: "All"
-        config:
-          !dbfconfig
-          refid: "all"
         deps:
           !dbfdeps
           posts:
@@ -66,15 +64,11 @@ func TestGenerateOptions(t *testing.T) {
       table_name: "public.user"
     rows:
       - user_id: 1
+        _refid: !dbfrefid "johndoe"
         name: "John Doe"
-        config:
-          !dbfconfig
-          refid: "johndoe"
       - user_id: 2
+        _refid: !dbfrefid "janedoe"
         name: "Jane Doe"
-        config:
-          !dbfconfig
-          refid: "janedoe"
 `),
 		},
 	}

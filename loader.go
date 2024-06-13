@@ -363,12 +363,21 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 		case *ast.TagNode:
 			if strings.HasPrefix(n.Start.Value, "!dbf") {
 				switch n.Start.Value {
-				case "!dbfconfig":
-					err := yaml.NodeToValue(n.Value, &row.Config)
+				case "!dbfrefid":
+					refid, err := getStringNode(n.Value)
 					if err != nil {
-						return NewParseError(fmt.Sprintf("error reading row config: %s", err),
+						return NewParseError(fmt.Sprintf("error reading row refid: %s", err),
 							field.GetPath(), field.GetToken().Position)
 					}
+					row.Config.RefID = refid
+					continue
+				case "!dbftags":
+					rowTags, err := getStringListNode(n.Value)
+					if err != nil {
+						return NewParseError(fmt.Sprintf("error reading row refid: %s", err),
+							field.GetPath(), field.GetToken().Position)
+					}
+					row.Config.Tags = rowTags
 					continue
 				case "!dbfdeps":
 					err := l.loadTables(n.Value, tags, &defaultParentRowInfo{

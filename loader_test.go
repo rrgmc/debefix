@@ -23,15 +23,11 @@ func TestLoad(t *testing.T) {
       table_name: "public.user"
     rows:
       - user_id: 1
+        _refid: !dbfrefid "johndoe"
         name: "John Doe"
-        config:
-          !dbfconfig
-          refid: "johndoe"
       - user_id: 2
+        _refid: !dbfrefid "janedoe"
         name: "Jane Doe"
-        config:
-          !dbfconfig
-          refid: "janedoe"
 `),
 		},
 	})
@@ -68,10 +64,8 @@ func TestLoadInitialData(t *testing.T) {
       table_name: "public.user"
     rows:
       - user_id: 1
+        _refid: !dbfrefid "johndoe"
         name: "John Doe"
-        config:
-          !dbfconfig
-          refid: "johndoe"
 `),
 		},
 	})
@@ -87,10 +81,8 @@ func TestLoadInitialData(t *testing.T) {
       table_name: "public.user"
     rows:
       - user_id: 2
+        _refid: !dbfrefid "janedoe"
         name: "Jane Doe"
-        config:
-          !dbfconfig
-          refid: "janedoe"
 `),
 		},
 	})
@@ -379,15 +371,11 @@ func TestLoadTags(t *testing.T) {
   users:
     rows:
       - user_id: 1
+        _tags: !dbftags ["first", "all"]
         name: "John Doe"
-        config:
-          !dbfconfig
-          tags: ["first", "all"]
       - user_id: 2
+        _tags: !dbftags ["second"]
         name: "Jane Doe"
-        config:
-          !dbfconfig
-          tags: ["second"]
 `),
 		},
 	}, WithDirectoryAsTag())
@@ -536,10 +524,8 @@ func TestLoadNoParent(t *testing.T) {
   tags:
     rows:
       - tag_id: 2
+        _refid: !dbfrefid "all"
         tag_name: "All"
-        config:
-          !dbfconfig
-          refid: "all"
       - tag_id: 5
         tag_name: "Half"
   posts:
