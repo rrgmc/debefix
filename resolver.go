@@ -58,9 +58,9 @@ func WithResolveRowProgress(rowProgress func(tableID, databaseName, tableName st
 }
 
 // WithRowResolvedCallback sets a function to receive all resolved rows.
-func WithRowResolvedCallback(f func(ctx ValueResolveContext)) ResolveOption {
+func WithRowResolvedCallback(callback RowResolvedCallback) ResolveOption {
 	return fnResolveOption(func(r *resolver) {
-		r.rowResolvedCallback = f
+		r.rowResolvedCallback = callback
 	})
 }
 
@@ -96,7 +96,7 @@ type resolver struct {
 	rowProgress          func(tableID, databaseName, tableName string, current, amount int, isIncluded bool)
 	includeTagsFunc      ResolveIncludeTagsFunc
 	resolvedValueParsers []ResolvedValueParser
-	rowResolvedCallback  func(ctx ValueResolveContext)
+	rowResolvedCallback  RowResolvedCallback
 }
 
 func (r *resolver) resolve(f ResolveCallback) error {
@@ -240,7 +240,7 @@ func (r *resolver) resolve(f ResolveCallback) error {
 			r.resolvedData.Tables[table.ID].Rows = append(r.resolvedData.Tables[table.ID].Rows, resolvedRow)
 
 			if r.rowResolvedCallback != nil {
-				r.rowResolvedCallback(&valueResolveContext{
+				r.rowResolvedCallback.RowResolved(&valueResolveContext{
 					table:        table,
 					row:          resolvedRow,
 					data:         r.data,

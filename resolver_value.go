@@ -34,6 +34,17 @@ func (p ResolvedValueParserFunc) ParseResolvedValue(typ string, value any) (bool
 	return p(typ, value)
 }
 
+// RowResolvedCallback is a callback called for every row fully resolved
+type RowResolvedCallback interface {
+	RowResolved(ctx ValueResolveContext)
+}
+
+type RowResolvedCallbackFunc func(ctx ValueResolveContext)
+
+func (r RowResolvedCallbackFunc) RowResolved(ctx ValueResolveContext) {
+	r(ctx)
+}
+
 type defaultResolveContext struct {
 	tableID, databaseName, tableName string
 	resolved                         map[string]any
