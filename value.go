@@ -48,7 +48,7 @@ func (v ValueInternalID) TableDepends() string {
 // This can only be set in code.
 type ValueCallback interface {
 	Value
-	GetValue(ctx ValueCallbackResolveContext) (resolvedValue any, addField bool, err error)
+	GetValueCallback(ctx ValueCallbackResolveContext) (resolvedValue any, addField bool, err error)
 }
 
 type ValueResolveContext interface {
@@ -62,20 +62,24 @@ type ValueCallbackResolveContext interface {
 	ValueResolveContext
 	FieldName() string
 	Metadata() map[string]any
-	AddMetadata(name string, value any)
+	SetMetadata(name string, value any)
 }
 
 // ValueCallbackFunc is a functional implementation of ValueCallback
 type ValueCallbackFunc func(ctx ValueCallbackResolveContext) (resolvedValue any, addField bool, err error)
 
-func (v ValueCallbackFunc) GetValue(ctx ValueCallbackResolveContext) (resolvedValue any, addField bool, err error) {
+func (v ValueCallbackFunc) GetValueCallback(ctx ValueCallbackResolveContext) (resolvedValue any, addField bool, err error) {
 	return v(ctx)
 }
+
+// ValueImpl is a helper to be able to implement Value outside the package.
+type ValueImpl struct{}
 
 func (v ValueRefID) isValue()        {}
 func (v ValueGenerated) isValue()    {}
 func (v ValueInternalID) isValue()   {}
 func (v ValueCallbackFunc) isValue() {}
+func (v ValueImpl) isValue()         {}
 
 // valueTableDepends is an interface to indicate that a [Value] adds a dependency on another table.
 type valueTableDepends interface {
@@ -267,7 +271,7 @@ func (v *valueResolveContext) Metadata() map[string]any {
 	return v.metadata
 }
 
-func (v *valueResolveContext) AddMetadata(name string, value any) {
+func (v *valueResolveContext) SetMetadata(name string, value any) {
 	if v.metadata == nil {
 		panic("metadata is nil")
 	}

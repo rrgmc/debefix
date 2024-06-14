@@ -291,7 +291,7 @@ func (r *resolver) resolveValue(ctx *valueResolveContext, value Value) (resolved
 		}
 		return vrowfield, true, nil
 	case ValueCallback:
-		vrowfield, addField, err := fv.GetValue(ctx)
+		vrowfield, addField, err := fv.GetValueCallback(ctx)
 		if err != nil {
 			return nil, false, errors.Join(ResolveValueError, err)
 		}
