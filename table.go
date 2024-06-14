@@ -91,6 +91,7 @@ type Row struct {
 	InternalID uuid.UUID
 	Config     RowConfig
 	Fields     map[string]any
+	Metadata   map[string]any
 }
 
 // Clone does a deep copy of the row, to ensure source is never modified.
@@ -99,6 +100,7 @@ func (r Row) Clone() Row {
 		InternalID: r.InternalID,
 		Config:     r.Config.Clone(),
 		Fields:     maps.Clone(r.Fields),
+		Metadata:   maps.Clone(r.Metadata),
 	}
 }
 

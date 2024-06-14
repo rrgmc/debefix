@@ -46,13 +46,36 @@ func (v ValueInternalID) TableDepends() string {
 // ValueCallback sets a callback to return the value.
 // Never change any of the passed parameters, they are to be used only for reading.
 // This can only be set in code.
-type ValueCallback func(table *Table, row Row, fieldName string, data *Data,
-	resolvedData *Data) (resolvedValue any, addField bool, err error)
+type ValueCallback interface {
+	Value
+	GetValue(ctx ValueCallbackResolveContext) (resolvedValue any, addField bool, err error)
+}
 
-func (v ValueRefID) isValue()      {}
-func (v ValueGenerated) isValue()  {}
-func (v ValueInternalID) isValue() {}
-func (v ValueCallback) isValue()   {}
+type ValueResolveContext interface {
+	Table() Table
+	Row() Row
+	Data() *Data
+	ResolvedData() *Data
+}
+
+type ValueCallbackResolveContext interface {
+	ValueResolveContext
+	FieldName() string
+	Metadata() map[string]any
+	AddMetadata(name string, value any)
+}
+
+// ValueCallbackFunc is a functional implementation of ValueCallback
+type ValueCallbackFunc func(ctx ValueCallbackResolveContext) (resolvedValue any, addField bool, err error)
+
+func (v ValueCallbackFunc) GetValue(ctx ValueCallbackResolveContext) (resolvedValue any, addField bool, err error) {
+	return v(ctx)
+}
+
+func (v ValueRefID) isValue()        {}
+func (v ValueGenerated) isValue()    {}
+func (v ValueInternalID) isValue()   {}
+func (v ValueCallbackFunc) isValue() {}
 
 // valueTableDepends is an interface to indicate that a [Value] adds a dependency on another table.
 type valueTableDepends interface {
@@ -209,4 +232,44 @@ func (n unsupportedParentRowInfoData) TableID() string {
 
 func (n unsupportedParentRowInfoData) InternalID() uuid.UUID {
 	return uuid.UUID{}
+}
+
+type valueResolveContext struct {
+	table        *Table
+	row          Row
+	fieldName    string
+	data         *Data
+	resolvedData *Data
+	metadata     map[string]any
+}
+
+func (v *valueResolveContext) Table() Table {
+	return *v.table
+}
+
+func (v *valueResolveContext) Row() Row {
+	return v.row
+}
+
+func (v *valueResolveContext) FieldName() string {
+	return v.fieldName
+}
+
+func (v *valueResolveContext) Data() *Data {
+	return v.data
+}
+
+func (v *valueResolveContext) ResolvedData() *Data {
+	return v.resolvedData
+}
+
+func (v *valueResolveContext) Metadata() map[string]any {
+	return v.metadata
+}
+
+func (v *valueResolveContext) AddMetadata(name string, value any) {
+	if v.metadata == nil {
+		panic("metadata is nil")
+	}
+	v.metadata[name] = value
 }

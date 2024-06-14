@@ -3,6 +3,7 @@ package debefix
 import (
 	"fmt"
 	"io"
+	"maps"
 	"slices"
 	"strings"
 
@@ -361,6 +362,7 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 	row := Row{
 		InternalID: uuid.New(),
 		Fields:     map[string]any{},
+		Metadata:   map[string]any{},
 	}
 	for _, field := range values {
 		switch n := field.Value.(type) {
@@ -381,6 +383,15 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 						field.GetPath(), field.GetToken().Position)
 				}
 				row.Config.Tags = rowTags
+				continue
+			case "!metadata":
+				md := map[string]any{}
+				err := yaml.NodeToValue(n.Value, &md)
+				if err != nil {
+					return NewParseError(fmt.Sprintf("error reading row metadata: %s", err),
+						field.GetPath(), field.GetToken().Position)
+				}
+				maps.Copy(row.Metadata, md)
 				continue
 			case "!deps":
 				err := l.loadTables(n.Value, tags, &defaultParentRowInfo{

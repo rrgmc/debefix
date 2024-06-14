@@ -3,6 +3,7 @@ package debefix
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
 
 	"github.com/google/uuid"
@@ -56,6 +57,13 @@ func WithResolveRowProgress(rowProgress func(tableID, databaseName, tableName st
 	})
 }
 
+// WithRowResolvedCallback sets a function to receive all resolved rows.
+func WithRowResolvedCallback(f func(ctx ValueResolveContext)) ResolveOption {
+	return fnResolveOption(func(r *resolver) {
+		r.rowResolvedCallback = f
+	})
+}
+
 // WithResolveTagsFunc sets a row tag filter function.
 func WithResolveTagsFunc(f ResolveIncludeTagsFunc) ResolveOption {
 	return fnResolveOption(func(r *resolver) {
@@ -88,6 +96,7 @@ type resolver struct {
 	rowProgress          func(tableID, databaseName, tableName string, current, amount int, isIncluded bool)
 	includeTagsFunc      ResolveIncludeTagsFunc
 	resolvedValueParsers []ResolvedValueParser
+	rowResolvedCallback  func(ctx ValueResolveContext)
 }
 
 func (r *resolver) resolve(f ResolveCallback) error {
@@ -152,13 +161,22 @@ func (r *resolver) resolve(f ResolveCallback) error {
 
 			// build the fields to send to the callback
 			callFields := map[string]any{}
+			metadata := maps.Clone(row.Metadata)
 			for _, fieldSource := range []map[string]any{table.Config.DefaultValues, row.Fields} {
 				for fieldName, fieldValue := range fieldSource {
 					// Value fields must be resolved by a ResolveValue.
 					addField := true
 					if fvalue, ok := fieldValue.(Value); ok {
+						rctx := &valueResolveContext{
+							table:        table,
+							row:          row,
+							fieldName:    fieldName,
+							data:         r.data,
+							resolvedData: r.resolvedData,
+							metadata:     metadata,
+						}
 						var err error
-						fieldValue, addField, err = r.resolveValue(table, row, fieldName, fvalue)
+						fieldValue, addField, err = r.resolveValue(rctx, fvalue)
 						if err != nil {
 							return fmt.Errorf("error resolving Value for table %s: %w", table.ID, err)
 						}
@@ -212,11 +230,23 @@ func (r *resolver) resolve(f ResolveCallback) error {
 					Config: table.Config,
 				}
 			}
-			r.resolvedData.Tables[table.ID].Rows = append(r.resolvedData.Tables[table.ID].Rows, Row{
+
+			resolvedRow := Row{
 				Config:     row.Config,
 				InternalID: row.InternalID,
 				Fields:     saveFields,
-			})
+				Metadata:   metadata,
+			}
+			r.resolvedData.Tables[table.ID].Rows = append(r.resolvedData.Tables[table.ID].Rows, resolvedRow)
+
+			if r.rowResolvedCallback != nil {
+				r.rowResolvedCallback(&valueResolveContext{
+					table:        table,
+					row:          resolvedRow,
+					data:         r.data,
+					resolvedData: r.resolvedData,
+				})
+			}
 		}
 	}
 
@@ -224,7 +254,7 @@ func (r *resolver) resolve(f ResolveCallback) error {
 }
 
 // resolveValue resolves Value fields or returns a ResolveValue instance to be resolved by the callback.
-func (r *resolver) resolveValue(table *Table, row Row, fieldName string, value Value) (resolvedValue any, addField bool, err error) {
+func (r *resolver) resolveValue(ctx *valueResolveContext, value Value) (resolvedValue any, addField bool, err error) {
 	switch fv := value.(type) {
 	case *ValueGenerated:
 		return &ResolveGenerate{
@@ -261,7 +291,7 @@ func (r *resolver) resolveValue(table *Table, row Row, fieldName string, value V
 		}
 		return vrowfield, true, nil
 	case ValueCallback:
-		vrowfield, addField, err := fv(table, row, fieldName, r.data, r.resolvedData)
+		vrowfield, addField, err := fv.GetValue(ctx)
 		if err != nil {
 			return nil, false, errors.Join(ResolveValueError, err)
 		}

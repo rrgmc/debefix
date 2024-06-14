@@ -584,7 +584,7 @@ func (t *testValueCallback) ParseValue(tag *ast.TagNode) (bool, any, error) {
 		return false, nil, err
 	}
 
-	return true, ValueCallback(func(table *Table, row Row, fieldName string, data *Data, resolvedData *Data) (any, bool, error) {
+	return true, ValueCallbackFunc(func(table *Table, row Row, fieldName string, data *Data, resolvedData *Data) (any, bool, error) {
 		return fmt.Sprintf("v=%s", str), true, nil
 	}), nil
 }
@@ -596,7 +596,7 @@ func (t *testValueCallbackNoAdd) ParseValue(tag *ast.TagNode) (bool, any, error)
 	if tag.Start.Value != "!callback" {
 		return false, nil, nil
 	}
-	return true, ValueCallback(func(table *Table, row Row, fieldName string, data *Data, resolvedData *Data) (any, bool, error) {
+	return true, ValueCallbackFunc(func(table *Table, row Row, fieldName string, data *Data, resolvedData *Data) (any, bool, error) {
 		return nil, false, nil
 	}), nil
 }
