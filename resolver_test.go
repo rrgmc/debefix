@@ -524,6 +524,36 @@ func TestResolveCallback(t *testing.T) {
 	assert.Equal(t, "v=a value", resolvedData.Tables["tags"].Rows[0].Fields["tag_name"])
 }
 
+func TestResolveCallbackNoAdd(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: 1
+        tag_name: !callback "a value"
+`),
+		},
+	})
+
+	data, err := Load(provider, WithLoadValueParser(&testValueCallbackNoAdd{}))
+	assert.NilError(t, err)
+
+	rowCount := map[string]int{}
+
+	resolvedData, err := Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+		rowCount[ctx.TableID()]++
+		return nil
+	})
+	assert.NilError(t, err)
+
+	assert.DeepEqual(t, map[string]int{
+		"tags": 1,
+	}, rowCount)
+
+	assert.Assert(t, resolvedData.Tables["tags"].Rows[0].Fields["tag_name"] == nil)
+}
+
 type testValueParserInt32 struct {
 }
 
@@ -554,7 +584,19 @@ func (t *testValueCallback) ParseValue(tag *ast.TagNode) (bool, any, error) {
 		return false, nil, err
 	}
 
-	return true, ValueCallback(func(table *Table, row Row, fieldName string, data *Data, resolvedData *Data) (any, error) {
-		return fmt.Sprintf("v=%s", str), nil
+	return true, ValueCallback(func(table *Table, row Row, fieldName string, data *Data, resolvedData *Data) (any, bool, error) {
+		return fmt.Sprintf("v=%s", str), true, nil
+	}), nil
+}
+
+type testValueCallbackNoAdd struct {
+}
+
+func (t *testValueCallbackNoAdd) ParseValue(tag *ast.TagNode) (bool, any, error) {
+	if tag.Start.Value != "!callback" {
+		return false, nil, nil
+	}
+	return true, ValueCallback(func(table *Table, row Row, fieldName string, data *Data, resolvedData *Data) (any, bool, error) {
+		return nil, false, nil
 	}), nil
 }

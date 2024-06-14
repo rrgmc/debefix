@@ -155,14 +155,17 @@ func (r *resolver) resolve(f ResolveCallback) error {
 			for _, fieldSource := range []map[string]any{table.Config.DefaultValues, row.Fields} {
 				for fieldName, fieldValue := range fieldSource {
 					// Value fields must be resolved by a ResolveValue.
+					addField := true
 					if fvalue, ok := fieldValue.(Value); ok {
 						var err error
-						fieldValue, err = r.resolveValue(table, row, fieldName, fvalue)
+						fieldValue, addField, err = r.resolveValue(table, row, fieldName, fvalue)
 						if err != nil {
 							return fmt.Errorf("error resolving Value for table %s: %w", table.ID, err)
 						}
 					}
-					callFields[fieldName] = fieldValue
+					if addField {
+						callFields[fieldName] = fieldValue
+					}
 				}
 			}
 
@@ -221,12 +224,12 @@ func (r *resolver) resolve(f ResolveCallback) error {
 }
 
 // resolveValue resolves Value fields or returns a ResolveValue instance to be resolved by the callback.
-func (r *resolver) resolveValue(table *Table, row Row, fieldName string, value Value) (any, error) {
+func (r *resolver) resolveValue(table *Table, row Row, fieldName string, value Value) (resolvedValue any, addField bool, err error) {
 	switch fv := value.(type) {
 	case *ValueGenerated:
 		return &ResolveGenerate{
 			Type: fv.Type,
-		}, nil
+		}, true, nil
 	case *ValueRefID:
 		vrowfield, err := r.resolvedData.WalkTableData(fv.TableID, func(row Row) (bool, any, error) {
 			if row.Config.RefID == fv.RefID {
@@ -239,9 +242,9 @@ func (r *resolver) resolveValue(table *Table, row Row, fieldName string, value V
 			return false, nil, nil
 		})
 		if err != nil {
-			return nil, errors.Join(ResolveValueError, fmt.Errorf("could not find refid %s in table %s: %w", fv.RefID, fv.TableID, err))
+			return nil, false, errors.Join(ResolveValueError, fmt.Errorf("could not find refid %s in table %s: %w", fv.RefID, fv.TableID, err))
 		}
-		return vrowfield, nil
+		return vrowfield, true, nil
 	case *ValueInternalID:
 		vrowfield, err := r.resolvedData.WalkTableData(fv.TableID, func(row Row) (bool, any, error) {
 			if row.InternalID != uuid.Nil && row.InternalID == fv.InternalID {
@@ -254,17 +257,17 @@ func (r *resolver) resolveValue(table *Table, row Row, fieldName string, value V
 			return false, nil, nil
 		})
 		if err != nil {
-			return nil, errors.Join(ResolveValueError, fmt.Errorf("could not find internalid %s in table %s: %w", fv.InternalID, fv.TableID, err))
+			return nil, false, errors.Join(ResolveValueError, fmt.Errorf("could not find internalid %s in table %s: %w", fv.InternalID, fv.TableID, err))
 		}
-		return vrowfield, nil
+		return vrowfield, true, nil
 	case ValueCallback:
-		vrowfield, err := fv(table, row, fieldName, r.data, r.resolvedData)
+		vrowfield, addField, err := fv(table, row, fieldName, r.data, r.resolvedData)
 		if err != nil {
-			return nil, errors.Join(ResolveValueError, err)
+			return nil, false, errors.Join(ResolveValueError, err)
 		}
-		return vrowfield, nil
+		return vrowfield, addField, nil
 	default:
-		return nil, errors.Join(ResolveValueError, fmt.Errorf("unknown Value field"))
+		return nil, false, errors.Join(ResolveValueError, fmt.Errorf("unknown Value field"))
 	}
 }
 

@@ -44,8 +44,10 @@ func (v ValueInternalID) TableDepends() string {
 }
 
 // ValueCallback sets a callback to return the value.
+// Never change any of the passed parameters, they are to be used only for reading.
 // This can only be set in code.
-type ValueCallback func(table *Table, row Row, fieldName string, data *Data, resolvedData *Data) (any, error)
+type ValueCallback func(table *Table, row Row, fieldName string, data *Data,
+	resolvedData *Data) (resolvedValue any, addField bool, err error)
 
 func (v ValueRefID) isValue()      {}
 func (v ValueGenerated) isValue()  {}
