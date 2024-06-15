@@ -36,13 +36,13 @@ func (p ResolvedValueParserFunc) ParseResolvedValue(typ string, value any) (bool
 
 // RowResolvedCallback is a callback called for every row fully resolved
 type RowResolvedCallback interface {
-	RowResolved(ctx ValueResolveContext)
+	RowResolved(ctx ValueResolveContext) error
 }
 
-type RowResolvedCallbackFunc func(ctx ValueResolveContext)
+type RowResolvedCallbackFunc func(ctx ValueResolveContext) error
 
-func (r RowResolvedCallbackFunc) RowResolved(ctx ValueResolveContext) {
-	r(ctx)
+func (r RowResolvedCallbackFunc) RowResolved(ctx ValueResolveContext) error {
+	return r(ctx)
 }
 
 type defaultResolveContext struct {

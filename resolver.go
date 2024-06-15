@@ -240,12 +240,15 @@ func (r *resolver) resolve(f ResolveCallback) error {
 			r.resolvedData.Tables[table.ID].Rows = append(r.resolvedData.Tables[table.ID].Rows, resolvedRow)
 
 			if r.rowResolvedCallback != nil {
-				r.rowResolvedCallback.RowResolved(&valueResolveContext{
+				err := r.rowResolvedCallback.RowResolved(&valueResolveContext{
 					table:        table,
 					row:          resolvedRow,
 					data:         r.data,
 					resolvedData: r.resolvedData,
 				})
+				if err != nil {
+					return errors.Join(ResolveCallbackError, err)
+				}
 			}
 		}
 	}
