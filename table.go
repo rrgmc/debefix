@@ -159,7 +159,7 @@ func (c *TableConfig) Merge(other *TableConfig) error {
 	return nil
 }
 
-// WalkTableData searches for rows in tables.
+// WalkTableData searches for a single row value in tables.
 func (d *Data) WalkTableData(tableID string, f func(row Row) (bool, any, error)) (any, error) {
 	if d.Tables == nil {
 		return nil, fmt.Errorf("could not find table %s", tableID)
@@ -171,7 +171,7 @@ func (d *Data) WalkTableData(tableID string, f func(row Row) (bool, any, error))
 	return vdb.WalkData(f)
 }
 
-// WalkData searches for rows in the table.
+// WalkData searches for a single row value in the table.
 func (t *Table) WalkData(f func(row Row) (bool, any, error)) (any, error) {
 	for _, vrow := range t.Rows {
 		ok, v, err := f(vrow)
@@ -186,6 +186,7 @@ func (t *Table) WalkData(f func(row Row) (bool, any, error)) (any, error) {
 }
 
 // WalkRows calls a callback for each row in each table.
+// Return false in the callback to stop walking.
 func (d *Data) WalkRows(f func(table *Table, row Row) bool) {
 	if d.Tables == nil {
 		return
@@ -226,6 +227,61 @@ func (d *Data) ExtractRows(f func(table *Table, row Row) (bool, error)) (*Data, 
 	return data, nil
 }
 
+// ExtractRowsRefID extract rows matched by a ValueRefID.[ValueRefID.FieldName] is ignored.
+// The filter map key will be the key in the output map.
+func (d *Data) ExtractRowsRefID(filter map[string]ValueRefID, options ...ExtractRefIDOption) (map[string]Row, error) {
+	var optns extractRefIDOptions
+	for _, option := range options {
+		option(&optns)
+	}
+
+	ret := map[string]Row{}
+	d.WalkRows(func(table *Table, row Row) bool {
+		for fn, f := range filter {
+			if RowMatchesRefID(table, row, f) {
+				ret[fn] = row
+			}
+		}
+		return true
+	})
+	if !optns.allowMissing && len(filter) != len(ret) {
+		return nil, fmt.Errorf("some values were not found")
+	}
+	return ret, nil
+}
+
+// ExtractValuesRefID extract values matched by a ValueRefID.
+// The filter map key will be the key in the output map.
+func (d *Data) ExtractValuesRefID(filter map[string]ValueRefID, options ...ExtractRefIDOption) (map[string]any, error) {
+	var optns extractRefIDOptions
+	for _, option := range options {
+		option(&optns)
+	}
+
+	ret := map[string]any{}
+	var err error
+	d.WalkRows(func(table *Table, row Row) bool {
+		for fn, f := range filter {
+			if RowMatchesRefID(table, row, f) {
+				if fv, ok := row.Fields[f.FieldName]; ok {
+					ret[fn] = fv
+				} else {
+					err = fmt.Errorf("could not find field %s in table %s", f.FieldName, table.ID)
+					return false
+				}
+			}
+		}
+		return true
+	})
+	if err != nil {
+		return nil, err
+	}
+	if !optns.allowMissing && len(filter) != len(ret) {
+		return nil, fmt.Errorf("some values were not found")
+	}
+	return ret, nil
+}
+
 // ExtractRowsNamed extract rows matched by the callback into a named map.
 func (d *Data) ExtractRowsNamed(f func(table *Table, row Row) (bool, string, error)) (map[string]Row, error) {
 	ret := map[string]Row{}
@@ -245,6 +301,30 @@ func (d *Data) ExtractRowsNamed(f func(table *Table, row Row) (bool, string, err
 	return ret, nil
 }
 
+// ExtractTableRows extract rows matched by the callback.
+func (d *Data) ExtractTableRows(tableID string, f func(row Row) (bool, error)) (*Table, error) {
+	data, err := d.ExtractRows(func(table *Table, row Row) (bool, error) {
+		if table.ID != tableID {
+			return false, nil
+		}
+		return f(row)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return data.Tables[tableID], nil
+}
+
+// ExtractTableRowsNamed extract rows matched by the callback into a named map.
+func (d *Data) ExtractTableRowsNamed(tableID string, f func(row Row) (bool, string, error)) (map[string]Row, error) {
+	return d.ExtractRowsNamed(func(table *Table, row Row) (bool, string, error) {
+		if table.ID != tableID {
+			return false, "", nil
+		}
+		return f(row)
+	})
+}
+
 // MergeData merge a list of [Data] objects into a new instance.
 // The data is deep-copied, the source [Data] instances are never modified in any way.
 func MergeData(list ...*Data) (*Data, error) {
@@ -258,4 +338,25 @@ func MergeData(list ...*Data) (*Data, error) {
 		}
 	}
 	return retData, nil
+}
+
+func RowMatchesRefID(table *Table, row Row, refID ValueRefID) bool {
+	return row.Config.RefID != "" &&
+		table.ID == refID.TableID &&
+		row.Config.RefID == refID.RefID
+}
+
+// options
+
+type extractRefIDOptions struct {
+	allowMissing bool
+}
+
+type ExtractRefIDOption func(*extractRefIDOptions)
+
+// WithExtractRefIDAllowMissing sets whether to allow one or more missing fields.
+func WithExtractRefIDAllowMissing(allowMissing bool) ExtractRefIDOption {
+	return func(o *extractRefIDOptions) {
+		o.allowMissing = allowMissing
+	}
 }

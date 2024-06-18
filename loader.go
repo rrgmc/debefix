@@ -126,7 +126,7 @@ func (l *loader) loadRoot(node ast.Node, tags []string, parent parentRowInfo) er
 		switch key {
 		case "config":
 			var fc FileConfig
-			err := yaml.NodeToValue(field.Value, &fc)
+			err := yaml.NodeToValue(field.Value, &fc, yaml.Strict())
 			if err != nil {
 				return NewParseError(fmt.Sprintf("error reading file config: %s", err),
 					field.Value.GetPath(), field.Value.GetToken().Position)
@@ -273,7 +273,7 @@ func (l *loader) loadTableConfig(node ast.Node, table *Table, cfg *TableConfig) 
 					field.Value.GetPath(), field.Value.GetToken().Position)
 			}
 		case "depends":
-			err := yaml.NodeToValue(field.Value, &cfg.Depends)
+			err := yaml.NodeToValue(field.Value, &cfg.Depends, yaml.Strict())
 			if err != nil {
 				return NewParseError(fmt.Sprintf("error reading table config: %s", err),
 					field.Value.GetPath(), field.Value.GetToken().Position)
