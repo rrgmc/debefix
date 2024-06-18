@@ -44,7 +44,7 @@ func (d *Data) ExtractRowsRefID(filter map[string]ValueRefID, options ...Extract
 	ret := map[string]Row{}
 	d.WalkRows(func(table *Table, row Row) bool {
 		for fn, f := range filter {
-			if RowMatchesRefID(table, row, f) {
+			if rowMatchesRefID(table, row, f) {
 				ret[fn] = row
 			}
 		}
@@ -68,7 +68,7 @@ func (d *Data) ExtractValuesRefID(filter map[string]ValueRefID, options ...Extra
 	var err error
 	d.WalkRows(func(table *Table, row Row) bool {
 		for fn, f := range filter {
-			if RowMatchesRefID(table, row, f) {
+			if rowMatchesRefID(table, row, f) {
 				if fv, ok := row.Fields[f.FieldName]; ok {
 					ret[fn] = fv
 				} else {
@@ -131,6 +131,7 @@ func (d *Data) ExtractTableRowsNamed(tableID string, f func(row Row) (bool, stri
 	})
 }
 
+// ExtractValue extracts a field value based on a [ExtractFilter].
 func (d *Data) ExtractValue(row Row, filter string) (any, error) {
 	f, err := ParseExtractFilters(filter)
 	if err != nil {
@@ -139,6 +140,7 @@ func (d *Data) ExtractValue(row Row, filter string) (any, error) {
 	return d.ExtractFilterValue(row, f[0])
 }
 
+// ExtractFilterValue extracts a field value based on a [ExtractFilter].
 func (d *Data) ExtractFilterValue(row Row, filter ExtractFilter) (any, error) {
 	switch ft := filter.(type) {
 	case *ExtractFilterValue:
@@ -194,6 +196,7 @@ func (d *Data) ExtractFilterValue(row Row, filter ExtractFilter) (any, error) {
 	}
 }
 
+// ExtractValues extracts field values based on a list of [ExtractFilter].
 func (d *Data) ExtractValues(row Row, filters ...string) (map[string]any, error) {
 	ret := map[string]any{}
 	for _, filter := range filters {
@@ -206,7 +209,7 @@ func (d *Data) ExtractValues(row Row, filters ...string) (map[string]any, error)
 	return ret, nil
 }
 
-func RowMatchesRefID(table *Table, row Row, refID ValueRefID) bool {
+func rowMatchesRefID(table *Table, row Row, refID ValueRefID) bool {
 	return row.Config.RefID != "" &&
 		table.ID == refID.TableID &&
 		row.Config.RefID == refID.RefID
@@ -214,6 +217,7 @@ func RowMatchesRefID(table *Table, row Row, refID ValueRefID) bool {
 
 // extract field filters
 
+// ParseExtractFilters parses a list of [ExtractFilter] filters.
 func ParseExtractFilters(filters ...string) ([]ExtractFilter, error) {
 	var ret []ExtractFilter
 	for _, filter := range filters {
@@ -249,16 +253,19 @@ type ExtractFilter interface {
 	isExtractFilter()
 }
 
+// ExtractFilterValue has the format "value:<fieldname>"
 type ExtractFilterValue struct {
 	FieldName string
 }
 
+// ExtractFilterRefID has the format "refid:<table>:<refid>:<fieldname>"
 type ExtractFilterRefID struct {
 	TableID   string
 	RefID     string
 	FieldName string
 }
 
+// ExtractFilterValueRef has the format "valueref:<source_fieldname>:<table>:<target_fieldname>:<return_fieldname>"
 type ExtractFilterValueRef struct {
 	SourceFieldName string
 	TableID         string

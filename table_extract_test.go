@@ -122,3 +122,37 @@ func TestDataExtractRowsNamed(t *testing.T) {
 	assert.DeepEqual(t, map[string]any{"a": 3}, rows["posts:3"].Fields)
 	assert.DeepEqual(t, map[string]any{"a": 2}, rows["posts:2"].Fields)
 }
+
+func TestDataExtractValues(t *testing.T) {
+	data := &Data{
+		Tables: map[string]*Table{
+			"tags": {
+				ID: "tags",
+				Rows: Rows{
+					Row{Fields: map[string]any{"tag_id": 1, "name": "this_is_1"}, Config: RowConfig{RefID: "tag1"}},
+					Row{Fields: map[string]any{"tag_id": 2, "name": "this_is_2"}, Config: RowConfig{RefID: "tag2"}},
+				},
+			},
+			"posts": {
+				ID: "posts",
+				Rows: Rows{
+					Row{Fields: map[string]any{"post_id": 5, "tag_id": 1}, Config: RowConfig{RefID: "post5"}},
+					Row{Fields: map[string]any{"post_id": 3, "tag_id": 2}, Config: RowConfig{RefID: "post3"}},
+					Row{Fields: map[string]any{"post_id": 2, "tag_id": 1}, Config: RowConfig{RefID: "post2"}},
+				},
+			},
+		},
+	}
+
+	values, err := data.ExtractValues(data.Tables["posts"].Rows[1],
+		"value:post_id",
+		"refid:tags:tag1:tag_id",
+		"valueref:tag_id:tags:tag_id:name")
+	assert.NilError(t, err)
+
+	assert.Assert(t, is.Len(values, 3))
+
+	assert.Equal(t, 3, values["value:post_id"])
+	assert.Equal(t, 1, values["refid:tags:tag1:tag_id"])
+	assert.Equal(t, "this_is_2", values["valueref:tag_id:tags:tag_id:name"])
+}
