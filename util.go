@@ -1,7 +1,9 @@
 package debefix
 
 import (
+	"errors"
 	"fmt"
+	"reflect"
 	"slices"
 	"strconv"
 	"strings"
@@ -141,5 +143,15 @@ func castToTime(v any) (any, error) {
 			return t, nil
 		}
 		return t, err
+	}
+}
+
+func valuesAreEqual(x, y interface{}) (bool, error) {
+	xv := reflect.ValueOf(x)
+	yv := reflect.ValueOf(y)
+	if yv.Type().ConvertibleTo(xv.Type()) {
+		return xv.Interface() == yv.Convert(xv.Type()).Interface(), nil
+	} else {
+		return false, errors.New("types are mismatched")
 	}
 }
