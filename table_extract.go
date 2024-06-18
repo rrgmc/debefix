@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// ExtractRows extract rows matched by the callback.
+// ExtractRows extract rows matched by the callback, returning a filtered Data instance.
 func (d *Data) ExtractRows(f func(table *Table, row Row) (bool, error)) (*Data, error) {
 	data := &Data{
 		Tables: map[string]*Table{},
@@ -33,7 +33,21 @@ func (d *Data) ExtractRows(f func(table *Table, row Row) (bool, error)) (*Data, 
 	return data, nil
 }
 
-// ExtractRowsRefID extract rows matched by a ValueRefID.[ValueRefID.FieldName] is ignored.
+// ExtractTableRows extract rows matched by the callback.
+func (d *Data) ExtractTableRows(tableID string, f func(row Row) (bool, error)) (*Table, error) {
+	data, err := d.ExtractRows(func(table *Table, row Row) (bool, error) {
+		if table.ID != tableID {
+			return false, nil
+		}
+		return f(row)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return data.Tables[tableID], nil
+}
+
+// ExtractRowsRefID extract rows matched by a ValueRefID. [ValueRefID.FieldName] is ignored.
 // The filter map key will be the key in the output map.
 func (d *Data) ExtractRowsRefID(filter map[string]ValueRefID, options ...ExtractRefIDOption) (map[string]Row, error) {
 	var optns extractRefIDOptions
@@ -105,20 +119,6 @@ func (d *Data) ExtractRowsNamed(f func(table *Table, row Row) (add bool, name st
 		return nil, ferr
 	}
 	return ret, nil
-}
-
-// ExtractTableRows extract rows matched by the callback.
-func (d *Data) ExtractTableRows(tableID string, f func(row Row) (bool, error)) (*Table, error) {
-	data, err := d.ExtractRows(func(table *Table, row Row) (bool, error) {
-		if table.ID != tableID {
-			return false, nil
-		}
-		return f(row)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return data.Tables[tableID], nil
 }
 
 // ExtractTableRowsNamed extract rows matched by the callback into a named map.
@@ -197,14 +197,14 @@ func (d *Data) ExtractFilterValue(row Row, filter ExtractFilter) (any, error) {
 }
 
 // ExtractValues extracts field values based on a list of [ExtractFilter].
-func (d *Data) ExtractValues(row Row, filters ...string) (map[string]any, error) {
+func (d *Data) ExtractValues(row Row, filters map[string]string) (map[string]any, error) {
 	ret := map[string]any{}
-	for _, filter := range filters {
+	for filterName, filter := range filters {
 		fv, err := d.ExtractValue(row, filter)
 		if err != nil {
 			return nil, err
 		}
-		ret[filter] = fv
+		ret[filterName] = fv
 	}
 	return ret, nil
 }

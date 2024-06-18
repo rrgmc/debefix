@@ -145,14 +145,16 @@ func TestDataExtractValues(t *testing.T) {
 	}
 
 	values, err := data.ExtractValues(data.Tables["posts"].Rows[1],
-		"value:post_id",
-		"refid:tags:tag1:tag_id",
-		"valueref:tag_id:tags:tag_id:name")
+		map[string]string{
+			"v1": "value:post_id",
+			"v2": "refid:tags:tag1:tag_id",
+			"v3": "valueref:tag_id:tags:tag_id:name",
+		})
 	assert.NilError(t, err)
 
 	assert.Assert(t, is.Len(values, 3))
 
-	assert.Equal(t, 3, values["value:post_id"])
-	assert.Equal(t, 1, values["refid:tags:tag1:tag_id"])
-	assert.Equal(t, "this_is_2", values["valueref:tag_id:tags:tag_id:name"])
+	assert.Equal(t, 3, values["v1"])
+	assert.Equal(t, 1, values["v2"])
+	assert.Equal(t, "this_is_2", values["v3"])
 }
