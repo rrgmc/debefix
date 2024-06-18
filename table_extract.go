@@ -89,7 +89,7 @@ func (d *Data) ExtractValuesRefID(filter map[string]ValueRefID, options ...Extra
 }
 
 // ExtractRowsNamed extract rows matched by the callback into a named map.
-func (d *Data) ExtractRowsNamed(f func(table *Table, row Row) (bool, string, error)) (map[string]Row, error) {
+func (d *Data) ExtractRowsNamed(f func(table *Table, row Row) (add bool, name string, err error)) (map[string]Row, error) {
 	ret := map[string]Row{}
 	var ferr error
 	d.WalkRows(func(table *Table, row Row) bool {
@@ -249,6 +249,7 @@ func ParseExtractFilters(filters ...string) ([]ExtractFilter, error) {
 	return ret, nil
 }
 
+// ExtractFilter is the base interface for filters that extract data.
 type ExtractFilter interface {
 	isExtractFilter()
 }

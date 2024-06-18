@@ -200,6 +200,20 @@ func (d *Data) WalkRows(f func(table *Table, row Row) bool) {
 	}
 }
 
+// WalkTableRows calls a callback for each row in a table.
+// Return false in the callback to stop walking.
+func (d *Data) WalkTableRows(tableID string, f func(row Row) bool) {
+	table, ok := d.Tables[tableID]
+	if !ok {
+		return
+	}
+	for _, row := range table.Rows {
+		if cont := f(row); !cont {
+			return
+		}
+	}
+}
+
 // MergeData merge a list of [Data] objects into a new instance.
 // The data is deep-copied, the source [Data] instances are never modified in any way.
 func MergeData(list ...*Data) (*Data, error) {
