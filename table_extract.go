@@ -47,61 +47,6 @@ func (d *Data) ExtractTableRows(tableID string, f func(row Row) (bool, error)) (
 	return data.Tables[tableID], nil
 }
 
-// ExtractRowsRefID extract rows matched by a ValueRefID. [ValueRefID.FieldName] is ignored.
-// The filter map key will be the key in the output map.
-func (d *Data) ExtractRowsRefID(filter map[string]ValueRefID, options ...ExtractRefIDOption) (map[string]Row, error) {
-	var optns extractRefIDOptions
-	for _, option := range options {
-		option(&optns)
-	}
-
-	ret := map[string]Row{}
-	d.WalkRows(func(table *Table, row Row) bool {
-		for fn, f := range filter {
-			if rowMatchesRefID(table, row, f) {
-				ret[fn] = row
-			}
-		}
-		return true
-	})
-	if !optns.allowMissing && len(filter) != len(ret) {
-		return nil, fmt.Errorf("some values were not found")
-	}
-	return ret, nil
-}
-
-// ExtractValuesRefID extract values matched by a ValueRefID.
-// The filter map key will be the key in the output map.
-func (d *Data) ExtractValuesRefID(filter map[string]ValueRefID, options ...ExtractRefIDOption) (map[string]any, error) {
-	var optns extractRefIDOptions
-	for _, option := range options {
-		option(&optns)
-	}
-
-	ret := map[string]any{}
-	var err error
-	d.WalkRows(func(table *Table, row Row) bool {
-		for fn, f := range filter {
-			if rowMatchesRefID(table, row, f) {
-				if fv, ok := row.Fields[f.FieldName]; ok {
-					ret[fn] = fv
-				} else {
-					err = fmt.Errorf("could not find field %s in table %s", f.FieldName, table.ID)
-					return false
-				}
-			}
-		}
-		return true
-	})
-	if err != nil {
-		return nil, err
-	}
-	if !optns.allowMissing && len(filter) != len(ret) {
-		return nil, fmt.Errorf("some values were not found")
-	}
-	return ret, nil
-}
-
 // ExtractRowsNamed extract rows matched by the callback into a named map.
 func (d *Data) ExtractRowsNamed(f func(table *Table, row Row) (add bool, name string, err error)) (map[string]Row, error) {
 	ret := map[string]Row{}
@@ -277,18 +222,3 @@ type ExtractFilterValueRef struct {
 func (ExtractFilterValue) isExtractFilter()    {}
 func (ExtractFilterRefID) isExtractFilter()    {}
 func (ExtractFilterValueRef) isExtractFilter() {}
-
-// options
-
-type extractRefIDOptions struct {
-	allowMissing bool
-}
-
-type ExtractRefIDOption func(*extractRefIDOptions)
-
-// WithExtractRefIDAllowMissing sets whether to allow one or more missing fields.
-func WithExtractRefIDAllowMissing(allowMissing bool) ExtractRefIDOption {
-	return func(o *extractRefIDOptions) {
-		o.allowMissing = allowMissing
-	}
-}
