@@ -154,12 +154,6 @@ func (d *Data) ExtractValues(row Row, filters map[string]string) (map[string]any
 	return ret, nil
 }
 
-func rowMatchesRefID(table *Table, row Row, refID ValueRefID) bool {
-	return row.Config.RefID != "" &&
-		table.ID == refID.TableID &&
-		row.Config.RefID == refID.RefID
-}
-
 // extract field filters
 
 // ParseExtractFilters parses a list of [ExtractFilter] filters.
