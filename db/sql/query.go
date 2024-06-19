@@ -189,13 +189,13 @@ func (m *debugQueryInterface) Query(ctx context.Context, databaseName, tableName
 	retErr = errors.Join(retErr, err)
 
 	if len(args) > 0 {
-		_, _ = fmt.Fprintf(m.out, "$$ ARGS: ")
+		_, err = fmt.Fprintf(m.out, "$$ ARGS: ")
 		retErr = errors.Join(retErr, err)
 
 		err = dumpSlice(m.out, args)
 		retErr = errors.Join(retErr, err)
 
-		_, _ = fmt.Fprintf(m.out, "\n")
+		_, err = fmt.Fprintf(m.out, "\n")
 		retErr = errors.Join(retErr, err)
 	}
 
@@ -207,38 +207,44 @@ func (m *debugQueryInterface) Query(ctx context.Context, databaseName, tableName
 }
 
 type debugResultQueryInterface struct {
-	qi  QueryInterface
-	out io.Writer
+	qi      QueryInterface
+	debugQI *debugQueryInterface
 }
 
 // NewDebugResultQueryInterface returns a [QueryInterface] calls an inner [QueryInterface] and outputs the generated
 // queries and the returned fields. If out is nil, [os.Stdout] will be used.
 func NewDebugResultQueryInterface(qi QueryInterface, out io.Writer) QueryInterface {
-	return &debugResultQueryInterface{qi, out}
-}
-
-func (m debugResultQueryInterface) Query(ctx context.Context, databaseName, tableName string, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
-	out := m.out
 	if out == nil {
 		out = os.Stdout
 	}
+	return &debugResultQueryInterface{qi: qi, debugQI: &debugQueryInterface{out: out}}
+}
 
-	_, _ = fmt.Fprintln(out, query)
-	_ = dumpSlice(out, args)
-	_, _ = fmt.Fprintf(out, "\n")
-
-	result, err := m.qi.Query(ctx, databaseName, tableName, query, returnFieldNames, args...)
-	if err == nil {
-		if len(result) > 0 {
-			_, _ = fmt.Fprintf(out, "result: ")
-			_ = dumpMap(out, result)
-			_, _ = fmt.Fprintf(out, "\n")
-		}
-	} else {
-		_, err = fmt.Fprintf(out, "error: %s\n", err)
+func (m *debugResultQueryInterface) Query(ctx context.Context, databaseName, tableName string, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
+	_, err := m.debugQI.Query(ctx, databaseName, tableName, query, returnFieldNames, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	_, _ = fmt.Fprintf(out, "===\n")
+	var retErr error
 
-	return result, err
+	result, queryErr := m.qi.Query(ctx, databaseName, tableName, query, returnFieldNames, args...)
+	if queryErr == nil {
+		if len(result) > 0 {
+			_, err = fmt.Fprintf(m.debugQI.out, "## RESULT: ")
+			retErr = errors.Join(retErr, err)
+
+			err = dumpMap(m.debugQI.out, result)
+			retErr = errors.Join(retErr, err)
+
+			_, err = fmt.Fprintf(m.debugQI.out, "\n")
+			retErr = errors.Join(retErr, err)
+		}
+	} else {
+		_, err = fmt.Fprintf(m.debugQI.out, "@@ ERROR: %s\n", queryErr)
+		retErr = errors.Join(retErr, err)
+		retErr = errors.Join(retErr, queryErr)
+	}
+
+	return result, retErr
 }
