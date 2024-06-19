@@ -92,7 +92,18 @@ func (d *Data) ExtractFilterValue(row Row, filter ExtractFilter) (any, error) {
 		if fv, ok := row.Fields[ft.FieldName]; ok {
 			return fv, nil
 		}
+		if ft.DefaultValue != nil {
+			return *ft.DefaultValue, nil
+		}
 		return nil, fmt.Errorf("unknown field '%s' in row", ft.FieldName)
+	case *ExtractFilterMetadata:
+		if fv, ok := row.Metadata[ft.FieldName]; ok {
+			return fv, nil
+		}
+		if ft.DefaultValue != nil {
+			return *ft.DefaultValue, nil
+		}
+		return nil, fmt.Errorf("unknown field '%s' in row metadata", ft.FieldName)
 	case *ExtractFilterRefID:
 		fv, err := d.WalkTableData(ft.TableID, func(row Row) (bool, any, error) {
 			if row.Config.RefID == ft.RefID {
@@ -166,11 +177,24 @@ func ParseExtractFilters(filters ...string) ([]ExtractFilter, error) {
 		}
 
 		switch fields[0] {
-		case "value": // value:<fieldname>
-			if len(fields) != 2 {
+		case "value": // value:<fieldname>[:defaultValue]
+			if len(fields) < 2 || len(fields) > 3 {
 				return nil, errors.Join(ValueError, fmt.Errorf("invalid filter value: %s", filter))
 			}
-			ret = append(ret, &ExtractFilterValue{FieldName: fields[1]})
+			v := &ExtractFilterValue{FieldName: fields[1]}
+			if len(fields) == 3 {
+				v.DefaultValue = &fields[2]
+			}
+			ret = append(ret, v)
+		case "metadata": // metadata:<fieldname>[:defaultValue]
+			if len(fields) < 2 || len(fields) > 3 {
+				return nil, errors.Join(ValueError, fmt.Errorf("invalid filter value: %s", filter))
+			}
+			v := &ExtractFilterMetadata{FieldName: fields[1]}
+			if len(fields) == 3 {
+				v.DefaultValue = &fields[2]
+			}
+			ret = append(ret, v)
 		case "refid": // refid:<table>:<refid>:<fieldname>
 			if len(fields) != 4 {
 				return nil, errors.Join(ValueError, fmt.Errorf("invalid filter value: %s", filter))
@@ -193,9 +217,16 @@ type ExtractFilter interface {
 	isExtractFilter()
 }
 
-// ExtractFilterValue has the format "value:<fieldname>"
+// ExtractFilterValue has the format "value:<fieldname>[:defaultValue]"
 type ExtractFilterValue struct {
-	FieldName string
+	FieldName    string
+	DefaultValue *string
+}
+
+// ExtractFilterMetadata has the format "metadata:<fieldname>[:defaultValue]"
+type ExtractFilterMetadata struct {
+	FieldName    string
+	DefaultValue *string
 }
 
 // ExtractFilterRefID has the format "refid:<table>:<refid>:<fieldname>"
@@ -214,5 +245,6 @@ type ExtractFilterValueRef struct {
 }
 
 func (ExtractFilterValue) isExtractFilter()    {}
+func (ExtractFilterMetadata) isExtractFilter() {}
 func (ExtractFilterRefID) isExtractFilter()    {}
 func (ExtractFilterValueRef) isExtractFilter() {}

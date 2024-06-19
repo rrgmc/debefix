@@ -98,7 +98,7 @@ func TestDataExtractValues(t *testing.T) {
 				ID: "posts",
 				Rows: Rows{
 					Row{Fields: map[string]any{"post_id": 5, "tag_id": 1}, Config: RowConfig{RefID: "post5"}},
-					Row{Fields: map[string]any{"post_id": 3, "tag_id": 2}, Config: RowConfig{RefID: "post3"}},
+					Row{Fields: map[string]any{"post_id": 3, "tag_id": 2}, Config: RowConfig{RefID: "post3"}, Metadata: map[string]any{"post_image": "p1.jpg"}},
 					Row{Fields: map[string]any{"post_id": 2, "tag_id": 1}, Config: RowConfig{RefID: "post2"}},
 				},
 			},
@@ -110,12 +110,16 @@ func TestDataExtractValues(t *testing.T) {
 			"v1": "value:post_id",
 			"v2": "refid:tags:tag1:tag_id",
 			"v3": "valueref:tag_id:tags:tag_id:name",
+			"v4": "metadata:post_image",
+			"v5": "metadata:post_noimage:default.jpg",
 		})
 	assert.NilError(t, err)
 
-	assert.Assert(t, is.Len(values, 3))
+	assert.Assert(t, is.Len(values, 5))
 
 	assert.Equal(t, 3, values["v1"])
 	assert.Equal(t, 1, values["v2"])
 	assert.Equal(t, "this_is_2", values["v3"])
+	assert.Equal(t, "p1.jpg", values["v4"])
+	assert.Equal(t, "default.jpg", values["v5"])
 }
