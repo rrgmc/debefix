@@ -152,39 +152,52 @@ func (m multiQueryInterface) Query(ctx context.Context, databaseName, tableName 
 }
 
 type debugQueryInterface struct {
-	out io.Writer
+	out              io.Writer
+	lastDatabaseName string
+	lastTableName    string
 }
 
 // NewDebugQueryInterface returns a QueryInterface that outputs the generated queries.
 // If out is nil, [os.Stdout] will be used.
 func NewDebugQueryInterface(out io.Writer) QueryInterface {
-	return &debugQueryInterface{out}
-}
-
-func (m debugQueryInterface) Query(ctx context.Context, databaseName, tableName string, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
-	out := m.out
 	if out == nil {
 		out = os.Stdout
 	}
+	return &debugQueryInterface{out: out}
+}
 
+func (m *debugQueryInterface) Query(ctx context.Context, databaseName, tableName string, query string, returnFieldNames []string, args ...any) (map[string]any, error) {
 	var retErr error
-
-	_, err := fmt.Fprintln(out, query)
-	retErr = errors.Join(retErr, err)
-
-	err = dumpSlice(out, args)
-	retErr = errors.Join(retErr, err)
-
-	_, _ = fmt.Fprintf(out, "\n")
-	retErr = errors.Join(retErr, err)
+	var err error
 
 	outTable := tableName
 	if databaseName != "" {
 		outTable = fmt.Sprintf("[%s] %s", databaseName, tableName)
 	}
 
-	_, err = fmt.Fprintf(out, "=== %s\n", outTable)
+	if databaseName != m.lastDatabaseName || tableName != m.lastTableName {
+		_, err = fmt.Fprintf(m.out, "%s %s %s\n", strings.Repeat("=", 15), outTable, strings.Repeat("=", 15))
+		retErr = errors.Join(retErr, err)
+
+		m.lastDatabaseName = databaseName
+		m.lastTableName = tableName
+	} else {
+		_, _ = fmt.Fprint(m.out, strings.Repeat("-", 20))
+	}
+
+	_, err = fmt.Fprintln(m.out, query)
 	retErr = errors.Join(retErr, err)
+
+	if len(args) > 0 {
+		_, _ = fmt.Fprintf(m.out, "$$ ARGS: ")
+		retErr = errors.Join(retErr, err)
+
+		err = dumpSlice(m.out, args)
+		retErr = errors.Join(retErr, err)
+
+		_, _ = fmt.Fprintf(m.out, "\n")
+		retErr = errors.Join(retErr, err)
+	}
 
 	if retErr != nil {
 		return nil, retErr
