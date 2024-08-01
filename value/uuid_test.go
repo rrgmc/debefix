@@ -106,3 +106,34 @@ func TestUUIDValueResolvedConcreteType(t *testing.T) {
 		"tag_name": "All",
 	}, resolved.Tables["tags"].Rows[0].Fields)
 }
+
+func TestUUIDValueCalculated(t *testing.T) {
+	provider := debefix.NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: !expr calculated:uuid
+        tag_name: "All"
+`),
+		},
+	})
+
+	data, err := debefix.Load(provider)
+	assert.NilError(t, err)
+
+	rowCount := map[string]int{}
+
+	resolved, err := debefix.Resolve(data, func(ctx debefix.ResolveContext, fields map[string]any) error {
+		rowCount[ctx.TableID()]++
+		return nil
+	}, debefix.WithResolvedValueCalculator(&ValueUUID{}))
+	assert.NilError(t, err)
+
+	assert.DeepEqual(t, map[string]int{
+		"tags": 1,
+	}, rowCount)
+
+	_, isUUID := resolved.Tables["tags"].Rows[0].Fields["tag_id"].(uuid.UUID)
+	assert.Assert(t, isUUID, "field value should be of UUID type")
+}

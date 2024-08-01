@@ -92,6 +92,40 @@ func TestResolveGenerated(t *testing.T) {
 	}, rowCount)
 }
 
+func TestResolveCalculated(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: !expr calculated:myint32
+        tag_name: "All"
+`),
+		},
+	})
+
+	expected := int32(998)
+
+	data, err := Load(provider)
+	assert.NilError(t, err)
+
+	rowCount := map[string]int{}
+
+	resolved, err := Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+		rowCount[ctx.TableID()]++
+		return nil
+	}, WithResolvedValueCalculator(testValueCalculatorInt32{expected}))
+	assert.NilError(t, err)
+
+	assert.DeepEqual(t, map[string]int{
+		"tags": 1,
+	}, rowCount)
+
+	intVal, isIntVal := resolved.Tables["tags"].Rows[0].Fields["tag_id"].(int32)
+	assert.Assert(t, isIntVal, "field value should be of int32 type")
+	assert.Equal(t, expected, intVal)
+}
+
 func TestResolveTags(t *testing.T) {
 	provider := NewFSFileProvider(fstest.MapFS{
 		"users.dbf.yaml": &fstest.MapFile{
@@ -569,6 +603,17 @@ func (r testValueParserInt32) ParseResolvedValue(typ string, value any) (bool, a
 		v, err := strconv.ParseInt(fmt.Sprint(value), 10, 32)
 		return true, int32(v), err
 	}
+}
+
+type testValueCalculatorInt32 struct {
+	retVal int32
+}
+
+func (t testValueCalculatorInt32) CalculateValue(typ string, parameter string) (bool, any, error) {
+	if typ != "myint32" {
+		return false, nil, nil
+	}
+	return true, t.retVal, nil
 }
 
 type testValueCallback struct {

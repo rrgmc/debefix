@@ -29,6 +29,13 @@ func (v ValueUUID) ParseValue(tag *ast.TagNode) (bool, any, error) {
 	return true, u, nil
 }
 
+func (v ValueUUID) CalculateValue(typ string, parameter string) (bool, any, error) {
+	if typ != "uuid" {
+		return false, nil, nil
+	}
+	return true, uuid.New(), nil
+}
+
 func (v ValueUUID) ParseResolvedValue(typ string, value any) (bool, any, error) {
 	if typ != "uuid" {
 		return false, nil, nil

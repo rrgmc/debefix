@@ -31,6 +31,12 @@ type ValueGenerated struct {
 	Type string
 }
 
+// ValueCalculated is a [Value] that will be calculated by custom code.
+type ValueCalculated struct {
+	Type      string
+	Parameter string
+}
+
 // ValueInternalID is a [Value] that references a field value in a table using the internal ID.
 type ValueInternalID struct {
 	TableID    string
@@ -77,6 +83,7 @@ type ValueImpl struct{}
 
 func (v ValueRefID) isValue()        {}
 func (v ValueGenerated) isValue()    {}
+func (v ValueCalculated) isValue()   {}
 func (v ValueInternalID) isValue()   {}
 func (v ValueCallbackFunc) isValue() {}
 func (v ValueImpl) isValue()         {}
@@ -124,6 +131,17 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 		ret := &ValueGenerated{}
 		if len(fields) > 1 {
 			ret.Type = fields[1]
+		}
+		return ret, nil
+	case "calculated": // calculated:type<:parameter>
+		if len(fields) < 2 || len(fields) > 3 {
+			return nil, errors.Join(ValueError, fmt.Errorf("invalid tag value: %s", value))
+		}
+		ret := &ValueCalculated{
+			Type: fields[1],
+		}
+		if len(fields) == 3 {
+			ret.Parameter = fields[2]
 		}
 		return ret, nil
 	default:

@@ -77,6 +77,12 @@ func WithResolvedValueParser(f ResolvedValueParser) ResolveOption {
 	})
 }
 
+func WithResolvedValueCalculator(f ValueCalculator) ResolveOption {
+	return fnResolveOption(func(r *resolver) {
+		r.valueCalculators = append(r.valueCalculators, f)
+	})
+}
+
 // DefaultResolveIncludeTagFunc returns a [ResolveIncludeTagsFunc] check checks if at least one tags is contained.
 func DefaultResolveIncludeTagFunc(tags []string) ResolveIncludeTagsFunc {
 	return func(tableID string, rowTags []string) bool {
@@ -95,6 +101,7 @@ type resolver struct {
 	progress             func(tableID, databaseName, tableName string)
 	rowProgress          func(tableID, databaseName, tableName string, current, amount int, isIncluded bool)
 	includeTagsFunc      ResolveIncludeTagsFunc
+	valueCalculators     []ValueCalculator
 	resolvedValueParsers []ResolvedValueParser
 	rowResolvedCallback  RowResolvedCallback
 }
@@ -259,6 +266,13 @@ func (r *resolver) resolve(f ResolveCallback) error {
 // resolveValue resolves Value fields or returns a ResolveValue instance to be resolved by the callback.
 func (r *resolver) resolveValue(ctx *valueResolveContext, value Value) (resolvedValue any, addField bool, err error) {
 	switch fv := value.(type) {
+	case *ValueCalculated:
+		v, err := r.calculateValue(fv.Type, fv.Parameter)
+		if err != nil {
+			return nil, false, errors.Join(ResolveValueError,
+				fmt.Errorf("could not calculate value of type '%s': %w", fv.Type, err))
+		}
+		return v, true, nil
 	case *ValueGenerated:
 		return &ResolveGenerate{
 			Type: fv.Type,
@@ -337,6 +351,20 @@ func (r *resolver) parseResolvedValue(typ string, value any) (any, error) {
 	}
 
 	return nil, fmt.Errorf("unknown resolve type '%s'", typ)
+}
+
+func (r *resolver) calculateValue(typ string, parameter string) (any, error) {
+	for _, calc := range r.valueCalculators {
+		ok, v, err := calc.CalculateValue(typ, parameter)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			return v, nil
+		}
+	}
+
+	return nil, fmt.Errorf("unknown calculated type '%s'", typ)
 }
 
 // ResolveCheckCallback is the callback for the ResolveCheck function.
