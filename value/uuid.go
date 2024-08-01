@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 )
 
-// ValueUUID is a [debefix.ValueParser] to parse "!uuid" tags to [uuid.UUID], and a [debefix.ResolvedValueParser] to
-// to parse "uuid" type to [uuid.UUID].
+// ValueUUID is a [debefix.ValueParser] to parse "!uuid" tags to [uuid.UUID], a [debefix.ResolvedValueParser] to
+// to parse "uuid" type to [uuid.UUID], and [debefix.ValueCalculator] to generate new UUID values.
 type ValueUUID struct{}
 
 func (v ValueUUID) ParseValue(tag *ast.TagNode) (bool, any, error) {
