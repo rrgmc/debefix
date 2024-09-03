@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -124,6 +125,54 @@ func TestResolveCalculated(t *testing.T) {
 	intVal, isIntVal := resolved.Tables["tags"].Rows[0].Fields["tag_id"].(int32)
 	assert.Assert(t, isIntVal, "field value should be of int32 type")
 	assert.Equal(t, expected, intVal)
+}
+
+func TestResolveNamed(t *testing.T) {
+	provider := NewFSFileProvider(fstest.MapFS{
+		"users.dbf.yaml": &fstest.MapFile{
+			Data: []byte(`tables:
+  tags:
+    rows:
+      - tag_id: !expr resolve:r1
+        tag_name: "TAGME"
+        slug: !expr resolve:r2
+`),
+		},
+	})
+
+	expectedID := int32(998)
+	expectedName := "tagme"
+
+	data, err := Load(provider)
+	assert.NilError(t, err)
+
+	rowCount := map[string]int{}
+
+	resolved, err := Resolve(data, func(ctx ResolveContext, fields map[string]any) error {
+		rowCount[ctx.TableID()]++
+		return nil
+	}, WithNamedResolveCallback(NamedResolveCallbackFunc(func(ctx ValueResolveContext, name string) (resolvedValue any, addField bool, err error) {
+		switch name {
+		case "r1":
+			return expectedID, true, nil
+		case "r2":
+			return strings.ToLower(ctx.Row().Fields["tag_name"].(string)), true, nil
+		default:
+			return nil, false, fmt.Errorf("unknown field: %s", name)
+		}
+	})))
+	assert.NilError(t, err)
+
+	assert.DeepEqual(t, map[string]int{
+		"tags": 1,
+	}, rowCount)
+
+	idVal, isIntVal := resolved.Tables["tags"].Rows[0].Fields["tag_id"].(int32)
+	nameVal, isStringVal := resolved.Tables["tags"].Rows[0].Fields["slug"].(string)
+	assert.Assert(t, isIntVal, "field id should be of int32 type")
+	assert.Assert(t, isStringVal, "field name should be of string type")
+	assert.Equal(t, expectedID, idVal)
+	assert.Equal(t, expectedName, nameVal)
 }
 
 func TestResolveTags(t *testing.T) {

@@ -64,6 +64,13 @@ func WithRowResolvedCallback(callback RowResolvedCallback) ResolveOption {
 	})
 }
 
+// WithNamedResolveCallback sets a function to receive named resolve callbacks.
+func WithNamedResolveCallback(callback NamedResolveCallback) ResolveOption {
+	return fnResolveOption(func(r *resolver) {
+		r.namedResolverCallback = callback
+	})
+}
+
 // WithResolveTagsFunc sets a row tag filter function.
 func WithResolveTagsFunc(f ResolveIncludeTagsFunc) ResolveOption {
 	return fnResolveOption(func(r *resolver) {
@@ -96,14 +103,15 @@ func DefaultResolveIncludeTagFunc(tags []string) ResolveIncludeTagsFunc {
 }
 
 type resolver struct {
-	data                 *Data
-	resolvedData         *Data
-	progress             func(tableID, databaseName, tableName string)
-	rowProgress          func(tableID, databaseName, tableName string, current, amount int, isIncluded bool)
-	includeTagsFunc      ResolveIncludeTagsFunc
-	valueCalculators     []ValueCalculator
-	resolvedValueParsers []ResolvedValueParser
-	rowResolvedCallback  RowResolvedCallback
+	data                  *Data
+	resolvedData          *Data
+	progress              func(tableID, databaseName, tableName string)
+	rowProgress           func(tableID, databaseName, tableName string, current, amount int, isIncluded bool)
+	includeTagsFunc       ResolveIncludeTagsFunc
+	valueCalculators      []ValueCalculator
+	resolvedValueParsers  []ResolvedValueParser
+	rowResolvedCallback   RowResolvedCallback
+	namedResolverCallback NamedResolveCallback
 }
 
 func (r *resolver) resolve(f ResolveCallback) error {
@@ -310,6 +318,16 @@ func (r *resolver) resolveValue(ctx *valueResolveContext, value Value) (resolved
 		return vrowfield, true, nil
 	case ValueCallback:
 		vrowfield, addField, err := fv.GetValueCallback(ctx)
+		if err != nil {
+			return nil, false, errors.Join(ResolveValueError, err)
+		}
+		return vrowfield, addField, nil
+	case *NamedValueCallback:
+		if r.namedResolverCallback == nil {
+			return nil, false, errors.Join(ResolveValueError,
+				errors.New("named resolver callback not set"))
+		}
+		vrowfield, addField, err := r.namedResolverCallback.NamedResolveValue(ctx, fv.Name)
 		if err != nil {
 			return nil, false, errors.Join(ResolveValueError, err)
 		}

@@ -45,6 +45,16 @@ func (r RowResolvedCallbackFunc) RowResolved(ctx ValueResolveContext) error {
 	return r(ctx)
 }
 
+type NamedResolveCallback interface {
+	NamedResolveValue(ctx ValueCallbackResolveContext, name string) (resolvedValue any, addField bool, err error)
+}
+
+type NamedResolveCallbackFunc func(ctx ValueResolveContext, name string) (resolvedValue any, addField bool, err error)
+
+func (r NamedResolveCallbackFunc) NamedResolveValue(ctx ValueCallbackResolveContext, name string) (resolvedValue any, addField bool, err error) {
+	return r(ctx, name)
+}
+
 type defaultResolveContext struct {
 	tableID, databaseName, tableName string
 	resolved                         map[string]any

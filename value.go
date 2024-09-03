@@ -57,6 +57,11 @@ type ValueCallback interface {
 	GetValueCallback(ctx ValueCallbackResolveContext) (resolvedValue any, addField bool, err error)
 }
 
+// NamedValueCallback is like ValueCallback but uses a global resolver callback.
+type NamedValueCallback struct {
+	Name string
+}
+
 type ValueResolveContext interface {
 	Table() Table
 	Row() Row
@@ -81,12 +86,13 @@ func (v ValueCallbackFunc) GetValueCallback(ctx ValueCallbackResolveContext) (re
 // ValueImpl is a helper to be able to implement Value outside the package.
 type ValueImpl struct{}
 
-func (v ValueRefID) isValue()        {}
-func (v ValueGenerated) isValue()    {}
-func (v ValueCalculated) isValue()   {}
-func (v ValueInternalID) isValue()   {}
-func (v ValueCallbackFunc) isValue() {}
-func (v ValueImpl) isValue()         {}
+func (v ValueRefID) isValue()         {}
+func (v ValueGenerated) isValue()     {}
+func (v ValueCalculated) isValue()    {}
+func (v ValueInternalID) isValue()    {}
+func (v ValueCallbackFunc) isValue()  {}
+func (v NamedValueCallback) isValue() {}
+func (v ValueImpl) isValue()          {}
 
 // valueTableDepends is an interface to indicate that a [Value] adds a dependency on another table.
 type valueTableDepends interface {
@@ -142,6 +148,14 @@ func parseValue(value string, parent ParentRowInfo) (Value, error) {
 		}
 		if len(fields) == 3 {
 			ret.Parameter = fields[2]
+		}
+		return ret, nil
+	case "resolve": // resolve:name
+		if len(fields) != 2 {
+			return nil, errors.Join(ValueError, fmt.Errorf("invalid tag value: %s", value))
+		}
+		ret := &NamedValueCallback{
+			Name: fields[1],
 		}
 		return ret, nil
 	default:
