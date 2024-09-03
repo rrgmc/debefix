@@ -152,7 +152,7 @@ func (d *Data) ExtractFilterValue(row Row, filter ExtractFilter) (any, error) {
 		return fv, nil
 	case *ExtractFilterParent:
 		if row.Parent == nil {
-			return nil, errors.New("parents not supported in current context")
+			return nil, errors.New("row has no parent")
 		}
 		plevel := row.Parent.ParentLevel(ft.Level)
 		if !plevel.ParentSupported() {

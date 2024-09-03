@@ -243,6 +243,7 @@ func (r *resolver) resolve(f ResolveCallback) error {
 				InternalID: row.InternalID,
 				Fields:     saveFields,
 				Metadata:   metadata,
+				Parent:     row.Parent,
 			}
 			r.resolvedData.Tables[table.ID].Rows = append(r.resolvedData.Tables[table.ID].Rows, resolvedRow)
 

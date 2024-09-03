@@ -102,6 +102,7 @@ func (r Row) Clone() Row {
 		Config:     r.Config.Clone(),
 		Fields:     maps.Clone(r.Fields),
 		Metadata:   maps.Clone(r.Metadata),
+		Parent:     r.Parent,
 	}
 }
 
