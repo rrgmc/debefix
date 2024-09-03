@@ -104,7 +104,7 @@ func (l *loader) loadFile(file io.Reader, tags []string) error {
 	return nil
 }
 
-func (l *loader) loadRoot(node ast.Node, tags []string, parent parentRowInfo) error {
+func (l *loader) loadRoot(node ast.Node, tags []string, parent ParentRowInfo) error {
 	var values []*ast.MappingValueNode
 	switch n := node.(type) {
 	case *ast.MappingNode:
@@ -159,7 +159,7 @@ func (l *loader) loadRoot(node ast.Node, tags []string, parent parentRowInfo) er
 	return nil
 }
 
-func (l *loader) loadTables(node ast.Node, tags []string, parent parentRowInfo) error {
+func (l *loader) loadTables(node ast.Node, tags []string, parent ParentRowInfo) error {
 	switch n := node.(type) {
 	case *ast.MappingValueNode:
 		tableID, err := getStringNode(n.Key)
@@ -185,7 +185,7 @@ func (l *loader) loadTables(node ast.Node, tags []string, parent parentRowInfo) 
 	return nil
 }
 
-func (l *loader) loadTable(tableID string, node ast.Node, tags []string, parent parentRowInfo) error {
+func (l *loader) loadTable(tableID string, node ast.Node, tags []string, parent ParentRowInfo) error {
 	if l.data.Tables == nil {
 		l.data.Tables = map[string]*Table{}
 	}
@@ -331,7 +331,7 @@ func (l *loader) loadTableConfigDefaultValues(node ast.Node, table *Table, cfg *
 	return nil
 }
 
-func (l *loader) loadTableRows(node ast.Node, table *Table, tags []string, parent parentRowInfo) error {
+func (l *loader) loadTableRows(node ast.Node, table *Table, tags []string, parent ParentRowInfo) error {
 	switch n := node.(type) {
 	case *ast.SequenceNode:
 		for _, row := range n.Values {
@@ -347,7 +347,7 @@ func (l *loader) loadTableRows(node ast.Node, table *Table, tags []string, paren
 	return nil
 }
 
-func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent parentRowInfo) error {
+func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent ParentRowInfo) error {
 	var values []*ast.MappingValueNode
 	switch n := node.(type) {
 	case *ast.MappingNode:
@@ -363,6 +363,7 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 		InternalID: uuid.New(),
 		Fields:     map[string]any{},
 		Metadata:   map[string]any{},
+		Parent:     parent,
 	}
 	for _, field := range values {
 		switch n := field.Value.(type) {
@@ -435,7 +436,7 @@ func (l *loader) loadTableRow(node ast.Node, table *Table, tags []string, parent
 	return nil
 }
 
-func (l *loader) loadFieldValue(node ast.Node, parent parentRowInfo) (any, error) {
+func (l *loader) loadFieldValue(node ast.Node, parent ParentRowInfo) (any, error) {
 	switch n := node.(type) {
 	case *ast.TagNode:
 		switch n.Start.Value {

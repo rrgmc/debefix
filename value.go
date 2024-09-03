@@ -94,7 +94,7 @@ type valueTableDepends interface {
 }
 
 // parseValue parses !expr expressions.
-func parseValue(value string, parent parentRowInfo) (Value, error) {
+func parseValue(value string, parent ParentRowInfo) (Value, error) {
 	fields := strings.Split(value, ":")
 	if len(fields) == 0 {
 		return nil, errors.Join(ValueError, fmt.Errorf("invalid tag: %s", value))
@@ -149,13 +149,13 @@ func parseValue(value string, parent parentRowInfo) (Value, error) {
 	}
 }
 
-// parentRowInfo gets parent info from a level number.
-type parentRowInfo interface {
-	ParentLevel(level int) parentRowInfoData
+// ParentRowInfo gets parent info from a level number.
+type ParentRowInfo interface {
+	ParentLevel(level int) ParentRowInfoData
 }
 
-// parentRowInfoData indicates if a parent exists and its information.
-type parentRowInfoData interface {
+// ParentRowInfoData indicates if a parent exists and its information.
+type ParentRowInfoData interface {
 	ParentSupported() bool
 	HasParent() bool
 	TableID() string
@@ -166,7 +166,7 @@ type parentRowInfoData interface {
 type noParentRowInfo struct {
 }
 
-func (n noParentRowInfo) ParentLevel(level int) parentRowInfoData {
+func (n noParentRowInfo) ParentLevel(level int) ParentRowInfoData {
 	return &noParentRowInfoData{}
 }
 
@@ -192,11 +192,11 @@ func (n noParentRowInfoData) InternalID() uuid.UUID {
 
 // defaultParentRowInfoData indicates a parent exists in the current context.
 type defaultParentRowInfo struct {
-	parent parentRowInfo
-	data   parentRowInfoData
+	parent ParentRowInfo
+	data   ParentRowInfoData
 }
 
-func (n defaultParentRowInfo) ParentLevel(level int) parentRowInfoData {
+func (n defaultParentRowInfo) ParentLevel(level int) ParentRowInfoData {
 	if level == 1 {
 		return n.data
 	}
@@ -232,7 +232,7 @@ func (n defaultParentRowInfoData) InternalID() uuid.UUID {
 type unsupportedParentRowInfo struct {
 }
 
-func (n unsupportedParentRowInfo) ParentLevel(level int) parentRowInfoData {
+func (n unsupportedParentRowInfo) ParentLevel(level int) ParentRowInfoData {
 	return &unsupportedParentRowInfoData{}
 }
 

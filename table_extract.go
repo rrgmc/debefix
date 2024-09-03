@@ -3,7 +3,10 @@ package debefix
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 // ExtractRows extract rows matched by the callback, returning a filtered Data instance.
@@ -147,6 +150,32 @@ func (d *Data) ExtractFilterValue(row Row, filter ExtractFilter) (any, error) {
 			return nil, err
 		}
 		return fv, nil
+	case *ExtractFilterParent:
+		if row.Parent == nil {
+			return nil, errors.New("parents not supported in current context")
+		}
+		plevel := row.Parent.ParentLevel(ft.Level)
+		if !plevel.ParentSupported() {
+			return nil, errors.New("parents not supported in current context")
+		}
+		if !plevel.HasParent() {
+			return nil, errors.New("value has no parent")
+		}
+		fv, err := d.WalkTableData(plevel.TableID(), func(row Row) (bool, any, error) {
+			if row.InternalID != uuid.Nil && row.InternalID == plevel.InternalID() {
+				if rowfield, ok := row.Fields[ft.FieldName]; ok {
+					return true, rowfield, nil
+				} else {
+					return false, nil, fmt.Errorf("could not find field %s in internalid table %s", ft.FieldName, plevel.TableID())
+				}
+			}
+			return false, nil, nil
+		})
+		if err != nil {
+			return nil, fmt.Errorf("could not find internalid %s in table %s: %w", plevel.InternalID(), plevel.TableID(), err)
+		}
+
+		return fv, nil
 	default:
 		return nil, fmt.Errorf("unknown extract filter %T", filter)
 	}
@@ -205,6 +234,20 @@ func ParseExtractFilters(filters ...string) ([]ExtractFilter, error) {
 				return nil, errors.Join(ValueError, fmt.Errorf("invalid filter value: %s", filter))
 			}
 			ret = append(ret, &ExtractFilterValueRef{SourceFieldName: fields[1], TableID: fields[2], TargetFieldName: fields[3], ReturnFieldName: fields[4]})
+		case "parent": // parent<:level>:<fieldname>
+			parentLevel := 1
+			fieldName := fields[1]
+			if len(fields) == 3 {
+				level, err := strconv.ParseInt(fields[1], 10, 32)
+				if err != nil {
+					return nil, errors.Join(ValueError, fmt.Errorf("invalid level '%s' in parent expression: %w", fields[1], err))
+				}
+				parentLevel = int(level)
+				fieldName = fields[2]
+			} else if len(fields) != 2 {
+				return nil, errors.Join(ValueError, fmt.Errorf("invalid filter value: %s", filter))
+			}
+			ret = append(ret, &ExtractFilterParent{Level: parentLevel, FieldName: fieldName})
 		default:
 			return nil, errors.Join(ValueError, fmt.Errorf("invalid filter value: %s", filter))
 		}
@@ -244,7 +287,14 @@ type ExtractFilterValueRef struct {
 	ReturnFieldName string
 }
 
+// ExtractFilterParent has the format "parent<:level>:<fieldname>"
+type ExtractFilterParent struct {
+	Level     int
+	FieldName string
+}
+
 func (ExtractFilterValue) isExtractFilter()    {}
 func (ExtractFilterMetadata) isExtractFilter() {}
 func (ExtractFilterRefID) isExtractFilter()    {}
 func (ExtractFilterValueRef) isExtractFilter() {}
+func (ExtractFilterParent) isExtractFilter()   {}

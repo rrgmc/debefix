@@ -92,6 +92,7 @@ type Row struct {
 	Config     RowConfig
 	Fields     map[string]any
 	Metadata   map[string]any
+	Parent     ParentRowInfo
 }
 
 // Clone does a deep copy of the row, to ensure source is never modified.
