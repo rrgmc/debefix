@@ -27,7 +27,7 @@ func SetValueRefID(refID RefID) SetValueRefIDData {
 
 var _ ValueMultiple = SetValueRefIDData{}
 
-func (v SetValueRefIDData) Resolve(ctx context.Context, resolvedData *ResolvedData, fieldName string, values ValuesMutable) error {
+func (v SetValueRefIDData) Resolve(ctx context.Context, resolvedData *ResolvedData, tableID TableID, fieldName string, values ValuesMutable) error {
 	return NewResolveError("SetValueRefID is not meant to be resolved")
 }
 

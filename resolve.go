@@ -258,7 +258,7 @@ func resolveRowValues(ctx context.Context, resolvedData *ResolvedData, tableID T
 					resolvedFields[fieldName] = value
 				}
 			case ValueMultiple:
-				err := vv.Resolve(ctx, resolvedData, fieldName, resolvedFields)
+				err := vv.Resolve(ctx, resolvedData, tableID, fieldName, resolvedFields)
 				if errors.Is(err, ResolveLater) {
 					currentResolveLater = append(currentResolveLater, fieldName)
 					continue

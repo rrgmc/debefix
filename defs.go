@@ -15,7 +15,7 @@ type Value interface {
 // ValueMultiple can set any amount of row field values (even none) at resolve time. It can use the current row values,
 // or load any previously loaded rows.
 type ValueMultiple interface {
-	Resolve(ctx context.Context, resolvedData *ResolvedData, fieldName string, values ValuesMutable) error
+	Resolve(ctx context.Context, resolvedData *ResolvedData, tableID TableID, fieldName string, values ValuesMutable) error
 }
 
 // ValueDependencies lists value dependencies on other tables, allowing a dependency graph to be built to ensure
