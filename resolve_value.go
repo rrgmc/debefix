@@ -11,6 +11,8 @@ type ResolveValueResolveData struct {
 	ResolveInfo any
 }
 
+var _ ResolveValue = ResolveValueResolveData{}
+
 // ResolveValueResolve is a value to be resolved, with an option information parameter.
 func ResolveValueResolve(options ...ResolveValueResolveOption) ResolveValueResolveData {
 	ret := ResolveValueResolveData{}
