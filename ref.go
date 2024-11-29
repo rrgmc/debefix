@@ -9,7 +9,7 @@ import (
 // a Value implementation for one of its fields.
 // It implements QueryRow, and can return a UpdateQuery.
 type InternalIDRef struct {
-	notAValue
+	NotAValue
 	TableID    TableID
 	InternalID uuid.UUID
 }

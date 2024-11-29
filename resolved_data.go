@@ -35,7 +35,7 @@ func (d *ResolvedData) ResolveArgs(ctx context.Context, values Values, args ...a
 			resolvedArgs = append(resolvedArgs, argValue)
 		} else if _, ok := arg.(ValueMultiple); ok {
 			return nil, false, NewResolveErrorf("argument %d cannot be of 'ValueMultiple' type (type is '%T')", argIdx, arg)
-		} else if _, ok := arg.(isNotAValue); ok {
+		} else if _, ok := arg.(IsNotAValue); ok {
 			return nil, false, NewResolveErrorf("argument %d should not be used as a field value (type %T)", argIdx, arg)
 		} else {
 			resolvedArgs = append(resolvedArgs, arg)

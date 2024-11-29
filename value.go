@@ -389,14 +389,16 @@ func (d ValueDefaultData) TableDependencies() []TableID {
 	return nil
 }
 
+type ValueFormatCallback func(ctx context.Context, resolvedData *ResolvedData, values Values, value any) (any, bool, error)
+
 // ValueFormatFuncData resolves Value, and allows it to be changed on a callback formatting function.
 type ValueFormatFuncData struct {
 	Value      Value
-	FormatFunc func(any) (any, error)
+	FormatFunc ValueFormatCallback
 }
 
 // ValueFormatFunc resolves Value, and allows it to be changed on a callback formatting function.
-func ValueFormatFunc(value Value, formatFunc func(any) (any, error)) ValueFormatFuncData {
+func ValueFormatFunc(value Value, formatFunc ValueFormatCallback) ValueFormatFuncData {
 	return ValueFormatFuncData{
 		Value:      value,
 		FormatFunc: formatFunc,
@@ -408,17 +410,10 @@ var _ ValueDependencies = (*ValueFormatFuncData)(nil)
 
 func (d ValueFormatFuncData) ResolveValue(ctx context.Context, resolvedData *ResolvedData, values Values) (any, bool, error) {
 	value, ok, err := d.Value.ResolveValue(ctx, resolvedData, values)
-	if err != nil {
-		return nil, false, err
+	if err != nil || !ok {
+		return nil, ok, err
 	}
-	if !ok {
-		return nil, false, nil
-	}
-	newValue, err := d.FormatFunc(value)
-	if err != nil {
-		return nil, false, err
-	}
-	return newValue, true, nil
+	return d.FormatFunc(ctx, resolvedData, values, value)
 }
 
 func (d ValueFormatFuncData) TableDependencies() []TableID {

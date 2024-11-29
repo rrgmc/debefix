@@ -51,11 +51,12 @@ func (v ValueMultipleErr) Resolve(ctx context.Context, resolvedData *ResolvedDat
 	return v.Err
 }
 
-// isNotAValue marks structs that may be confused with values to avoid using them as such.
-type isNotAValue interface {
+// IsNotAValue marks structs that may be confused with values to avoid using them as such.
+type IsNotAValue interface {
 	isNotAValue()
 }
 
-type notAValue struct{}
+// NotAValue implements IsNotAValue.
+type NotAValue struct{}
 
-func (notAValue) isNotAValue() {}
+func (NotAValue) isNotAValue() {}

@@ -229,7 +229,7 @@ func resolveRowValues(ctx context.Context, resolvedData *ResolvedData, tableID T
 	for fieldName, fieldValue := range row.Values.All {
 		switch fieldValue.(type) {
 		case Value, ValueMultiple:
-		case isNotAValue:
+		case IsNotAValue:
 			return nil, NewResolveErrorf("value for table '%s' field '%s' should not be used as a field value (type %T)",
 				tableID, fieldName, fieldValue)
 		default:
