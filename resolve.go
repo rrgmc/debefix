@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/uuid"
 	"github.com/rrgmc/debefix/v2/internal/external/depgraph"
 )
 
@@ -299,3 +300,22 @@ var (
 	ResolveUnknownFieldName = errors.New("unknown field name")
 	ResolveLater            = errors.New("resolve later")
 )
+
+// ResolveCheck checks if all dependencies between rows are resolvable.
+func ResolveCheck(ctx context.Context, data *Data, options ...ResolveOption) error {
+	_, err := Resolve(ctx, data, ResolveCheckCallback, options...)
+	return err
+}
+
+// ResolveCheckCallback is the callback for the ResolveCheck function.
+func ResolveCheckCallback(ctx context.Context, resolveInfo ResolveInfo, values ValuesMutable) error {
+	for fn, fv := range values.All {
+		if fresolve, ok := fv.(ResolveValue); ok {
+			switch fresolve.(type) {
+			case ResolveValueResolveData:
+				values.Set(fn, uuid.New())
+			}
+		}
+	}
+	return nil
+}
