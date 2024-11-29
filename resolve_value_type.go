@@ -3,7 +3,6 @@ package debefix
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -41,11 +40,11 @@ func (r ResolveValueUUIDData) ResolveValueParse(ctx context.Context, value any) 
 		}
 		vv, err := uuid.Parse(v)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing resolved value as UUID ('%s'): %w", v, err)
+			return nil, NewResolveErrorf("error parsing resolved value as UUID ('%s'): %w", v, err)
 		}
 		return vv, nil
 	default:
-		return nil, fmt.Errorf("invalid type conversion to UUID: '%T'", value)
+		return nil, NewResolveErrorf("invalid type conversion to UUID: '%T'", value)
 	}
 }
 

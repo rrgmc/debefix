@@ -258,12 +258,12 @@ func (v ValueFormatTemplateData) ResolveValue(ctx context.Context, resolvedData 
 	}
 	tmpl, err := template.New("tmpl").Parse(v.Template)
 	if err != nil {
-		return nil, false, fmt.Errorf("failed to parse template: %w", err)
+		return nil, false, NewResolveErrorf("failed to parse template: %w", err)
 	}
 	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, fmtArgs)
+	err = tmpl.Option("missingkey=error").Execute(&buf, fmtArgs)
 	if err != nil {
-		return nil, false, fmt.Errorf("failed to execute template: %w", err)
+		return nil, false, NewResolveErrorf("failed to execute template: %w", err)
 	}
 	return buf.String(), true, nil
 }

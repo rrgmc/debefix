@@ -25,5 +25,19 @@ func TestValueFormatTemplate(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Assert(t, rok)
 	assert.Equal(t, expected, rv)
+}
+
+func TestValueFormatTemplateNoField(t *testing.T) {
+	ctx := context.Background()
+
+	rd := NewResolvedData()
+
+	v := ValueFormatTemplate("{{.data}}", map[string]any{
+		"xdata": "test",
+	})
+	_, _, err := v.ResolveValue(ctx, rd, MapValues{
+		"row_value": 78,
+	})
+	AssertIsResolveError(t, err)
 
 }

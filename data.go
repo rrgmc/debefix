@@ -2,7 +2,6 @@ package debefix
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -70,7 +69,7 @@ func (d *Data) Update(query UpdateQuery, action UpdateAction) {
 func (d *Data) UpdateAfter(afterRow QueryRow, query UpdateQuery, action UpdateAction) {
 	row, err := afterRow.QueryRow(d)
 	if err != nil {
-		d.addError(fmt.Errorf("could not find row for UpdateAfter: %w", err))
+		d.addError(NewResolveErrorf("could not find row for UpdateAfter: %w", err))
 		return
 	}
 	row.Row.Updates = append(row.Row.Updates, Update{
