@@ -15,7 +15,7 @@ after they are resolved, so it can reference values generated on execution like 
 ## Install
 
 ```shell
-go get github.com/rrgmc/debefix/v2
+go get -u github.com/rrgmc/debefix/v2
 ```
 
 ## Goals
