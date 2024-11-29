@@ -80,6 +80,11 @@ func Resolve(ctx context.Context, data *Data, resolveFunc ResolveCallback, optio
 		}
 	}
 
+	if len(tableIDOrder) != len(data.Tables) {
+		return nil, NewResolveErrorf("internal error: expected to resolve %d tables but dependency graph returned only %d",
+			len(data.Tables), len(tableIDOrder))
+	}
+
 	resolvedData.TableOrder = tableIDOrder
 
 	// resolve table's rows in dependency order
