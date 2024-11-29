@@ -10,7 +10,7 @@ type ValueFunc func(ctx context.Context, resolvedData *ResolvedData, values Valu
 
 var _ Value = (ValueFunc)(nil)
 
-func (f ValueFunc) ResolveValue(ctx context.Context, resolvedData *ResolvedData, values Values) (any, bool, error) {
+func (f ValueFunc) ResolveValue(ctx context.Context, resolvedData *ResolvedData, tableID TableID, values Values) (any, bool, error) {
 	return f(ctx, resolvedData, values)
 }
 
@@ -30,7 +30,7 @@ type ValueErr struct {
 
 var _ Value = ValueErr{}
 
-func (v ValueErr) ResolveValue(ctx context.Context, resolvedData *ResolvedData, values Values) (any, bool, error) {
+func (v ValueErr) ResolveValue(ctx context.Context, resolvedData *ResolvedData, tableID TableID, values Values) (any, bool, error) {
 	if v.Err == nil {
 		return nil, false, errors.New("unknown error")
 	}
@@ -44,7 +44,7 @@ type ValueMultipleErr struct {
 
 var _ ValueMultiple = ValueMultipleErr{}
 
-func (v ValueMultipleErr) Resolve(ctx context.Context, resolvedData *ResolvedData, fieldName string, values ValuesMutable) error {
+func (v ValueMultipleErr) Resolve(ctx context.Context, resolvedData *ResolvedData, tableID TableID, fieldName string, values ValuesMutable) error {
 	if v.Err == nil {
 		return errors.New("unknown error")
 	}
