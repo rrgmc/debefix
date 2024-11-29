@@ -1,6 +1,8 @@
 # debefix - Database seeding and fixtures
 [![GoDoc](https://godoc.org/github.com/rrgmc/debefix?status.png)](https://godoc.org/github.com/rrgmc/debefix)
 
+### WARNNG: v1 is deprecated, use v2 instead.
+
 debefix is a Go library to seed database data and/or create fixtures for DB tests.
 
 Tables can reference each other using string ids (called `refid`), and generated fields (like database auto increment or
