@@ -1,3 +1,4 @@
+// Deprecated: use github.com/rrgmc/debefix/v2 instead.
 module github.com/rrgmc/debefix
 
 go 1.22
