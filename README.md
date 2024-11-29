@@ -25,6 +25,15 @@ go get -u github.com/rrgmc/debefix/v2
 ## Example
 
 ```go
+import (
+    "context"
+    "os"
+
+    "github.com/rrgmc/debefix-db/v2/sql"
+    "github.com/rrgmc/debefix-db/v2/sql/postgres"
+    "github.com/rrgmc/debefix/v2"
+)
+
 func ExampleResolve() {
     ctx := context.Background()
     data := debefix.NewData()
@@ -133,11 +142,36 @@ func ExampleResolve() {
 
     // resolve the rows using a SQL query resolver.
     _, err := debefix.Resolve(ctx, data,
-        sql.ResolveFunc(qi, sql.NewQueryBuilder(sql.DefaultQueryBuilderDialect{})))
+        postgres.ResolveFunc(qi))
     if err != nil {
         panic(err)
     }
 
+    // =============== public.tags ===============
+    // INSERT INTO "public.tags" ("created_at", "name", "updated_at") VALUES ($1, $2, $3) RETURNING "tag_id"
+    // $$ ARGS: [0:"2024-11-29 08:30:16.028185 -0300 -03 m=+3600.002859876"] [1:"Go"] [2:"2024-11-29 08:30:16.028185 -0300 -03 m=+3600.002859876"]
+    // --------------------INSERT INTO "public.tags" ("created_at", "name", "updated_at") VALUES ($1, $2, $3) RETURNING "tag_id"
+    // $$ ARGS: [0:"2024-11-29 08:32:16.028185 -0300 -03 m=+3720.002859876"] [1:"JavaScript"] [2:"2024-11-29 08:32:16.028185 -0300 -03 m=+3720.002859876"]
+    // --------------------INSERT INTO "public.tags" ("created_at", "name", "updated_at") VALUES ($1, $2, $3) RETURNING "tag_id"
+    // $$ ARGS: [0:"2024-11-29 08:32:16.028185 -0300 -03 m=+3720.002859876"] [1:"C++"] [2:"2024-11-29 08:32:16.028185 -0300 -03 m=+3720.002859876"]
+    // =============== public.users ===============
+    // INSERT INTO "public.users" ("created_at", "email", "name", "updated_at", "user_id") VALUES ($1, $2, $3, $4, $5)
+    // $$ ARGS: [0:"2024-11-29 08:00:16.028185 -0300 -03 m=+1800.002859876"] [1:"john@example.com"] [2:"John Doe"] [3:"2024-11-29 08:00:16.028185 -0300 -03 m=+1800.002859876"] [4:"1"]
+    // --------------------INSERT INTO "public.users" ("created_at", "email", "name", "updated_at", "user_id") VALUES ($1, $2, $3, $4, $5)
+    // $$ ARGS: [0:"2024-11-29 08:00:16.028185 -0300 -03 m=+1800.002859876"] [1:"jane@example.com"] [2:"Jane Doe"] [3:"2024-11-29 08:00:16.028185 -0300 -03 m=+1800.002859876"] [4:"2"]
+    // =============== public.posts ===============
+    // INSERT INTO "public.posts" ("created_at", "post_id", "text", "title", "updated_at", "user_id") VALUES ($1, $2, $3, $4, $5, $6)
+    // $$ ARGS: [0:"2024-11-29 09:30:16.028185 -0300 -03 m=+7200.002859876"] [1:"91a27c77-ff00-4f3b-90d6-51e335b7ad36"] [2:"This is the text of the first post"] [3:"First post"] [4:"2024-11-29 09:30:16.028185 -0300 -03 m=+7200.002859876"] [5:"1"]
+    // --------------------INSERT INTO "public.posts" ("created_at", "parent_post_id", "post_id", "text", "title", "updated_at", "user_id") VALUES ($1, $2, $3, $4, $5, $6, $7)
+    // $$ ARGS: [0:"2024-11-29 09:30:16.028185 -0300 -03 m=+7200.002859876"] [1:"91a27c77-ff00-4f3b-90d6-51e335b7ad36"] [2:"c06a1f3e-3578-4b56-bf51-9fb949ae5dbf"] [3:"This is the text of the second post"] [4:"Second post"] [5:"2024-11-29 09:30:16.028185 -0300 -03 m=+7200.002859876"] [6:"1"]
+    // =============== public.post_tags ===============
+    // INSERT INTO "public.post_tags" ("post_id", "tag_id") VALUES ($1, $2)
+    // $$ ARGS: [0:"91a27c77-ff00-4f3b-90d6-51e335b7ad36"] [1:"223eca8c-d2c3-46ef-bb1f-d175916c97a2"]
+    // --------------------INSERT INTO "public.post_tags" ("post_id", "tag_id") VALUES ($1, $2)
+    // $$ ARGS: [0:"91a27c77-ff00-4f3b-90d6-51e335b7ad36"] [1:"d5c6e911-f38e-4cef-958b-cd5d8fc787f2"]
+    // --------------------INSERT INTO "public.post_tags" ("post_id", "tag_id") VALUES ($1, $2)
+    // $$ ARGS: [0:"c06a1f3e-3578-4b56-bf51-9fb949ae5dbf"] [1:"bd2d497f-af58-4338-a040-a24002492436"]
+    // want:
     // =============== public.tags ===============
     // INSERT INTO public.tags (created_at, name, updated_at) VALUES (?, ?, ?) RETURNING tag_id
     // $$ ARGS: [0:"2024-11-28 11:59:29.61896 -0300 -03 m=+3600.002892251"] [1:"Go"] [2:"2024-11-28 11:59:29.61896 -0300 -03 m=+3600.002892251"]
