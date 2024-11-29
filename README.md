@@ -171,31 +171,6 @@ func ExampleResolve() {
     // $$ ARGS: [0:"91a27c77-ff00-4f3b-90d6-51e335b7ad36"] [1:"d5c6e911-f38e-4cef-958b-cd5d8fc787f2"]
     // --------------------INSERT INTO "public.post_tags" ("post_id", "tag_id") VALUES ($1, $2)
     // $$ ARGS: [0:"c06a1f3e-3578-4b56-bf51-9fb949ae5dbf"] [1:"bd2d497f-af58-4338-a040-a24002492436"]
-    // want:
-    // =============== public.tags ===============
-    // INSERT INTO public.tags (created_at, name, updated_at) VALUES (?, ?, ?) RETURNING tag_id
-    // $$ ARGS: [0:"2024-11-28 11:59:29.61896 -0300 -03 m=+3600.002892251"] [1:"Go"] [2:"2024-11-28 11:59:29.61896 -0300 -03 m=+3600.002892251"]
-    // --------------------INSERT INTO public.tags (created_at, name, updated_at) VALUES (?, ?, ?) RETURNING tag_id
-    // $$ ARGS: [0:"2024-11-28 12:01:29.61896 -0300 -03 m=+3720.002892251"] [1:"JavaScript"] [2:"2024-11-28 12:01:29.61896 -0300 -03 m=+3720.002892251"]
-    // --------------------INSERT INTO public.tags (created_at, name, updated_at) VALUES (?, ?, ?) RETURNING tag_id
-    // $$ ARGS: [0:"2024-11-28 12:01:29.61896 -0300 -03 m=+3720.002892251"] [1:"C++"] [2:"2024-11-28 12:01:29.61896 -0300 -03 m=+3720.002892251"]
-    // =============== public.users ===============
-    // INSERT INTO public.users (created_at, email, name, updated_at, user_id) VALUES (?, ?, ?, ?, ?)
-    // $$ ARGS: [0:"2024-11-28 11:29:29.61896 -0300 -03 m=+1800.002892251"] [1:"john@example.com"] [2:"John Doe"] [3:"2024-11-28 11:29:29.61896 -0300 -03 m=+1800.002892251"] [4:"1"]
-    // --------------------INSERT INTO public.users (created_at, email, name, updated_at, user_id) VALUES (?, ?, ?, ?, ?)
-    // $$ ARGS: [0:"2024-11-28 11:29:29.61896 -0300 -03 m=+1800.002892251"] [1:"jane@example.com"] [2:"Jane Doe"] [3:"2024-11-28 11:29:29.61896 -0300 -03 m=+1800.002892251"] [4:"2"]
-    // =============== public.posts ===============
-    // INSERT INTO public.posts (created_at, post_id, text, title, updated_at, user_id) VALUES (?, ?, ?, ?, ?, ?)
-    // $$ ARGS: [0:"2024-11-28 12:59:29.61896 -0300 -03 m=+7200.002892251"] [1:"8fe25018-1d15-41ff-9a63-f34844835112"] [2:"This is the text of the first post"] [3:"First post"] [4:"2024-11-28 12:59:29.61896 -0300 -03 m=+7200.002892251"] [5:"1"]
-    // --------------------INSERT INTO public.posts (created_at, parent_post_id, post_id, text, title, updated_at, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)
-    // $$ ARGS: [0:"2024-11-28 12:59:29.61896 -0300 -03 m=+7200.002892251"] [1:"8fe25018-1d15-41ff-9a63-f34844835112"] [2:"68ebab1a-0126-4658-9694-c46d98f23cb7"] [3:"This is the text of the second post"] [4:"Second post"] [5:"2024-11-28 12:59:29.61896 -0300 -03 m=+7200.002892251"] [6:"1"]
-    // =============== public.post_tags ===============
-    // INSERT INTO public.post_tags (post_id, tag_id) VALUES (?, ?)
-    // $$ ARGS: [0:"8fe25018-1d15-41ff-9a63-f34844835112"] [1:"93f3120c-ac6d-47d6-b7a4-66c92ffa5c0a"]
-    // --------------------INSERT INTO public.post_tags (post_id, tag_id) VALUES (?, ?)
-    // $$ ARGS: [0:"8fe25018-1d15-41ff-9a63-f34844835112"] [1:"44fcb6e4-5f81-4ae6-a5e4-e9e4767de6d1"]
-    // --------------------INSERT INTO public.post_tags (post_id, tag_id) VALUES (?, ?)
-    // $$ ARGS: [0:"68ebab1a-0126-4658-9694-c46d98f23cb7"] [1:"1f5127cb-1004-4081-a179-d33195fd5fac"]
 }
 ```
 
