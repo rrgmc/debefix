@@ -206,7 +206,6 @@ func resolveRow(ctx context.Context, resolvedData *ResolvedData, resolveInfo Res
 // resolveRowCallback handles the resolve callback.
 func resolveRowCallback(ctx context.Context, resolveInfo ResolveInfo,
 	resolveFunc ResolveCallback, resolvedFields ValuesMutable) error {
-
 	// call the resolve callback
 	err := resolveFunc(ctx, resolveInfo, resolvedFields)
 	if err != nil {
@@ -224,7 +223,8 @@ func resolveRowCallback(ctx context.Context, resolveInfo ResolveInfo,
 
 // resolveRowValues resolves the values of a single row.
 func resolveRowValues(ctx context.Context, resolvedData *ResolvedData, tableID TableID, row *Row) (ValuesMutable, error) {
-	// build the fields to send to the callback
+	// build the fields to send to the callback.
+	// load the raw values first, so value loaders may use them.
 	resolvedFields := MapValues{}
 	for fieldName, fieldValue := range row.Values.All {
 		switch fieldValue.(type) {
@@ -316,10 +316,11 @@ func ResolveCheck(ctx context.Context, data *Data, options ...ResolveOption) err
 func ResolveCheckCallback(ctx context.Context, resolveInfo ResolveInfo, values ValuesMutable) error {
 	for fn, fv := range values.All {
 		if fresolve, ok := fv.(ResolveValue); ok {
-			switch fresolve.(type) {
-			case ResolveValueResolveData:
-				values.Set(fn, uuid.New())
+			frv, err := fresolve.ResolveValueParse(ctx, uuid.New())
+			if err != nil {
+				return err
 			}
+			values.Set(fn, frv)
 		}
 	}
 	return nil
