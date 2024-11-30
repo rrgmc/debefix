@@ -231,24 +231,24 @@ func (v ValueFormatData) TableDependencies() []TableID {
 	return deps
 }
 
-// ValueFormatTemplateData is a Value that formats a string based on other field's values using "text/template".
-type ValueFormatTemplateData struct {
+// ValueTemplateData is a Value that formats a string based on other field's values using "text/template".
+type ValueTemplateData struct {
 	Template string
 	Args     map[string]any
 }
 
-// ValueFormatTemplate is a Value that formats a string based on other field's values using "text/template".
-func ValueFormatTemplate(template string, args map[string]any) ValueFormatTemplateData {
-	return ValueFormatTemplateData{
+// ValueTemplate is a Value that formats a string based on other field's values using "text/template".
+func ValueTemplate(template string, args map[string]any) ValueTemplateData {
+	return ValueTemplateData{
 		Template: template,
 		Args:     args,
 	}
 }
 
-var _ Value = (*ValueFormatTemplateData)(nil)
-var _ ValueDependencies = (*ValueFormatTemplateData)(nil)
+var _ Value = (*ValueTemplateData)(nil)
+var _ ValueDependencies = (*ValueTemplateData)(nil)
 
-func (v ValueFormatTemplateData) ResolveValue(ctx context.Context, resolvedData *ResolvedData, values Values) (any, bool, error) {
+func (v ValueTemplateData) ResolveValue(ctx context.Context, resolvedData *ResolvedData, values Values) (any, bool, error) {
 	fmtArgs, argOk, err := resolvedData.ResolveMapArgs(ctx, values, v.Args)
 	if err != nil {
 		return nil, false, err
@@ -268,7 +268,7 @@ func (v ValueFormatTemplateData) ResolveValue(ctx context.Context, resolvedData 
 	return buf.String(), true, nil
 }
 
-func (v ValueFormatTemplateData) TableDependencies() []TableID {
+func (v ValueTemplateData) TableDependencies() []TableID {
 	var deps []TableID
 	for _, arg := range v.Args {
 		if vd, ok := arg.(ValueDependencies); ok {
